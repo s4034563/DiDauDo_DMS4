@@ -1,7 +1,0 @@
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".",
-  "env": {
-    "CONVEX_DEPLOYMENT": "prod:spotted-mockingbird-143"
-  }
-}
