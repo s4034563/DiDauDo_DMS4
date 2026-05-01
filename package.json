@@ -1,0 +1,13 @@
+{
+  "name": "vibemap",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "convex deploy --prod",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy"
+  },
+  "devDependencies": {
+    "convex": "^1.20.0"
+  }
+}

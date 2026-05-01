@@ -1,0 +1,117 @@
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
+
+const ratingValidator = v.number();
+
+function normalizeRating(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.min(5, Math.max(1, Math.round(value)));
+}
+
+export const getSummary = query({
+  args: {
+    locationId: v.string(),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const summary = await ctx.db
+      .query("ratingSummaries")
+      .withIndex("by_locationId", (q) => q.eq("locationId", args.locationId))
+      .unique();
+
+    let userRating = 0;
+
+    if (args.sessionId) {
+      const vote = await ctx.db
+        .query("locationRatings")
+        .withIndex("by_location_session", (q) =>
+          q.eq("locationId", args.locationId).eq("sessionId", args.sessionId),
+        )
+        .unique();
+
+      userRating = vote?.rating ?? 0;
+    }
+
+    const ratingCount = summary?.ratingCount ?? 0;
+    const ratingSum = summary?.ratingSum ?? 0;
+
+    return {
+      locationId: args.locationId,
+      ratingCount,
+      ratingSum,
+      averageRating: ratingCount > 0 ? ratingSum / ratingCount : 0,
+      userRating,
+    };
+  },
+});
+
+export const submitRating = mutation({
+  args: {
+    locationId: v.string(),
+    sessionId: v.string(),
+    rating: ratingValidator,
+  },
+  handler: async (ctx, args) => {
+    const rating = normalizeRating(args.rating);
+    const now = Date.now();
+
+    const existingVote = await ctx.db
+      .query("locationRatings")
+      .withIndex("by_location_session", (q) =>
+        q.eq("locationId", args.locationId).eq("sessionId", args.sessionId),
+      )
+      .unique();
+
+    const existingSummary = await ctx.db
+      .query("ratingSummaries")
+      .withIndex("by_locationId", (q) => q.eq("locationId", args.locationId))
+      .unique();
+
+    let ratingCount = existingSummary?.ratingCount ?? 0;
+    let ratingSum = existingSummary?.ratingSum ?? 0;
+
+    if (existingVote) {
+      ratingSum += rating - existingVote.rating;
+      await ctx.db.patch(existingVote._id, {
+        rating,
+        updatedAt: now,
+      });
+    } else {
+      ratingCount += 1;
+      ratingSum += rating;
+      await ctx.db.insert("locationRatings", {
+        locationId: args.locationId,
+        sessionId: args.sessionId,
+        rating,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    if (!existingSummary) {
+      await ctx.db.insert("ratingSummaries", {
+        locationId: args.locationId,
+        ratingCount,
+        ratingSum,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.patch(existingSummary._id, {
+        ratingCount,
+        ratingSum,
+        updatedAt: now,
+      });
+    }
+
+    return {
+      locationId: args.locationId,
+      ratingCount,
+      ratingSum,
+      averageRating: ratingCount > 0 ? ratingSum / ratingCount : 0,
+      userRating: rating,
+    };
+  },
+});

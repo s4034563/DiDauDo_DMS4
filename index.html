@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ĐiĐâuĐó - Social-Driven Location Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@10.6.1/ol.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neon: {
+                            purple: '#c084fc',
+                            cyan: '#06b6d4'
+                        }
+                    },
+                    backdropBlur: {
+                        glass: '10px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .glassmorphic {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(192, 132, 252, 0.2);
+        }
+
+        
+
+        .neon-border {
+            border-color: #c084fc;
+        }
+
+        .neon-text {
+            color: #c084fc;
+        }
+
+        .neon-cyan {
+            color: #06b6d4;
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(192, 132, 252, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(192, 132, 252, 0);
+            }
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .ol-viewport {
+            outline: none;
+        }
+
+        .right-info-panel {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: min(360px, calc(100vw - 2rem));
+            max-height: calc(100vh - 48px);
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(192, 132, 252, 0.45);
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transform: translateX(120%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 9;
+        }
+
+        .right-info-panel.visible {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .right-info-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        .right-info-panel-close {
+            border: none;
+            background: transparent;
+            color: #cbd5e1;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .right-info-panel-content {
+            padding: 14px;
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+        }
+
+        .right-info-panel-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .right-info-panel-content::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.18);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 5;
+        }
+
+        .sidebar-backdrop.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mobile-action-bar,
+        .mobile-search-tray,
+        .mobile-locations-list {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .app-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: min(88vw, 360px);
+                transform: translateX(-102%);
+                transition: transform 0.28s ease;
+                z-index: 34;
+                overflow: hidden;
+                background: rgba(15, 23, 42, 0.88);
+                backdrop-filter: blur(18px);
+            }
+
+            body.mobile-filters-open .app-sidebar {
+                transform: translateX(0);
+            }
+
+            .app-sidebar .sidebar-scroll {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                min-height: 0;
+                overscroll-behavior: contain;
+                touch-action: pan-y;
+            }
+
+            .mobile-action-bar {
+                display: flex;
+                position: fixed;
+                top: calc(env(safe-area-inset-top, 0px) + 12px);
+                right: 12px;
+                gap: 8px;
+                z-index: 30;
+            }
+
+            .mobile-action-btn {
+                width: 42px;
+                height: 42px;
+                border-radius: 999px;
+                border: 1px solid rgba(192, 132, 252, 0.35);
+                background: rgba(15, 23, 42, 0.92);
+                color: #e2e8f0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 10px 24px rgba(2, 6, 23, 0.35);
+                backdrop-filter: blur(10px);
+            }
+
+            .mobile-action-btn.active {
+                background: linear-gradient(135deg, #c084fc, #a855f7);
+                color: #ffffff;
+            }
+
+            .mobile-search-tray {
+                display: block;
+                position: fixed;
+                top: calc(env(safe-area-inset-top, 0px) + 62px);
+                right: 12px;
+                width: min(84vw, 320px);
+                padding: 10px;
+                border-radius: 18px;
+                border: 1px solid rgba(192, 132, 252, 0.32);
+                background: rgba(15, 23, 42, 0.95);
+                box-shadow: 0 18px 48px rgba(2, 6, 23, 0.45);
+                backdrop-filter: blur(12px);
+                z-index: 29;
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+                pointer-events: none;
+                transition: opacity 0.22s ease, transform 0.22s ease;
+            }
+
+            body.mobile-search-open .mobile-search-tray {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                pointer-events: auto;
+            }
+
+            .mobile-search-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                gap: 12px;
+            }
+
+            .mobile-search-input {
+                width: 100%;
+                border-radius: 14px;
+                border: 1px solid rgba(192, 132, 252, 0.28);
+                background: rgba(30, 41, 59, 0.85);
+                color: #e2e8f0;
+                padding: 14px 14px;
+                font-size: 15px;
+                outline: none;
+            }
+
+            .mobile-search-input::placeholder {
+                color: #94a3b8;
+            }
+
+            .mobile-search-close {
+                border: none;
+                background: transparent;
+                color: #cbd5e1;
+                font-size: 22px;
+                line-height: 1;
+                cursor: pointer;
+                padding: 0;
+            }
+
+            .sidebar-backdrop.visible {
+                pointer-events: auto;
+            }
+
+            .right-info-panel {
+                position: fixed;
+                inset: 0;
+                width: auto;
+                max-height: none;
+                border-radius: 0;
+                transform: translateY(100%);
+                z-index: 40;
+            }
+
+            .right-info-panel.visible {
+                transform: translateY(0);
+            }
+
+            .right-info-panel-content {
+                max-height: calc(100dvh - 56px);
+            }
+
+            .mobile-locations-list {
+                display: block;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                padding: 0 12px calc(env(safe-area-inset-bottom, 0px) + 10px);
+                z-index: 24;
+                pointer-events: none;
+            }
+
+            body.mobile-filters-open .mobile-locations-list,
+            body.mobile-search-open .mobile-locations-list {
+                display: none;
+            }
+
+            #locationsList {
+                display: none;
+            }
+
+            .mobile-locations-scroll {
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                padding: 4px 2px 2px;
+                scroll-snap-type: x mandatory;
+                pointer-events: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mobile-locations-scroll::-webkit-scrollbar {
+                display: none;
+            }
+
+            .mobile-location-card {
+                min-width: min(84vw, 340px);
+                scroll-snap-align: start;
+            }
+
+            .mobile-location-card .location-card {
+                margin: 0;
+                border-radius: 18px;
+            }
+
+            .mobile-location-card.selected {
+                transform: translateY(-2px);
+            }
+
+            .mobile-location-card .location-title {
+                font-size: 16px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .app-sidebar {
+                position: relative;
+                z-index: 10;
+            }
+
+            .sidebar-backdrop {
+                display: none;
+            }
+        }
+
+        .info-window {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #c084fc;
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 300px;
+            font-size: 14px;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #64748b;
+            background: rgba(51, 65, 85, 0.5);
+        }
+
+        .chip.active {
+            background: #c084fc;
+            border-color: #c084fc;
+            color: #0f172a;
+        }
+
+        .chip:hover {
+            border-color: #c084fc;
+            transform: translateY(-2px);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #334155;
+            transition: 0.3s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #c084fc;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+        .segmented-control {
+            display: flex;
+            gap: 2px;
+            background: rgba(51, 65, 85, 0.5);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .segmented-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .segmented-btn.active {
+            background: #c084fc;
+            color: #0f172a;
+            font-weight: bold;
+        }
+
+        .custom-marker {
+            background: linear-gradient(135deg, #c084fc, #06b6d4);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(192, 132, 252, 0.4);
+        }
+
+        .custom-marker.selected {
+            transform: scale(1.18);
+            border-color: #22d3ee;
+            box-shadow:
+                0 0 0 4px rgba(34, 211, 238, 0.35),
+                0 0 20px rgba(192, 132, 252, 0.9),
+                0 8px 20px rgba(15, 23, 42, 0.7);
+            z-index: 20;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #334155, #c084fc);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #c084fc;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(192, 132, 252, 0.6);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #c084fc;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(192, 132, 252, 0.6);
+        }
+
+        .search-input {
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid #64748b;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #c084fc;
+            background: rgba(51, 65, 85, 0.8);
+            box-shadow: 0 0 12px rgba(192, 132, 252, 0.3);
+        }
+
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .viral-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b6b, #ff8c8c);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #c084fc, #06b6d4);
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(192, 132, 252, 0.3);
+        }
+
+        .button-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-secondary {
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            padding: 8px 14px;
+            border: 1px solid #60a5fa;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .button-secondary:hover {
+            background: rgba(96, 165, 250, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .sidebar-scroll {
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #c084fc;
+            border-radius: 3px;
+        }
+
+
+
+        .location-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .location-card:hover {
+            border-color: #c084fc;
+            background: rgba(30, 41, 59, 1);
+            transform: translateX(4px);
+        }
+
+        .location-card.selected {
+            border-color: #c084fc;
+            background: rgba(49, 46, 129, 0.88);
+            box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.35), 0 12px 28px rgba(17, 24, 39, 0.35);
+        }
+
+        .location-title {
+            font-weight: bold;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+        }
+
+        .location-activity {
+            display: inline-block;
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-right: 4px;
+        }
+
+        .location-vibe {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.18);
+            color: #34d399;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            margin-right: 4px;
+        }
+
+        
+
+        .language-select {
+            width: 100%;
+            margin-top: 10px;
+            border: 1px solid rgba(192, 132, 252, 0.45);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+            padding: 8px 10px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        /* Geolocation Permission Modal */
+        .permission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .permission-modal.hidden {
+            display: none;
+        }
+
+        .permission-modal-content {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(192, 132, 252, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .permission-modal-header {
+            margin-bottom: 16px;
+        }
+
+        .permission-modal-title {
+            color: #e2e8f0;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .permission-modal-message {
+            color: #cbd5e1;
+            font-size: 14px;
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+        }
+
+        .permission-modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .permission-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .permission-btn-deny {
+            background: transparent;
+            color: #cbd5e1;
+            border: 1px solid rgba(192, 132, 252, 0.2);
+        }
+
+        .permission-btn-deny:hover {
+            background: rgba(192, 132, 252, 0.1);
+            border-color: rgba(192, 132, 252, 0.4);
+        }
+
+        .permission-btn-allow {
+            background: linear-gradient(135deg, #c084fc, #a855f7);
+            color: #ffffff;
+        }
+
+        .permission-btn-allow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+    <div class="flex h-screen w-screen">
+        <!-- Sidebar -->
+        <div class="app-sidebar w-96 glassmorphic flex flex-col z-10">
+            <!-- Header -->
+            <div class="p-6 border-b border-neon-purple border-opacity-20">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-2xl">🗺️</span>
+                    <h1 class="text-2xl font-bold neon-text">ĐiĐâuĐó</h1>
+                </div>
+                <p class="text-sm text-gray-400" data-i18n="subtitle">Discover interesting locations near you</p>
+                <select id="languageSelect" class="language-select" aria-label="Language selector">
+                    <option value="en">English</option>
+                    <option value="vi">Tiếng Việt</option>
+                </select>
+            </div>
+
+            <!-- Filters Container -->
+            <div class="sidebar-scroll flex-1 p-6 space-y-6">
+                
+                <!-- Search Filter -->
+                <div>
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="search">Search Places</label>
+                    <input type="text" id="searchInput" class="search-input w-full" placeholder="Type a location name..." data-i18n-placeholder="searchPlaceholder">
+                </div>
+                
+                <!-- Proximity Filter -->
+                <div id="proximitySection">
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="proximity">Proximity</label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="proximitySlider" class="range-slider flex-1" min="1" max="50" value="5">
+                        <span id="proximityValue" class="text-sm font-bold neon-cyan min-w-12">5 km</span>
+                    </div>
+                </div>
+
+                <!-- Activity Categories Filter -->
+                <div>
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="activityCategory">Activity Category</label>
+                    <div class="space-y-3">
+                        <!-- Sports & Recreation -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categorySportsRecreation" value="Sports & Recreation" data-category="true" data-subid="sportsRecreationSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="sportsRecreation">🏀 Sports & Recreation</span>
+                            </label>
+                            <div id="sportsRecreationSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activitySports" value="Sports" data-parent="Sports & Recreation">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="sports">⚽ Sports</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityFitness" value="Fitness" data-parent="Sports & Recreation">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="fitness">💪 Fitness</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Music & Nightlife -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryMusicNightlife" value="Music & Nightlife" data-category="true" data-subid="musicNightlifeSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="musicNightlife">🎵 Music & Nightlife</span>
+                            </label>
+                            <div id="musicNightlifeSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityMusic" value="Music" data-parent="Music & Nightlife">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="music">🎵 Music</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityNightlife" value="Nightlife" data-parent="Music & Nightlife">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="nightlife">🍺 Nightlife</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Art & Culture -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryArtCulture" value="Art & Culture" data-category="true" data-subid="artCultureSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="artCulture">🎨 Art & Culture</span>
+                            </label>
+                            <div id="artCultureSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityArt" value="Art" data-parent="Art & Culture">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="art">🎨 Art</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityPhotography" value="Photography" data-parent="Art & Culture">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="photography">📸 Photography</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Shopping & Social -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryShoppingSocial" value="Shopping & Social" data-category="true" data-subid="shoppingSocialSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="shoppingSocial">🛍️ Shopping & Social</span>
+                            </label>
+                            <div id="shoppingSocialSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityShopping" value="Shopping" data-parent="Shopping & Social">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="shopping">🛍️ Shopping</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityMarkets" value="Markets" data-parent="Shopping & Social">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="markets">🎪 Markets</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Dining & Social -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryDiningSocial" value="Dining & Social" data-category="true" data-subid="diningSocialSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="diningSocial">🍽️ Dining & Social</span>
+                            </label>
+                            <div id="diningSocialSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityDining" value="Dining" data-parent="Dining & Social">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="dining">🍽️ Dining</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityCafes" value="Cafes" data-parent="Dining & Social">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="cafes">☕ Cafes</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Outdoor & Nature -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryOutdoorNature" value="Outdoor & Nature" data-category="true" data-subid="outdoorNatureSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="outdoorNature">🌳 Outdoor & Nature</span>
+                            </label>
+                            <div id="outdoorNatureSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityHiking" value="Hiking" data-parent="Outdoor & Nature">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="hiking">🥾 Hiking</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityParks" value="Parks" data-parent="Outdoor & Nature">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="parks">🌳 Parks</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Events & Festivals -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryEventsFestivals" value="Events & Festivals" data-category="true" data-subid="eventsFestivalsSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="eventsFestivals">🎪 Events & Festivals</span>
+                            </label>
+                            <div id="eventsFestivalsSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityEvents" value="Events" data-parent="Events & Festivals">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="events">🎫 Events</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityFestivals" value="Festivals" data-parent="Events & Festivals">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="festivals">🎆 Festivals</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Gaming & Esports -->
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer mb-2">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="categoryGamingEsports" value="Gaming & Esports" data-category="true" data-subid="gamingEsportsSubcategories">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="text-sm font-medium" data-i18n="gamingEsports">🎮 Gaming & Esports</span>
+                            </label>
+                            <div id="gamingEsportsSubcategories" class="pl-6 space-y-2 hidden">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityGaming" value="Gaming" data-parent="Gaming & Esports">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="gaming">🎮 Gaming</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityArcades" value="Arcades" data-parent="Gaming & Esports">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="text-sm" data-i18n="arcades">🕹️ Arcades</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- The Vibe Filter -->
+                <div>
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="theVibe">The Vibe</label>
+                    <div class="flex flex-wrap">
+                        <div class="chip" data-vibe="Cozy" data-i18n="vibeCozy">🛋️ Cozy</div>
+                        <div class="chip" data-vibe="Industrial" data-i18n="vibeIndustrial">🏭 Industrial</div>
+                        <div class="chip" data-vibe="Loud/Party" data-i18n="vibeLoudParty">🎊 Loud/Party</div>
+                        <div class="chip" data-vibe="Minimalist" data-i18n="vibeMinimalist">✨ Minimalist</div>
+                        <div class="chip" data-vibe="Hidden Gem" data-i18n="vibeHiddenGem">💎 Hidden Gem</div>
+                        <div class="chip" data-vibe="Instagrammable" data-i18n="vibeInstagrammable">📸 Instagrammable</div>
+                    </div>
+                </div>
+
+                <!-- Social Momentum Filter removed -->
+
+                <!-- Active Filters Display -->
+                <div id="activeFilters" class="text-xs text-gray-400">
+                    <p><span data-i18n="filters">Filters</span>: <span id="filterCount">0</span> <span data-i18n="active">active</span></p>
+                </div>
+
+                <!-- Use My Location Button -->
+                <button id="useLocationBtn" class="button-primary text-sm" style="width: 100%; margin-bottom: 12px;" data-i18n="useMyLocation">📍 Use My Location</button>
+
+                <!-- Clear Filters Button -->
+                <button id="clearFilters" class="button-primary text-sm" data-i18n="clearFilters">Clear All Filters</button>
+
+            </div>
+
+            <!-- Locations List -->
+            <div id="locationsList" class="border-t border-neon-purple border-opacity-20 max-h-96 overflow-y-auto flex-shrink-0">
+                <div id="locationsContainer" class="p-4 space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-shell flex-1 relative">
+            <div id="map"></div>
+            <aside id="rightInfoPanel" class="right-info-panel" aria-hidden="true">
+                <div class="right-info-panel-header">
+                    <p class="text-xs font-semibold tracking-wide text-slate-300 uppercase" data-i18n="locationDetails">Location Details</p>
+                    <button id="rightInfoPanelClose" type="button" class="right-info-panel-close" aria-label="Close details" data-i18n-aria-label="closeDetails">×</button>
+                </div>
+                <div id="rightInfoPanelContent" class="right-info-panel-content text-slate-100 text-sm">
+                    <p class="text-slate-400" data-i18n="clickMarkerHint">Click a marker to view details.</p>
+                </div>
+            </aside>
+
+            <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+            <div class="mobile-action-bar" aria-label="Mobile tools">
+                <button id="mobileSearchBtn" type="button" class="mobile-action-btn" aria-label="Search places">⌕</button>
+                <button id="mobileFiltersBtn" type="button" class="mobile-action-btn" aria-label="Filters">☰</button>
+            </div>
+
+            <div id="mobileSearchTray" class="mobile-search-tray" aria-hidden="true">
+                <div class="mobile-search-header">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300" data-i18n="search">Search Places</p>
+                    <button id="mobileSearchCloseBtn" type="button" class="mobile-search-close" aria-label="Close search">×</button>
+                </div>
+                <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Type a location name..." data-i18n-placeholder="searchPlaceholder">
+            </div>
+
+            <div id="mobileLocationsList" class="mobile-locations-list">
+                <div id="mobileLocationsContainer" class="mobile-locations-scroll"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geolocation Permission Modal -->
+    <div id="permissionModal" class="permission-modal hidden">
+        <div class="permission-modal-content">
+            <div class="permission-modal-header">
+                <h3 class="permission-modal-title" data-i18n="permissionTitle">Share Your Location</h3>
+            </div>
+            <p class="permission-modal-message" data-i18n="permissionMessage">Allow access to your location to show nearby places more accurately.</p>
+            <div class="permission-modal-buttons">
+                <button id="permissionDenyBtn" class="permission-btn permission-btn-deny" data-i18n="permissionDeny">Not Now</button>
+                <button id="permissionAllowBtn" class="permission-btn permission-btn-allow" data-i18n="permissionAllow">Allow</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@10.6.1/dist/ol.js"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

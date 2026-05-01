@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ĐiĐâuĐó Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="./config.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@10.6.1/ol.css" />
+  <script src="https://cdn.jsdelivr.net/npm/ol@10.6.1/dist/ol.js"></script>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(10, 17, 32, 0.86);
+      --panel-2: rgba(16, 24, 40, 0.96);
+      --line: rgba(148, 163, 184, 0.18);
+      --text: #e5eefb;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --gold: #fbbf24;
+      --gold-soft: rgba(251, 191, 36, 0.18);
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.15), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.14), transparent 24%),
+        linear-gradient(135deg, #030712 0%, #07111f 55%, #0b1526 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .tab-btn {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.65);
+      color: #cbd5e1;
+      transition: all 160ms ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.08));
+      color: white;
+      border-color: rgba(34, 211, 238, 0.35);
+      box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2) inset;
+    }
+
+    .field {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(15, 23, 42, 0.75);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 0.7rem 0.8rem;
+      outline: none;
+    }
+
+    .field:focus {
+      border-color: rgba(34, 211, 238, 0.55);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14);
+    }
+
+    .soft-btn {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.76);
+      color: var(--text);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .soft-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(34, 211, 238, 0.35);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+      color: #04111f;
+      font-weight: 800;
+      box-shadow: 0 12px 26px rgba(34, 211, 238, 0.22);
+    }
+
+    .danger-btn {
+      background: rgba(239, 68, 68, 0.14);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fecaca;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      border-left: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .marker {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.95);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      color: white;
+      background: linear-gradient(135deg, #14b8a6, #0ea5e9);
+      box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.18), 0 8px 18px rgba(0,0,0,0.35);
+      cursor: pointer;
+      transform: translateY(-50%);
+    }
+
+    .marker.curator {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #1f1300;
+      border-color: rgba(255, 247, 210, 0.98);
+      box-shadow: 0 0 0 8px rgba(251, 191, 36, 0.18), 0 0 28px rgba(251, 191, 36, 0.38), 0 10px 22px rgba(0,0,0,0.38);
+    }
+
+    .marker.selected {
+      outline: 3px solid rgba(34, 211, 238, 0.72);
+      outline-offset: 2px;
+    }
+
+    .list-item {
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(15, 23, 42, 0.68);
+      transition: border-color 160ms ease, transform 160ms ease;
+    }
+
+    .list-item:hover {
+      transform: translateY(-1px);
+      border-color: rgba(34, 211, 238, 0.36);
+    }
+
+    .list-item.active {
+      border-color: rgba(34, 211, 238, 0.6);
+      background: rgba(8, 47, 73, 0.55);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 999px;
+      padding: 0.25rem 0.55rem;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .badge.curator {
+      background: rgba(251, 191, 36, 0.12);
+      border-color: rgba(251, 191, 36, 0.28);
+      color: #fde68a;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid min-h-screen lg:grid-cols-[420px_minmax(0,1fr)]">
+    <aside class="panel flex min-h-screen flex-col border-r border-white/10 p-4 lg:p-5">
+      <div class="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/90">Admin Panel</p>
+          <h1 class="mt-2 text-2xl font-black text-white">ĐiĐâuĐó</h1>
+          <p class="mt-1 text-sm text-slate-400">Edit map locations, add new spots, and promote curator picks.</p>
+        </div>
+        <a href="./index.html" class="soft-btn rounded-xl px-3 py-2 text-xs font-semibold no-underline">Open app</a>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button id="tabMap" class="tab-btn active flex-1 rounded-xl px-3 py-2 text-sm font-semibold">Map Editor</button>
+        <button id="tabAdd" class="tab-btn flex-1 rounded-xl px-3 py-2 text-sm font-semibold">Manual Add</button>
+      </div>
+
+      <div id="mapEditorTab" class="mt-4 flex min-h-0 flex-1 flex-col gap-4">
+        <div class="rounded-2xl border border-white/10 bg-slate-950/45 p-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Selected location</p>
+              <h2 id="selectedTitle" class="mt-1 text-lg font-bold text-white">Choose a marker</h2>
+            </div>
+            <span id="curatorBadge" class="badge hidden curator">Curator's choice</span>
+          </div>
+          <p id="selectedHint" class="mt-2 text-sm text-slate-400">Click a marker on the map to edit its details.</p>
+        </div>
+
+        <div class="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Location ID</label>
+            <input id="editId" class="field" readonly />
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Name</label>
+            <input id="editName" class="field" placeholder="Location name" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latitude</label>
+              <input id="editLat" class="field" type="number" step="0.000001" />
+            </div>
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Longitude</label>
+              <input id="editLng" class="field" type="number" step="0.000001" />
+            </div>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Media URL</label>
+            <input id="editMedia" class="field" placeholder="Image URL or video embed link" />
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
+            <input id="editTags" class="field" placeholder="Curator pick, cozy, viral, rooftop" />
+          </div>
+          <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
+            <input id="editCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
+            <span>
+              <span class="block text-sm font-semibold text-white">Curator's choice</span>
+              <span class="block text-xs text-slate-400">Promote this place with a gold marker and stronger emphasis.</span>
+            </span>
+          </label>
+          <div class="flex gap-2 pt-1">
+            <button id="saveSelected" class="primary-btn flex-1 rounded-xl px-4 py-3 text-sm">Save changes</button>
+            <button id="resetSelected" class="soft-btn rounded-xl px-4 py-3 text-sm">Reset</button>
+            <button id="deleteSelected" class="danger-btn rounded-xl px-4 py-3 text-sm">Delete</button>
+          </div>
+          <p class="text-xs text-slate-400">Tip: click on the map after selecting a marker to move it.</p>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-auto rounded-2xl border border-white/10 bg-slate-950/45 p-3">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-300">Location list</h3>
+            <button id="refreshList" class="soft-btn rounded-lg px-3 py-2 text-xs font-semibold">Refresh</button>
+          </div>
+          <div id="locationList" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <div id="addTab" class="mt-4 hidden min-h-0 flex-1 flex-col gap-4">
+        <div class="rounded-2xl border border-white/10 bg-slate-950/45 p-3">
+          <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Manual add</p>
+          <h2 class="mt-1 text-lg font-bold text-white">Create a new location</h2>
+          <p class="mt-2 text-sm text-slate-400">Fill the form, then click on the map to set the coordinates or use the map center.</p>
+        </div>
+
+        <div class="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Name</label>
+            <input id="addName" class="field" placeholder="New location name" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Image upload</label>
+              <input id="addImage" type="file" accept="image/*" class="field py-2" />
+            </div>
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Video embed link</label>
+              <input id="addVideo" class="field" placeholder="https://..." />
+            </div>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
+            <input id="addTags" class="field" placeholder="coffee, cozy, rooftop" />
+          </div>
+          <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
+            <input id="addCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
+            <span>
+              <span class="block text-sm font-semibold text-white">Curator's choice</span>
+              <span class="block text-xs text-slate-400">Highlighted with a premium gold marker.</span>
+            </span>
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latitude</label>
+              <input id="addLat" class="field" type="number" step="0.000001" placeholder="Click map to set" />
+            </div>
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Longitude</label>
+              <input id="addLng" class="field" type="number" step="0.000001" placeholder="Click map to set" />
+            </div>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button id="useCenter" class="soft-btn flex-1 rounded-xl px-4 py-3 text-sm font-semibold">Use map center</button>
+            <button id="addLocation" class="primary-btn flex-1 rounded-xl px-4 py-3 text-sm">Add location</button>
+          </div>
+          <p class="text-xs text-slate-400">The new location is saved locally and can be synced into the app data flow.</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="relative min-h-screen">
+      <div id="map"></div>
+      <div class="pointer-events-none absolute left-4 top-4 z-20 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-2xl backdrop-blur-md">
+        <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/90">Map editor</p>
+        <p id="mapStatus" class="mt-1 text-sm text-slate-300">Click a marker to edit it, or click the map to place a new one.</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const appConfig = window.VIBEMAP_CONFIG || {};
+    const locationsApiBase = appConfig.useConvex && appConfig.convexBaseUrl
+      ? String(appConfig.convexBaseUrl).replace(/\/$/, '')
+      : '';
+
+    const DEFAULT_CENTER = [106.69573512876413, 10.729229862661654];
+    const BASE_LOCATIONS = [
+      { id: 'loc_001', name: 'The Neon Lounge', type: 'Nightlife', lat: 10.739229862661654, lng: 106.71573512876413, mediaType: 'video', mediaURL: 'https://www.tiktok.com/search?q=neon_lounge', tags: ['nightlife', 'music', 'curator'], curatorChoice: true },
+      { id: 'loc_002', name: 'Cozy Corner Café', type: 'Cafes', lat: 10.714229862661654, lng: 106.68573512876413, mediaType: 'image', mediaURL: '', tags: ['coffee', 'cozy', 'hangout'], curatorChoice: false },
+      { id: 'loc_003', name: 'Urban Kitchen', type: 'Dining', lat: 10.737229862661654, lng: 106.68073512876413, mediaType: 'image', mediaURL: '', tags: ['dining', 'industrial'], curatorChoice: false },
+      { id: 'loc_004', name: 'Sunset Valley View', type: 'Parks', lat: 10.717229862661654, lng: 106.71373512876413, mediaType: 'image', mediaURL: '', tags: ['outdoor', 'view', 'nature'], curatorChoice: false },
+      { id: 'loc_005', name: 'Electric Pulse Club', type: 'Nightlife', lat: 10.747229862661654, lng: 106.70373512876413, mediaType: 'video', mediaURL: 'https://www.tiktok.com/search?q=electric_pulse', tags: ['party', 'music', 'nightlife'], curatorChoice: true },
+      { id: 'loc_006', name: 'Artisan Market Hall', type: 'Markets', lat: 10.721229862661654, lng: 106.67373512876413, mediaType: 'image', mediaURL: '', tags: ['market', 'shopping', 'social'], curatorChoice: false },
+      { id: 'loc_007', name: 'Serenity Wellness Café', type: 'Cafes', lat: 10.743229862661654, lng: 106.68373512876413, mediaType: 'image', mediaURL: '', tags: ['cafe', 'wellness', 'quiet'], curatorChoice: false },
+      { id: 'loc_008', name: 'Street Food Revolution', type: 'Dining', lat: 10.709229862661654, lng: 106.71073512876413, mediaType: 'video', mediaURL: 'https://www.tiktok.com/search?q=street_food', tags: ['street-food', 'viral', 'night-market'], curatorChoice: false }
+    ];
+
+    const state = {
+      locations: [],
+      selectedId: null,
+      draftCoords: { lat: DEFAULT_CENTER[1], lng: DEFAULT_CENTER[0] },
+      map: null,
+      overlays: []
+    };
+
+    const tabMap = document.getElementById('tabMap');
+    const tabAdd = document.getElementById('tabAdd');
+    const mapEditorTab = document.getElementById('mapEditorTab');
+    const addTab = document.getElementById('addTab');
+    const locationList = document.getElementById('locationList');
+    const mapStatus = document.getElementById('mapStatus');
+    const selectedTitle = document.getElementById('selectedTitle');
+    const selectedHint = document.getElementById('selectedHint');
+    const curatorBadge = document.getElementById('curatorBadge');
+
+    const editFields = {
+      id: document.getElementById('editId'),
+      name: document.getElementById('editName'),
+      lat: document.getElementById('editLat'),
+      lng: document.getElementById('editLng'),
+      media: document.getElementById('editMedia'),
+      tags: document.getElementById('editTags'),
+      curator: document.getElementById('editCurator')
+    };
+
+    const addFields = {
+      name: document.getElementById('addName'),
+      image: document.getElementById('addImage'),
+      video: document.getElementById('addVideo'),
+      tags: document.getElementById('addTags'),
+      curator: document.getElementById('addCurator'),
+      lat: document.getElementById('addLat'),
+      lng: document.getElementById('addLng')
+    };
+
+    function createId(prefix = 'loc') {
+      return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function apiUrl(path) {
+      return `${locationsApiBase}${path}`;
+    }
+
+    async function fetchServerLocations() {
+      if (!locationsApiBase) {
+        return [];
+      }
+
+      const response = await fetch(apiUrl('/api/locations'));
+      if (!response.ok) {
+        throw new Error(`Failed to load locations (${response.status})`);
+      }
+
+      const payload = await response.json();
+      const locations = Array.isArray(payload) ? payload : (payload.locations || []);
+      return locations;
+    }
+
+    function normalizeLocation(location) {
+      const tags = Array.isArray(location.tags)
+        ? location.tags
+        : String(location.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+      const mediaURL = location.mediaURL || '';
+      const mediaType = location.mediaType || (mediaURL ? 'video' : 'image');
+      
+
+      return {
+        id: location.id || createId(),
+        name: location.name || 'Untitled location',
+        type: location.type || 'Cafes',
+        lat: Number(location.lat) || DEFAULT_CENTER[1],
+        lng: Number(location.lng) || DEFAULT_CENTER[0],
+        mediaType,
+        mediaURL,
+        tags,
+        curatorChoice: Boolean(location.curatorChoice),
+        caption: location.caption || `${location.name || 'Untitled location'} ${tags.join(' ')}`.trim(),
+        address: location.address || ''
+      };
+    }
+
+    function getMergedLocations(remoteLocations) {
+      const stored = Array.isArray(remoteLocations) ? remoteLocations.map(normalizeLocation) : [];
+      const overrides = new Map(stored.map(location => [location.id, location]));
+      const mergedBase = BASE_LOCATIONS.map(location => overrides.get(location.id) || normalizeLocation(location));
+      const custom = stored.filter(location => !BASE_LOCATIONS.some(base => base.id === location.id));
+      return [...mergedBase, ...custom];
+    }
+
+    async function refreshLocations({ selectedId = state.selectedId, quiet = false } = {}) {
+      try {
+        if (!quiet) {
+          setMapStatus('Loading locations from the server...');
+        }
+
+        const remoteLocations = await fetchServerLocations();
+        state.locations = getMergedLocations(remoteLocations);
+
+        if (selectedId && state.locations.some(location => location.id === selectedId)) {
+          state.selectedId = selectedId;
+        } else if (state.locations.length > 0) {
+          state.selectedId = state.locations[0].id;
+        } else {
+          state.selectedId = null;
+        }
+
+        renderAll();
+
+        if (!quiet) {
+          setMapStatus(`Loaded ${state.locations.length} locations from the server.`);
+        }
+      } catch (error) {
+        console.warn('Failed to refresh locations from the server.', error);
+        if (!quiet) {
+          setMapStatus('Could not load server locations. Showing cached defaults.');
+        }
+        state.locations = getMergedLocations([]);
+        renderAll();
+      }
+    }
+
+    async function persistLocation(updatedLocation) {
+      const response = await fetch(apiUrl('/api/locations'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ location: normalizeLocation(updatedLocation) })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save location (${response.status})`);
+      }
+
+      const payload = await response.json();
+      state.locations = getMergedLocations(payload.locations || []);
+      state.selectedId = updatedLocation.id;
+      renderAll();
+    }
+
+    async function deleteLocation(id) {
+      const response = await fetch(`${apiUrl('/api/locations')}?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete location (${response.status})`);
+      }
+
+      const payload = await response.json();
+      state.locations = getMergedLocations(payload.locations || []);
+      if (state.selectedId === id) {
+        state.selectedId = null;
+      }
+      renderAll();
+    }
+
+    function getSelectedLocation() {
+      return state.locations.find(location => location.id === state.selectedId) || null;
+    }
+
+    function setMapStatus(text) {
+      mapStatus.textContent = text;
+    }
+
+    function setTab(tab) {
+      const isMap = tab === 'map';
+      tabMap.classList.toggle('active', isMap);
+      tabAdd.classList.toggle('active', !isMap);
+      mapEditorTab.classList.toggle('hidden', !isMap);
+      addTab.classList.toggle('hidden', isMap);
+      setMapStatus(isMap ? 'Click a marker to edit it, or click the map to place a new one.' : 'Click the map to choose coordinates for the new location.');
+    }
+
+    function toFeatureCoordinates(location) {
+      return ol.proj.fromLonLat([location.lng, location.lat]);
+    }
+
+    function getMarkerClass(location) {
+      return `marker ${location.curatorChoice ? 'curator' : ''}`;
+    }
+
+    function createMarker(location) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = getMarkerClass(location);
+      button.innerHTML = location.curatorChoice ? '★' : '•';
+      button.title = location.name;
+      button.setAttribute('aria-label', location.name);
+
+      const overlay = new ol.Overlay({
+        element: button,
+        positioning: 'bottom-center',
+        offset: [0, -16],
+        stopEvent: true
+      });
+
+      overlay.setPosition(toFeatureCoordinates(location));
+      button.addEventListener('click', () => selectLocation(location.id));
+
+      return { overlay, button };
+    }
+
+    function clearMarkers() {
+      state.overlays.forEach(overlay => state.map.removeOverlay(overlay));
+      state.overlays = [];
+    }
+
+    function renderMarkers() {
+      clearMarkers();
+      state.locations.forEach(location => {
+        const marker = createMarker(location);
+        state.overlays.push(marker.overlay);
+        state.map.addOverlay(marker.overlay);
+        if (location.id === state.selectedId) {
+          marker.button.classList.add('selected');
+        }
+      });
+    }
+
+    function fillEditForm(location) {
+      if (!location) {
+        editFields.id.value = '';
+        editFields.name.value = '';
+        editFields.lat.value = '';
+        editFields.lng.value = '';
+        editFields.media.value = '';
+        editFields.tags.value = '';
+        editFields.curator.checked = false;
+        selectedTitle.textContent = 'Choose a marker';
+        selectedHint.textContent = 'Click a marker on the map to edit its details.';
+        curatorBadge.classList.add('hidden');
+        return;
+      }
+
+      editFields.id.value = location.id;
+      editFields.name.value = location.name;
+      editFields.lat.value = location.lat;
+      editFields.lng.value = location.lng;
+      editFields.media.value = location.mediaURL || '';
+      editFields.tags.value = (location.tags || []).join(', ');
+      editFields.curator.checked = Boolean(location.curatorChoice);
+      selectedTitle.textContent = location.name;
+      selectedHint.textContent = `Drag the marker by clicking a new point on the map. Current type: ${location.type}`;
+      curatorBadge.classList.toggle('hidden', !location.curatorChoice);
+    }
+
+    function renderList() {
+      locationList.innerHTML = '';
+      state.locations.forEach(location => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = `list-item w-full rounded-2xl p-3 text-left ${location.id === state.selectedId ? 'active' : ''}`;
+        item.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-semibold text-white">${location.name}</span>
+                ${location.curatorChoice ? '<span class="badge curator">Curator\'s choice</span>' : ''}
+              </div>
+              <p class="mt-1 text-xs text-slate-400">${location.type} • ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</p>
+            </div>
+            <span class="text-xs text-cyan-300">Edit</span>
+          </div>
+          <p class="mt-2 text-xs text-slate-400">${(location.tags || []).join(' · ') || 'No tags yet'}</p>
+        `;
+        item.addEventListener('click', () => selectLocation(location.id));
+        locationList.appendChild(item);
+      });
+    }
+
+    function renderAll() {
+      renderMarkers();
+      renderList();
+      fillEditForm(getSelectedLocation());
+    }
+
+    function selectLocation(id) {
+      state.selectedId = id;
+      const location = getSelectedLocation();
+      if (location) {
+        state.map.getView().animate({ center: toFeatureCoordinates(location), zoom: 15, duration: 420 });
+      }
+      fillEditForm(location);
+      renderMarkers();
+      renderList();
+      setTab('map');
+    }
+
+    async function updateSelectedFromForm() {
+      const location = getSelectedLocation();
+      if (!location) return;
+
+      const updated = normalizeLocation({
+        ...location,
+        name: editFields.name.value.trim() || location.name,
+        lat: Number(editFields.lat.value) || location.lat,
+        lng: Number(editFields.lng.value) || location.lng,
+        mediaURL: editFields.media.value.trim(),
+        mediaType: editFields.media.value.trim() ? 'video' : 'image',
+        tags: editFields.tags.value.split(',').map(tag => tag.trim()).filter(Boolean),
+        curatorChoice: editFields.curator.checked
+      });
+
+      await persistLocation(updated);
+      state.selectedId = updated.id;
+      fillEditForm(updated);
+      setMapStatus(`Saved ${updated.name}.`);
+    }
+
+    async function resetSelected() {
+      const location = getSelectedLocation();
+      if (!location) return;
+      const base = BASE_LOCATIONS.find(item => item.id === location.id);
+      if (!base) return;
+      await persistLocation(normalizeLocation(base));
+      state.selectedId = base.id;
+      setMapStatus(`Reset ${base.name} to its default values.`);
+    }
+
+    async function addNewLocation() {
+      const name = addFields.name.value.trim();
+      if (!name) {
+        setMapStatus('Enter a name before adding a location.');
+        return;
+      }
+
+      const lat = Number(addFields.lat.value) || state.draftCoords.lat;
+      const lng = Number(addFields.lng.value) || state.draftCoords.lng;
+      const videoURL = addFields.video.value.trim();
+      const tags = addFields.tags.value.split(',').map(tag => tag.trim()).filter(Boolean);
+      const file = addFields.image.files && addFields.image.files[0];
+
+      const finishSave = async (mediaURL, mediaType) => {
+        const location = normalizeLocation({
+          id: createId('custom'),
+          name,
+          lat,
+          lng,
+          mediaURL,
+          mediaType,
+          tags,
+          curatorChoice: addFields.curator.checked,
+          type: 'Cafes'
+        });
+        await persistLocation(location);
+        await refreshLocations({ selectedId: location.id, quiet: true });
+        state.selectedId = location.id;
+        state.draftCoords = { lat, lng };
+        addFields.name.value = '';
+        addFields.image.value = '';
+        addFields.video.value = '';
+        addFields.tags.value = '';
+        addFields.curator.checked = false;
+        addFields.lat.value = lat;
+        addFields.lng.value = lng;
+        renderAll();
+        setTab('map');
+        setMapStatus(`Added ${location.name}.`);
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => { void finishSave(String(reader.result || ''), 'image'); };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      if (videoURL) {
+        await finishSave(videoURL, 'video');
+        return;
+      }
+
+      await finishSave('', 'image');
+    }
+
+    function useMapCenterForDraft() {
+      const center = ol.proj.toLonLat(state.map.getView().getCenter());
+      state.draftCoords = { lat: center[1], lng: center[0] };
+      addFields.lat.value = center[1].toFixed(6);
+      addFields.lng.value = center[0].toFixed(6);
+      setMapStatus('Draft coordinates set from the current map center.');
+    }
+
+    async function handleMapClick(event) {
+      const lonLat = ol.proj.toLonLat(event.coordinate);
+      const lat = Number(lonLat[1].toFixed(6));
+      const lng = Number(lonLat[0].toFixed(6));
+
+      if (addTab && !addTab.classList.contains('hidden')) {
+        state.draftCoords = { lat, lng };
+        addFields.lat.value = lat;
+        addFields.lng.value = lng;
+        setMapStatus(`Draft position set to ${lat.toFixed(6)}, ${lng.toFixed(6)}.`);
+        return;
+      }
+
+      const selected = getSelectedLocation();
+      if (!selected) return;
+
+      await persistLocation({
+        ...selected,
+        lat,
+        lng
+      });
+      state.selectedId = selected.id;
+      fillEditForm(getSelectedLocation());
+      setMapStatus(`Moved ${selected.name} to ${lat.toFixed(6)}, ${lng.toFixed(6)}.`);
+    }
+
+    function initMap() {
+      state.map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat(DEFAULT_CENTER),
+          zoom: 13
+        })
+      });
+
+      state.map.on('singleclick', handleMapClick);
+      state.map.once('rendercomplete', () => setMapStatus('Click a marker to edit it, or click the map to place a new one.'));
+    }
+
+    tabMap.addEventListener('click', () => setTab('map'));
+    tabAdd.addEventListener('click', () => setTab('add'));
+    document.getElementById('saveSelected').addEventListener('click', updateSelectedFromForm);
+    document.getElementById('resetSelected').addEventListener('click', resetSelected);
+    document.getElementById('deleteSelected').addEventListener('click', () => {
+      const selected = getSelectedLocation();
+      if (!selected) return;
+      if (BASE_LOCATIONS.some(item => item.id === selected.id)) {
+        setMapStatus('Default locations can be reset, but not deleted.');
+        return;
+      }
+      void deleteLocation(selected.id);
+      setMapStatus('Deleted the custom location.');
+    });
+    document.getElementById('refreshList').addEventListener('click', renderAll);
+    document.getElementById('useCenter').addEventListener('click', useMapCenterForDraft);
+    document.getElementById('addLocation').addEventListener('click', addNewLocation);
+
+    document.getElementById('editLat').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editLng').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editName').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editTags').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
+
+    (async () => {
+      initMap();
+      await refreshLocations({ quiet: true });
+      setTab('map');
+      const selected = state.locations[0];
+      if (selected) selectLocation(selected.id);
+      addFields.lat.value = DEFAULT_CENTER[1].toFixed(6);
+      addFields.lng.value = DEFAULT_CENTER[0].toFixed(6);
+
+      window.setInterval(() => {
+        void refreshLocations({ selectedId: state.selectedId, quiet: true });
+      }, 8000);
+    })();
+  </script>
+</body>
+</html>
