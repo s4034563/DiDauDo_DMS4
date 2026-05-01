@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "convex deploy --prod",
+    "build": "npx convex deploy --prod",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy"
   },
