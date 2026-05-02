@@ -24,6 +24,8 @@ export default defineSchema({
     lng: v.number(),
     mediaType: v.string(),
     mediaURL: v.string(),
+    thumbnailUrl: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
     tags: v.array(v.string()),
     curatorChoice: v.boolean(),
     caption: v.string(),

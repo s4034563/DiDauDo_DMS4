@@ -347,6 +347,40 @@
       ? String(appConfig.convexBaseUrl).replace(/\/$/, '')
       : '';
 
+    // Cloudinary configuration
+    const CLOUDINARY_CLOUD_NAME = import.meta.env?.VITE_CLOUDINARY_CLOUD_NAME || 'no-cloud-name';
+    const CLOUDINARY_UPLOAD_PRESET = import.meta.env?.VITE_CLOUDINARY_UPLOAD_PRESET || 'no-preset';
+
+    async function uploadImageToCloudinary(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        throw new Error('Invalid file type. Please upload an image.');
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Cloudinary upload failed');
+        }
+
+        const data = await response.json();
+        // Return optimized thumbnail URL with transformations
+        const url = data.secure_url;
+        // Apply transform: width 480, height 320, crop to fill, format webp, quality 75
+        return url.replace('/upload/', '/upload/w_480,h_320,c_fill,q_75,f_webp/');
+      } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        throw error;
+      }
+    }
+
     const DEFAULT_CENTER = [106.69573512876413, 10.729229862661654];
     const ACTIVITY_OPTIONS = [
       'Sports',
@@ -889,9 +923,13 @@
       };
 
       if (file) {
-        const reader = new FileReader();
-        reader.onload = () => { void finishSave(String(reader.result || ''), 'image'); };
-        reader.readAsDataURL(file);
+        try {
+          setMapStatus('Uploading image to Cloudinary...');
+          const thumbnailUrl = await uploadImageToCloudinary(file);
+          await finishSave(thumbnailUrl, 'image');
+        } catch (error) {
+          setMapStatus(`Upload failed: ${String(error?.message || 'Unknown error')}`);
+        }
         return;
       }
 
