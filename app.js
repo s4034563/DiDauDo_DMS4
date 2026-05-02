@@ -966,8 +966,14 @@ function showInfoWindow(location, markerElement) {
         <div class="space-y-3">
             <div>
                 <h3 class="text-base font-bold text-slate-50">${location.name}</h3>
-                <p class="text-xs text-slate-400">${location.address}</p>
             </div>
+
+            ${location.address ? `
+            <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Address</p>
+                <p class="mt-1 text-sm text-slate-200">${location.address}</p>
+            </div>
+            ` : ''}
 
             ${getLocationPreviewImageUrl(location) ? `
             <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">

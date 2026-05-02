@@ -237,6 +237,10 @@
             <input id="editMedia" class="field" placeholder="Image URL or video embed link" />
           </div>
           <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Address</label>
+            <input id="editAddress" class="field" placeholder="Street address" />
+          </div>
+          <div>
             <div class="mb-2 flex items-center justify-between gap-3">
               <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Activity Tag</label>
               <span class="text-[11px] text-slate-500">Pick one</span>
@@ -295,6 +299,10 @@
               <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Video embed link</label>
               <input id="addVideo" class="field" placeholder="https://..." />
             </div>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Address</label>
+            <input id="addAddress" class="field" placeholder="Street address" />
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between gap-3">
@@ -413,6 +421,7 @@
       lat: document.getElementById('editLat'),
       lng: document.getElementById('editLng'),
       media: document.getElementById('editMedia'),
+      address: document.getElementById('editAddress'),
       curator: document.getElementById('editCurator')
     };
 
@@ -420,6 +429,7 @@
       name: document.getElementById('addName'),
       image: document.getElementById('addImage'),
       video: document.getElementById('addVideo'),
+      address: document.getElementById('addAddress'),
       curator: document.getElementById('addCurator'),
       lat: document.getElementById('addLat'),
       lng: document.getElementById('addLng')
@@ -705,6 +715,7 @@
         editFields.lat.value = '';
         editFields.lng.value = '';
         editFields.media.value = '';
+        editFields.address.value = '';
         setSelectedActivities(activityPickers.edit, ['Cafes']);
         setSelectedTags(vibePickers.edit, []);
         editFields.curator.checked = false;
@@ -719,6 +730,7 @@
       editFields.lat.value = location.lat;
       editFields.lng.value = location.lng;
       editFields.media.value = location.mediaURL || '';
+      editFields.address.value = location.address || '';
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
       editFields.curator.checked = Boolean(location.curatorChoice);
@@ -781,6 +793,7 @@
         lng: Number(editFields.lng.value) || location.lng,
         mediaURL: editFields.media.value.trim(),
         mediaType: editFields.media.value.trim() ? 'video' : 'image',
+        address: editFields.address.value.trim(),
         type: selectedActivities[0] || location.type || 'Cafes',
         types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
         tags: getSelectedTags(vibePickers.edit),
@@ -811,6 +824,7 @@
       const lat = Number(addFields.lat.value) || state.draftCoords.lat;
       const lng = Number(addFields.lng.value) || state.draftCoords.lng;
       const videoURL = addFields.video.value.trim();
+      const address = addFields.address.value.trim();
       const tags = getSelectedTags(vibePickers.add);
       const activities = getSelectedActivities(activityPickers.add);
       const activity = activities[0] || 'Cafes';
@@ -824,6 +838,7 @@
           lng,
           mediaURL,
           mediaType,
+          address,
           tags,
           types: activities.length > 0 ? activities : [activity],
           curatorChoice: addFields.curator.checked,
@@ -836,6 +851,7 @@
         addFields.name.value = '';
         addFields.image.value = '';
         addFields.video.value = '';
+        addFields.address.value = '';
         setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
@@ -921,6 +937,7 @@
     document.getElementById('editLng').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editName').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editAddress').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
 
     renderTagPicker(activityPickers.edit, ACTIVITY_OPTIONS, ['Cafes']);
