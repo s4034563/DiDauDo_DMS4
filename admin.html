@@ -238,10 +238,17 @@
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between gap-3">
-              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Activity Tag</label>
+              <span class="text-[11px] text-slate-500">Pick one</span>
+            </div>
+            <div id="editActivityContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Vibe Tags</label>
               <span class="text-[11px] text-slate-500">Pick one or more</span>
             </div>
-            <div id="editTagsContainer" class="flex flex-wrap gap-2"></div>
+            <div id="editVibeTagsContainer" class="flex flex-wrap gap-2"></div>
           </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="editCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
@@ -291,10 +298,17 @@
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between gap-3">
-              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Activity Tag</label>
+              <span class="text-[11px] text-slate-500">Pick one</span>
+            </div>
+            <div id="addActivityContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Vibe Tags</label>
               <span class="text-[11px] text-slate-500">Pick one or more</span>
             </div>
-            <div id="addTagsContainer" class="flex flex-wrap gap-2"></div>
+            <div id="addVibeTagsContainer" class="flex flex-wrap gap-2"></div>
           </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="addCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
@@ -338,7 +352,25 @@
       : '';
 
     const DEFAULT_CENTER = [106.69573512876413, 10.729229862661654];
-    const TAG_OPTIONS = [
+    const ACTIVITY_OPTIONS = [
+      'Sports',
+      'Fitness',
+      'Music',
+      'Nightlife',
+      'Art',
+      'Photography',
+      'Shopping',
+      'Markets',
+      'Dining',
+      'Cafes',
+      'Hiking',
+      'Parks',
+      'Events',
+      'Festivals',
+      'Gaming',
+      'Arcades'
+    ];
+    const VIBE_TAG_OPTIONS = [
       'cozy',
       'viral',
       'rooftop',
@@ -392,9 +424,14 @@
       lng: document.getElementById('addLng')
     };
 
-    const tagPickers = {
-      edit: document.getElementById('editTagsContainer'),
-      add: document.getElementById('addTagsContainer')
+    const activityPickers = {
+      edit: document.getElementById('editActivityContainer'),
+      add: document.getElementById('addActivityContainer')
+    };
+
+    const vibePickers = {
+      edit: document.getElementById('editVibeTagsContainer'),
+      add: document.getElementById('addVibeTagsContainer')
     };
 
     function createId(prefix = 'loc') {
@@ -424,10 +461,27 @@
       });
     }
 
-    function renderTagPicker(container, initialTags = []) {
+    function getSelectedActivity(container) {
+      if (!container) return '';
+      const active = container.querySelector('button[data-tag].active');
+      return active ? String(active.dataset.tag || '').trim() : '';
+    }
+
+    function setSelectedActivity(container, value) {
+      if (!container) return;
+      const normalizedValue = normalizeTag(value);
+
+      container.querySelectorAll('button[data-tag]').forEach(button => {
+        const active = normalizeTag(button.dataset.tag) === normalizedValue;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+
+    function renderTagPicker(container, options, initialTags = [], singleSelect = false) {
       if (!container) return;
 
-      container.innerHTML = TAG_OPTIONS.map(tag => {
+      container.innerHTML = options.map(tag => {
         const normalized = normalizeTag(tag);
         const active = (Array.isArray(initialTags) ? initialTags : []).some(value => normalizeTag(value) === normalized);
         return `
@@ -439,6 +493,11 @@
 
       container.querySelectorAll('button[data-tag]').forEach(button => {
         button.addEventListener('click', () => {
+          if (singleSelect) {
+            setSelectedActivity(container, button.dataset.tag || '');
+            return;
+          }
+
           button.classList.toggle('active');
           button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
         });
@@ -630,7 +689,8 @@
         editFields.lat.value = '';
         editFields.lng.value = '';
         editFields.media.value = '';
-        setSelectedTags(tagPickers.edit, []);
+        setSelectedActivity(activityPickers.edit, 'Cafes');
+        setSelectedTags(vibePickers.edit, []);
         editFields.curator.checked = false;
         selectedTitle.textContent = 'Choose a marker';
         selectedHint.textContent = 'Click a marker on the map to edit its details.';
@@ -643,7 +703,8 @@
       editFields.lat.value = location.lat;
       editFields.lng.value = location.lng;
       editFields.media.value = location.mediaURL || '';
-      setSelectedTags(tagPickers.edit, location.tags || []);
+      setSelectedActivity(activityPickers.edit, location.type || 'Cafes');
+      setSelectedTags(vibePickers.edit, location.tags || []);
       editFields.curator.checked = Boolean(location.curatorChoice);
       selectedTitle.textContent = location.name;
       selectedHint.textContent = `Use the Latitude and Longitude fields to reposition this location. Current type: ${location.type}`;
@@ -703,7 +764,8 @@
         lng: Number(editFields.lng.value) || location.lng,
         mediaURL: editFields.media.value.trim(),
         mediaType: editFields.media.value.trim() ? 'video' : 'image',
-        tags: getSelectedTags(tagPickers.edit),
+        type: getSelectedActivity(activityPickers.edit) || location.type || 'Cafes',
+        tags: getSelectedTags(vibePickers.edit),
         curatorChoice: editFields.curator.checked
       });
 
@@ -731,7 +793,8 @@
       const lat = Number(addFields.lat.value) || state.draftCoords.lat;
       const lng = Number(addFields.lng.value) || state.draftCoords.lng;
       const videoURL = addFields.video.value.trim();
-      const tags = getSelectedTags(tagPickers.add);
+      const tags = getSelectedTags(vibePickers.add);
+      const activity = getSelectedActivity(activityPickers.add) || 'Cafes';
       const file = addFields.image.files && addFields.image.files[0];
 
       const finishSave = async (mediaURL, mediaType) => {
@@ -744,7 +807,7 @@
           mediaType,
           tags,
           curatorChoice: addFields.curator.checked,
-          type: 'Cafes'
+          type: activity
         });
         await persistLocation(location);
         await refreshLocations({ selectedId: location.id, quiet: true });
@@ -753,7 +816,8 @@
         addFields.name.value = '';
         addFields.image.value = '';
         addFields.video.value = '';
-        setSelectedTags(tagPickers.add, []);
+        setSelectedActivity(activityPickers.add, 'Cafes');
+        setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
         addFields.lat.value = lat;
         addFields.lng.value = lng;
@@ -839,8 +903,10 @@
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
 
-    renderTagPicker(tagPickers.edit, []);
-    renderTagPicker(tagPickers.add, []);
+    renderTagPicker(activityPickers.edit, ACTIVITY_OPTIONS, ['Cafes'], true);
+    renderTagPicker(activityPickers.add, ACTIVITY_OPTIONS, ['Cafes'], true);
+    renderTagPicker(vibePickers.edit, VIBE_TAG_OPTIONS, []);
+    renderTagPicker(vibePickers.add, VIBE_TAG_OPTIONS, []);
 
     (async () => {
       initMap();
