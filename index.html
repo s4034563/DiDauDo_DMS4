@@ -1035,8 +1035,11 @@
                 <!-- Use My Location Button -->
                 <button id="useLocationBtn" class="button-primary text-sm" style="width: 100%; margin-bottom: 12px;" data-i18n="useMyLocation">📍 Use My Location</button>
 
-                <!-- Clear Filters Button -->
-                <button id="clearFilters" class="button-primary text-sm" data-i18n="clearFilters">Clear All Filters</button>
+                <!-- Refresh & Clear Filters Buttons -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                    <button id="refreshLocationsBtn" class="button-primary text-sm" style="width: 100%;" title="Refresh locations from server">🔄 Refresh</button>
+                    <button id="clearFilters" class="button-primary text-sm" data-i18n="clearFilters">Clear All Filters</button>
+                </div>
 
             </div>
 

@@ -1380,6 +1380,23 @@ window.addEventListener('load', () => {
     // Use My Location button
     document.getElementById('useLocationBtn').addEventListener('click', initializeUserLocation);
 
+    // Refresh locations button
+    const refreshBtn = document.getElementById('refreshLocationsBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '🔄 Loading...';
+            try {
+                await loadMapMarkers();
+            } catch (error) {
+                console.error('Refresh failed:', error);
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '🔄 Refresh';
+            }
+        });
+    }
+
     if (!locationRefreshTimer) {
         locationRefreshTimer = window.setInterval(() => {
             if (map) {
