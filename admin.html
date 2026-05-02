@@ -593,7 +593,7 @@
           state.selectedId = null;
         }
 
-        renderAll();
+        renderAll({ preserveEditForm: quiet });
 
         if (!quiet) {
           setMapStatus(`Loaded ${state.locations.length} locations from the server.`);
@@ -605,7 +605,7 @@
         }
         state.locations = [];
         state.selectedId = null;
-        renderAll();
+        renderAll({ preserveEditForm: quiet });
       }
     }
 
@@ -763,9 +763,22 @@
       });
     }
 
-    function renderAll() {
+    function isEditFormActive() {
+      const active = document.activeElement;
+      if (!active) return false;
+      return active.id === 'editName'
+        || active.id === 'editLat'
+        || active.id === 'editLng'
+        || active.id === 'editMedia'
+        || active.id === 'editAddress';
+    }
+
+    function renderAll({ preserveEditForm = false } = {}) {
       renderMarkers();
       renderList();
+      if (preserveEditForm && isEditFormActive()) {
+        return;
+      }
       fillEditForm(getSelectedLocation());
     }
 
