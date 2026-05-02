@@ -348,8 +348,8 @@
       : '';
 
     // Cloudinary configuration
-    const CLOUDINARY_CLOUD_NAME = import.meta.env?.VITE_CLOUDINARY_CLOUD_NAME || 'no-cloud-name';
-    const CLOUDINARY_UPLOAD_PRESET = import.meta.env?.VITE_CLOUDINARY_UPLOAD_PRESET || 'no-preset';
+    const CLOUDINARY_CLOUD_NAME = appConfig.cloudinaryCloudName || 'dnstelkfm';
+    const CLOUDINARY_UPLOAD_PRESET = appConfig.cloudinaryUploadPreset || 'didaudo_uploads';
 
     async function uploadImageToCloudinary(file) {
       if (!file || !file.type.startsWith('image/')) {
