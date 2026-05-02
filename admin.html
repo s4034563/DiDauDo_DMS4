@@ -388,6 +388,7 @@
       'outdoor',
       'view'
     ];
+    const ACTIVITY_TAG_PREFIX = 'activity:';
     const state = {
       locations: [],
       selectedId: null,
@@ -440,6 +441,36 @@
 
     function normalizeTag(tag) {
       return String(tag || '').trim().toLowerCase();
+    }
+
+    function toActivityMetaTag(activity) {
+      return `${ACTIVITY_TAG_PREFIX}${String(activity || '').trim()}`;
+    }
+
+    function isActivityMetaTag(tag) {
+      return normalizeTag(tag).startsWith(ACTIVITY_TAG_PREFIX);
+    }
+
+    function getSelectedActivities(container) {
+      return getSelectedTags(container);
+    }
+
+    function setSelectedActivities(container, activities) {
+      setSelectedTags(container, Array.isArray(activities) ? activities : [activities]);
+    }
+
+    function getPersistedActivities(location) {
+      const fromType = location?.type ? [String(location.type)] : [];
+      const fromTags = (Array.isArray(location?.tags) ? location.tags : [])
+        .filter(isActivityMetaTag)
+        .map(tag => String(tag).slice(ACTIVITY_TAG_PREFIX.length).trim())
+        .filter(Boolean);
+
+      return [...new Set([...fromType, ...fromTags])];
+    }
+
+    function getVisibleVibeTags(tags) {
+      return (Array.isArray(tags) ? tags : []).filter(tag => !isActivityMetaTag(tag));
     }
 
     function getSelectedTags(container) {
@@ -698,7 +729,7 @@
         editFields.lat.value = '';
         editFields.lng.value = '';
         editFields.media.value = '';
-        setSelectedActivity(activityPickers.edit, 'Cafes');
+        setSelectedActivities(activityPickers.edit, ['Cafes']);
         setSelectedTags(vibePickers.edit, []);
         editFields.curator.checked = false;
         selectedTitle.textContent = 'Choose a marker';
@@ -712,8 +743,8 @@
       editFields.lat.value = location.lat;
       editFields.lng.value = location.lng;
       editFields.media.value = location.mediaURL || '';
-      setSelectedActivity(activityPickers.edit, location.type || 'Cafes');
-      setSelectedTags(vibePickers.edit, location.tags || []);
+      setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
+      setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
       editFields.curator.checked = Boolean(location.curatorChoice);
       selectedTitle.textContent = location.name;
       selectedHint.textContent = `Use the Latitude and Longitude fields to reposition this location. Current type: ${location.type}`;
@@ -737,7 +768,7 @@
             </div>
             <span class="text-xs text-cyan-300">Edit</span>
           </div>
-          <p class="mt-2 text-xs text-slate-400">${(location.tags || []).join(' · ') || 'No tags yet'}</p>
+          <p class="mt-2 text-xs text-slate-400">${getVisibleVibeTags(location.tags || []).join(' · ') || 'No tags yet'}</p>
         `;
         item.addEventListener('click', () => selectLocation(location.id));
         locationList.appendChild(item);
@@ -773,8 +804,11 @@
         lng: Number(editFields.lng.value) || location.lng,
         mediaURL: editFields.media.value.trim(),
         mediaType: editFields.media.value.trim() ? 'video' : 'image',
-        type: getSelectedActivity(activityPickers.edit) || location.type || 'Cafes',
-        tags: getSelectedTags(vibePickers.edit),
+        type: getSelectedActivities(activityPickers.edit)[0] || location.type || 'Cafes',
+        tags: [
+          ...getSelectedTags(vibePickers.edit),
+          ...getSelectedActivities(activityPickers.edit).map(toActivityMetaTag)
+        ],
         curatorChoice: editFields.curator.checked
       });
 
@@ -803,7 +837,8 @@
       const lng = Number(addFields.lng.value) || state.draftCoords.lng;
       const videoURL = addFields.video.value.trim();
       const tags = getSelectedTags(vibePickers.add);
-      const activity = getSelectedActivity(activityPickers.add) || 'Cafes';
+      const activities = getSelectedActivities(activityPickers.add);
+      const activity = activities[0] || 'Cafes';
       const file = addFields.image.files && addFields.image.files[0];
 
       const finishSave = async (mediaURL, mediaType) => {
@@ -814,7 +849,7 @@
           lng,
           mediaURL,
           mediaType,
-          tags,
+          tags: [...tags, ...activities.map(toActivityMetaTag)],
           curatorChoice: addFields.curator.checked,
           type: activity
         });
@@ -825,7 +860,7 @@
         addFields.name.value = '';
         addFields.image.value = '';
         addFields.video.value = '';
-        setSelectedActivity(activityPickers.add, 'Cafes');
+        setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
         addFields.lat.value = lat;
@@ -912,8 +947,8 @@
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
 
-    renderTagPicker(activityPickers.edit, ACTIVITY_OPTIONS, ['Cafes'], true);
-    renderTagPicker(activityPickers.add, ACTIVITY_OPTIONS, ['Cafes'], true);
+    renderTagPicker(activityPickers.edit, ACTIVITY_OPTIONS, ['Cafes']);
+    renderTagPicker(activityPickers.add, ACTIVITY_OPTIONS, ['Cafes']);
     renderTagPicker(vibePickers.edit, VIBE_TAG_OPTIONS, []);
     renderTagPicker(vibePickers.add, VIBE_TAG_OPTIONS, []);
 

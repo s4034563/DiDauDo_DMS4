@@ -171,8 +171,9 @@ const locationsApiUrl = convexUrl('/api/locations');
 
 function mapServerLocationToAppLocation(location) {
     const tags = Array.isArray(location.tags) ? location.tags : [];
-    const caption = location.caption || tags.join(' ');
-    const seedVibes = tags.map(tag => {
+    const visibleTags = tags.filter(tag => !String(tag || '').toLowerCase().startsWith('activity:'));
+    const caption = location.caption || visibleTags.join(' ');
+    const seedVibes = visibleTags.map(tag => {
         const normalized = String(tag || '').toLowerCase();
         if (normalized.includes('cozy')) return 'Cozy';
         if (normalized.includes('industrial')) return 'Industrial';
