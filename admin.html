@@ -231,6 +231,11 @@
             <input id="editMedia" class="field" placeholder="Image URL or video embed link" />
           </div>
           <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Upload Thumbnail</label>
+            <input id="editThumbnail" type="file" accept="image/*" class="field py-2" />
+            <p class="mt-1 text-xs text-slate-500">Upload a new thumbnail image (optional, replaces Media URL on save)</p>
+          </div>
+          <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Address</label>
             <input id="editAddress" class="field" placeholder="Street address" />
           </div>
@@ -442,6 +447,7 @@
       name: document.getElementById('editName'),
       coordinates: document.getElementById('editCoordinates'),
       media: document.getElementById('editMedia'),
+      thumbnail: document.getElementById('editThumbnail'),
       address: document.getElementById('editAddress'),
       curator: document.getElementById('editCurator')
     };
@@ -753,6 +759,7 @@
         editFields.name.value = '';
         editFields.coordinates.value = '';
         editFields.media.value = '';
+        editFields.thumbnail.value = '';
         editFields.address.value = '';
         setSelectedActivities(activityPickers.edit, ['Cafes']);
         setSelectedTags(vibePickers.edit, []);
@@ -767,6 +774,7 @@
       editFields.name.value = location.name;
       editFields.coordinates.value = formatCoordinates(location.lat, location.lng);
       editFields.media.value = location.mediaURL || '';
+      editFields.thumbnail.value = '';
       editFields.address.value = location.address || '';
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
@@ -806,6 +814,7 @@
       return active.id === 'editName'
         || active.id === 'editCoordinates'
         || active.id === 'editMedia'
+        || active.id === 'editThumbnail'
         || active.id === 'editAddress';
     }
 
@@ -840,14 +849,28 @@
         return;
       }
 
+      let mediaURL = editFields.media.value.trim();
+      const thumbnailFile = editFields.thumbnail.files && editFields.thumbnail.files[0];
+
+      if (thumbnailFile) {
+        try {
+          setMapStatus('Uploading thumbnail...');
+          mediaURL = await uploadImageToCloudinary(thumbnailFile);
+          editFields.thumbnail.value = '';
+        } catch (error) {
+          setMapStatus(`Thumbnail upload failed: ${String(error?.message || 'Unknown error')}`);
+          return;
+        }
+      }
+
       const selectedActivities = getSelectedActivities(activityPickers.edit);
       const updated = normalizeLocation({
         ...location,
         name: editFields.name.value.trim() || location.name,
         lat: parsedCoordinates.lat,
         lng: parsedCoordinates.lng,
-        mediaURL: editFields.media.value.trim(),
-        mediaType: editFields.media.value.trim() ? 'video' : 'image',
+        mediaURL: mediaURL,
+        mediaType: mediaURL ? 'image' : 'video',
         address: editFields.address.value.trim(),
         type: selectedActivities[0] || location.type || 'Cafes',
         types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
