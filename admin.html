@@ -222,15 +222,9 @@
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Name</label>
             <input id="editName" class="field" placeholder="Location name" />
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latitude</label>
-              <input id="editLat" class="field" type="number" step="0.000001" />
-            </div>
-            <div>
-              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Longitude</label>
-              <input id="editLng" class="field" type="number" step="0.000001" />
-            </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Coordinates</label>
+            <input id="editCoordinates" class="field" placeholder="10.767922377988702, 106.68727375349671" />
           </div>
           <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Media URL</label>
@@ -266,7 +260,7 @@
             <button id="resetSelected" class="soft-btn rounded-xl px-4 py-3 text-sm">Reset</button>
             <button id="deleteSelected" class="danger-btn rounded-xl px-4 py-3 text-sm">Delete</button>
           </div>
-          <p class="text-xs text-slate-400">Tip: use the Latitude and Longitude fields to reposition the selected location.</p>
+          <p class="text-xs text-slate-400">Tip: use Coordinates in Latitude, Longitude format to reposition the selected location.</p>
         </div>
 
         <div class="min-h-0 flex-1 overflow-auto rounded-2xl border border-white/10 bg-slate-950/45 p-3">
@@ -325,15 +319,9 @@
               <span class="block text-xs text-slate-400">Highlighted with a premium gold marker.</span>
             </span>
           </label>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Latitude</label>
-              <input id="addLat" class="field" type="number" step="0.000001" placeholder="Click map to set" />
-            </div>
-            <div>
-              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Longitude</label>
-              <input id="addLng" class="field" type="number" step="0.000001" placeholder="Click map to set" />
-            </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Coordinates</label>
+            <input id="addCoordinates" class="field" placeholder="10.767922377988702, 106.68727375349671" />
           </div>
           <div class="flex gap-2 pt-1">
             <button id="useCenter" class="soft-btn flex-1 rounded-xl px-4 py-3 text-sm font-semibold">Use map center</button>
@@ -418,8 +406,7 @@
     const editFields = {
       id: document.getElementById('editId'),
       name: document.getElementById('editName'),
-      lat: document.getElementById('editLat'),
-      lng: document.getElementById('editLng'),
+      coordinates: document.getElementById('editCoordinates'),
       media: document.getElementById('editMedia'),
       address: document.getElementById('editAddress'),
       curator: document.getElementById('editCurator')
@@ -431,9 +418,27 @@
       video: document.getElementById('addVideo'),
       address: document.getElementById('addAddress'),
       curator: document.getElementById('addCurator'),
-      lat: document.getElementById('addLat'),
-      lng: document.getElementById('addLng')
+      coordinates: document.getElementById('addCoordinates')
     };
+
+    function formatCoordinates(lat, lng) {
+      return `${lat}, ${lng}`;
+    }
+
+    function parseCoordinates(value) {
+      const text = String(value || '').trim();
+      if (!text) return null;
+
+      const parts = text.split(',').map(part => part.trim());
+      if (parts.length !== 2) return null;
+
+      const lat = Number(parts[0]);
+      const lng = Number(parts[1]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+      return { lat, lng };
+    }
 
     const activityPickers = {
       edit: document.getElementById('editActivityContainer'),
@@ -712,8 +717,7 @@
       if (!location) {
         editFields.id.value = '';
         editFields.name.value = '';
-        editFields.lat.value = '';
-        editFields.lng.value = '';
+        editFields.coordinates.value = '';
         editFields.media.value = '';
         editFields.address.value = '';
         setSelectedActivities(activityPickers.edit, ['Cafes']);
@@ -727,15 +731,14 @@
 
       editFields.id.value = location.id;
       editFields.name.value = location.name;
-      editFields.lat.value = location.lat;
-      editFields.lng.value = location.lng;
+      editFields.coordinates.value = formatCoordinates(location.lat, location.lng);
       editFields.media.value = location.mediaURL || '';
       editFields.address.value = location.address || '';
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
       editFields.curator.checked = Boolean(location.curatorChoice);
       selectedTitle.textContent = location.name;
-      selectedHint.textContent = `Use the Latitude and Longitude fields to reposition this location. Current activities: ${getPersistedActivities(location).join(', ') || location.type}`;
+      selectedHint.textContent = `Use Coordinates in Latitude, Longitude format to reposition this location. Current activities: ${getPersistedActivities(location).join(', ') || location.type}`;
       curatorBadge.classList.toggle('hidden', !location.curatorChoice);
     }
 
@@ -767,8 +770,7 @@
       const active = document.activeElement;
       if (!active) return false;
       return active.id === 'editName'
-        || active.id === 'editLat'
-        || active.id === 'editLng'
+        || active.id === 'editCoordinates'
         || active.id === 'editMedia'
         || active.id === 'editAddress';
     }
@@ -798,12 +800,18 @@
       const location = getSelectedLocation();
       if (!location) return;
 
+      const parsedCoordinates = parseCoordinates(editFields.coordinates.value);
+      if (!parsedCoordinates) {
+        setMapStatus('Coordinates format is invalid. Use Latitude, Longitude (for example: 10.767922377988702, 106.68727375349671).');
+        return;
+      }
+
       const selectedActivities = getSelectedActivities(activityPickers.edit);
       const updated = normalizeLocation({
         ...location,
         name: editFields.name.value.trim() || location.name,
-        lat: Number(editFields.lat.value) || location.lat,
-        lng: Number(editFields.lng.value) || location.lng,
+        lat: parsedCoordinates.lat,
+        lng: parsedCoordinates.lng,
         mediaURL: editFields.media.value.trim(),
         mediaType: editFields.media.value.trim() ? 'video' : 'image',
         address: editFields.address.value.trim(),
@@ -834,8 +842,14 @@
         return;
       }
 
-      const lat = Number(addFields.lat.value) || state.draftCoords.lat;
-      const lng = Number(addFields.lng.value) || state.draftCoords.lng;
+      const parsedCoordinates = parseCoordinates(addFields.coordinates.value);
+      if (!parsedCoordinates) {
+        setMapStatus('Enter Coordinates as Latitude, Longitude (for example: 10.767922377988702, 106.68727375349671).');
+        return;
+      }
+
+      const lat = parsedCoordinates.lat;
+      const lng = parsedCoordinates.lng;
       const videoURL = addFields.video.value.trim();
       const address = addFields.address.value.trim();
       const tags = getSelectedTags(vibePickers.add);
@@ -868,8 +882,7 @@
         setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
-        addFields.lat.value = lat;
-        addFields.lng.value = lng;
+        addFields.coordinates.value = formatCoordinates(lat, lng);
         renderAll();
         setTab('map');
         setMapStatus(`Added ${location.name}.`);
@@ -893,8 +906,7 @@
     function useMapCenterForDraft() {
       const center = ol.proj.toLonLat(state.map.getView().getCenter());
       state.draftCoords = { lat: center[1], lng: center[0] };
-      addFields.lat.value = center[1].toFixed(6);
-      addFields.lng.value = center[0].toFixed(6);
+      addFields.coordinates.value = formatCoordinates(Number(center[1].toFixed(6)), Number(center[0].toFixed(6)));
       setMapStatus('Draft coordinates set from the current map center.');
     }
 
@@ -905,13 +917,12 @@
 
       if (addTab && !addTab.classList.contains('hidden')) {
         state.draftCoords = { lat, lng };
-        addFields.lat.value = lat;
-        addFields.lng.value = lng;
+        addFields.coordinates.value = formatCoordinates(lat, lng);
         setMapStatus(`Draft position set to ${lat.toFixed(6)}, ${lng.toFixed(6)}.`);
         return;
       }
 
-      setMapStatus('Map clicks only set coordinates in Manual Add mode. Use the Latitude and Longitude fields for existing locations.');
+      setMapStatus('Map clicks only set coordinates in Manual Add mode. Use the Coordinates field for existing locations.');
     }
 
     function initMap() {
@@ -946,8 +957,7 @@
     document.getElementById('useCenter').addEventListener('click', useMapCenterForDraft);
     document.getElementById('addLocation').addEventListener('click', addNewLocation);
 
-    document.getElementById('editLat').addEventListener('change', updateSelectedFromForm);
-    document.getElementById('editLng').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editCoordinates').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editName').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editAddress').addEventListener('change', updateSelectedFromForm);
@@ -964,8 +974,7 @@
       setTab('map');
       const selected = state.locations[0];
       if (selected) selectLocation(selected.id);
-      addFields.lat.value = DEFAULT_CENTER[1].toFixed(6);
-      addFields.lng.value = DEFAULT_CENTER[0].toFixed(6);
+      addFields.coordinates.value = formatCoordinates(Number(DEFAULT_CENTER[1].toFixed(6)), Number(DEFAULT_CENTER[0].toFixed(6)));
 
       window.setInterval(() => {
         void refreshLocations({ selectedId: state.selectedId, quiet: true });
