@@ -88,7 +88,7 @@ DMS4_A2/
    - Watch counter increment in same session
 
 5. **Explore the Code**
-   - `getSocialData()` generates mock locations
+   - `loadServerLocations()` fetches live locations from Convex
    - `applyFilters()` handles all filtering logic
    - `showInfoWindow()` creates detail overlays
 
@@ -122,23 +122,7 @@ DMS4_A2/
 ## 📈 Customize the Experience
 
 ### Add More Locations
-Edit `getSocialData()` in `app.js`:
-```javascript
-{
-    id: 'loc_009',
-    name: 'Your Location Name',
-    type: 'Dining',
-    lat: 40.7100,
-    lng: -74.0100,
-   caption: 'Your caption here',
-   seedVibes: ['Industrial', 'Instagrammable'],
-   videoURL: 'https://tiktok.com/...',
-   address: 'Your address here'
-    caption: 'Your caption here',
-    seedVibes: ['Industrial', 'Instagrammable'],
-    videoURL: 'https://tiktok.com/...',
-    address: 'Your address here'
-}
+Add locations through the admin panel or by writing them into Convex so the app can load them through `loadServerLocations()`.
 ```
 
 ### Change Default Location

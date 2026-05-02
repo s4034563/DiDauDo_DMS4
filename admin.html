@@ -312,17 +312,6 @@
       : '';
 
     const DEFAULT_CENTER = [106.69573512876413, 10.729229862661654];
-    const BASE_LOCATIONS = [
-      { id: 'loc_001', name: 'The Neon Lounge', type: 'Nightlife', lat: 10.739229862661654, lng: 106.71573512876413, mediaType: 'video', mediaURL: 'https://www.tiktok.com/search?q=neon_lounge', tags: ['nightlife', 'music', 'curator'], curatorChoice: true },
-      { id: 'loc_002', name: 'Cozy Corner Café', type: 'Cafes', lat: 10.714229862661654, lng: 106.68573512876413, mediaType: 'image', mediaURL: '', tags: ['coffee', 'cozy', 'hangout'], curatorChoice: false },
-      { id: 'loc_003', name: 'Urban Kitchen', type: 'Dining', lat: 10.737229862661654, lng: 106.68073512876413, mediaType: 'image', mediaURL: '', tags: ['dining', 'industrial'], curatorChoice: false },
-      { id: 'loc_004', name: 'Sunset Valley View', type: 'Parks', lat: 10.717229862661654, lng: 106.71373512876413, mediaType: 'image', mediaURL: '', tags: ['outdoor', 'view', 'nature'], curatorChoice: false },
-      { id: 'loc_005', name: 'Electric Pulse Club', type: 'Nightlife', lat: 10.747229862661654, lng: 106.70373512876413, mediaType: 'video', mediaURL: 'https://www.tiktok.com/search?q=electric_pulse', tags: ['party', 'music', 'nightlife'], curatorChoice: true },
-      { id: 'loc_006', name: 'Artisan Market Hall', type: 'Markets', lat: 10.721229862661654, lng: 106.67373512876413, mediaType: 'image', mediaURL: '', tags: ['market', 'shopping', 'social'], curatorChoice: false },
-      { id: 'loc_007', name: 'Serenity Wellness Café', type: 'Cafes', lat: 10.743229862661654, lng: 106.68373512876413, mediaType: 'image', mediaURL: '', tags: ['cafe', 'wellness', 'quiet'], curatorChoice: false },
-      { id: 'loc_008', name: 'Street Food Revolution', type: 'Dining', lat: 10.709229862661654, lng: 106.71073512876413, mediaType: 'video', mediaURL: 'https://www.tiktok.com/search?q=street_food', tags: ['street-food', 'viral', 'night-market'], curatorChoice: false }
-    ];
-
     const state = {
       locations: [],
       selectedId: null,
@@ -407,12 +396,8 @@
       };
     }
 
-    function getMergedLocations(remoteLocations) {
-      const stored = Array.isArray(remoteLocations) ? remoteLocations.map(normalizeLocation) : [];
-      const overrides = new Map(stored.map(location => [location.id, location]));
-      const mergedBase = BASE_LOCATIONS.map(location => overrides.get(location.id) || normalizeLocation(location));
-      const custom = stored.filter(location => !BASE_LOCATIONS.some(base => base.id === location.id));
-      return [...mergedBase, ...custom];
+    function normalizeLocations(remoteLocations) {
+      return Array.isArray(remoteLocations) ? remoteLocations.map(normalizeLocation) : [];
     }
 
     async function refreshLocations({ selectedId = state.selectedId, quiet = false } = {}) {
@@ -422,7 +407,7 @@
         }
 
         const remoteLocations = await fetchServerLocations();
-        state.locations = getMergedLocations(remoteLocations);
+        state.locations = normalizeLocations(remoteLocations);
 
         if (selectedId && state.locations.some(location => location.id === selectedId)) {
           state.selectedId = selectedId;
@@ -440,9 +425,10 @@
       } catch (error) {
         console.warn('Failed to refresh locations from the server.', error);
         if (!quiet) {
-          setMapStatus('Could not load server locations. Showing cached defaults.');
+          setMapStatus('Could not load server locations.');
         }
-        state.locations = getMergedLocations([]);
+        state.locations = [];
+        state.selectedId = null;
         renderAll();
       }
     }
@@ -461,7 +447,7 @@
       }
 
       const payload = await response.json();
-      state.locations = getMergedLocations(payload.locations || []);
+      state.locations = normalizeLocations(payload.locations || []);
       state.selectedId = updatedLocation.id;
       renderAll();
     }
@@ -476,7 +462,7 @@
       }
 
       const payload = await response.json();
-      state.locations = getMergedLocations(payload.locations || []);
+      state.locations = normalizeLocations(payload.locations || []);
       if (state.selectedId === id) {
         state.selectedId = null;
       }
@@ -639,11 +625,9 @@
     async function resetSelected() {
       const location = getSelectedLocation();
       if (!location) return;
-      const base = BASE_LOCATIONS.find(item => item.id === location.id);
-      if (!base) return;
-      await persistLocation(normalizeLocation(base));
-      state.selectedId = base.id;
-      setMapStatus(`Reset ${base.name} to its default values.`);
+      await refreshLocations({ selectedId: location.id, quiet: true });
+      fillEditForm(getSelectedLocation());
+      setMapStatus(`Reloaded ${location.name} from the server.`);
     }
 
     async function addNewLocation() {
@@ -761,10 +745,6 @@
     document.getElementById('deleteSelected').addEventListener('click', () => {
       const selected = getSelectedLocation();
       if (!selected) return;
-      if (BASE_LOCATIONS.some(item => item.id === selected.id)) {
-        setMapStatus('Default locations can be reset, but not deleted.');
-        return;
-      }
       void deleteLocation(selected.id);
       setMapStatus('Deleted the custom location.');
     });

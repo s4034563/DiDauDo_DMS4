@@ -61,7 +61,7 @@ A sophisticated single-page web application that integrates OpenLayers to discov
 ### Backend & APIs
 - **OpenLayers**: Interactive mapping with OpenStreetMap tiles
 - **HTML Overlays**: Custom marker styling with HTML content
-- **Mock Data Pipeline**: `getSocialData()` function with realistic location data
+- **Convex HTTP API**: Server-backed locations, search, and ratings endpoints
 
 ### Data Structure
 Each location object includes:
@@ -149,9 +149,9 @@ The app uses OpenStreetMap tiles through OpenLayers. If you are offline, the sid
 - Convex hosts your backend functions and database.
 - CORS headers are already configured in `convex/http.ts` for cross-origin requests.
 
-## 📊 Mock Data System
+## 📊 Server-Backed Data
 
-The `getSocialData()` function generates realistic location data. Note: social-momentum filtering and the visual "hype meter" have been removed from the UI and data model in this version.
+Locations are loaded from Convex and edited through the admin panel. Social-momentum filtering and the visual "hype meter" have been removed from the UI and data model in this version.
 
 ### AI-Tagged Vibes
 Each location is assigned 2-3 vibes from the available categories, simulating AI categorization of social media captions.
@@ -200,28 +200,21 @@ Each location is assigned 2-3 vibes from the available categories, simulating AI
    <div class="chip" data-vibe="Your Vibe">🎯 Your Vibe</div>
    ```
 
-2. Update `getSocialData()` to assign vibes:
+2. Update the location records in Convex so they include the vibes you want:
    ```javascript
    vibes: ['Your Vibe', 'Another Vibe']
    ```
 
-### Modifying Mock Data
-Edit `getSocialData()` in `app.js` to:
-- Add/remove locations
+### Updating Locations
+Use the admin panel or Convex data model to:
+- Add or remove locations
 - Change coordinates
-- Adjust mention counts
 - Modify vibes
-- Update video URLs
+- Update media URLs
 
 ## 🔧 Code Architecture
 
 ### Core Functions
-
-#### `getSocialData(center)`
-- Generates mock location data for given map center
-- Returns array of location objects with full metadata
-- Simulates API response from backend
-
 
 #### `initMap()`
 - Initializes the OpenLayers map with a dark theme
@@ -235,7 +228,7 @@ Edit `getSocialData()` in `app.js` to:
 
 #### `loadMapMarkers()`
 - Fetches data for current map center
-- Merges server locations with generated fallback data
+- Loads locations from the server and renders them on the map
 - Calls `applyFilters()` to update display
 
 #### `showInfoWindow(location, marker)`
@@ -257,8 +250,8 @@ Edit `getSocialData()` in `app.js` to:
 
 ## 🚫 Known Limitations
 
-1. **Seeded Fallback Data**: The app still includes generated fallback locations when the server has no records yet
-   - For production, keep the backend seeded and prefer server-backed data as the primary source
+1. **Empty Backend**: If Convex has no locations yet, the map will appear empty
+   - Add data through the admin panel or seed your Convex database once before launch
 
 2. **Session-Based Verification**: Resets on page reload
    - To persist: Keep it in Convex or another backend store only
