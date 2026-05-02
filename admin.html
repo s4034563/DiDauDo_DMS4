@@ -493,13 +493,22 @@
 
       container.querySelectorAll('button[data-tag]').forEach(button => {
         button.addEventListener('click', () => {
+          const shouldPersistEditSelection = container === activityPickers.edit || container === vibePickers.edit;
+
           if (singleSelect) {
             setSelectedActivity(container, button.dataset.tag || '');
+            if (shouldPersistEditSelection) {
+              void updateSelectedFromForm();
+            }
             return;
           }
 
           button.classList.toggle('active');
           button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
+
+          if (shouldPersistEditSelection) {
+            void updateSelectedFromForm();
+          }
         });
       });
     }
