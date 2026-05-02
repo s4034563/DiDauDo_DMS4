@@ -19,6 +19,7 @@ export default defineSchema({
     id: v.string(),
     name: v.string(),
     type: v.string(),
+    types: v.optional(v.array(v.string())),
     lat: v.number(),
     lng: v.number(),
     mediaType: v.string(),

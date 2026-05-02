@@ -184,10 +184,15 @@ function mapServerLocationToAppLocation(location) {
         return null;
     }).filter(Boolean);
 
+    const types = Array.isArray(location.types) && location.types.length > 0
+        ? location.types.map(value => String(value).trim()).filter(Boolean)
+        : [location.type || 'Cafes'];
+
     return {
         id: String(location.id),
         name: location.name || 'Untitled',
-        type: location.type || 'Cafes',
+        type: types[0] || 'Cafes',
+        types,
         lat: Number(location.lat) || currentMapCenter.lat,
         lng: Number(location.lng) || currentMapCenter.lng,
         caption,
@@ -258,6 +263,14 @@ function getLocalizedActivityType(type) {
     return mapType[type] || type;
 }
 
+function getLocationActivities(location) {
+    if (Array.isArray(location.types) && location.types.length > 0) {
+        return location.types;
+    }
+
+    return [location.type || 'Cafes'];
+}
+
 function getLocalizedVibe(vibe) {
     const vibeMap = {
         Cozy: t('vibeCozy').replace('🛋️ ', ''),
@@ -325,10 +338,10 @@ function getFilteredLocations() {
         const selectedSubcategories = filterState.venueTypes.filter(v => v === 'Sports' || v === 'Fitness');
         if (selectedSubcategories.length === 0) {
             // No sub-categories manually selected = show both Sports & Fitness
-            filtered = filtered.filter(loc => loc.type === 'Sports' || loc.type === 'Fitness');
+            filtered = filtered.filter(loc => getLocationActivities(loc).some(activity => activity === 'Sports' || activity === 'Fitness'));
         } else if (selectedSubcategories.length > 0) {
             // Show only selected sub-categories
-            filtered = filtered.filter(loc => selectedSubcategories.includes(loc.type));
+            filtered = filtered.filter(loc => getLocationActivities(loc).some(activity => selectedSubcategories.includes(activity)));
         }
     }
 
@@ -963,7 +976,7 @@ function showInfoWindow(location, markerElement) {
             ` : ''}
 
             <div class="flex flex-wrap gap-2">
-                <span class="location-activity">${getLocalizedActivityType(location.type)}</span>
+                ${getLocationActivities(location).map(activity => `<span class="location-activity">${getLocalizedActivityType(activity)}</span>`).join('')}
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -1025,9 +1038,8 @@ function updateLocationsList(locations) {
             : `location-card${isSelected ? ' selected' : ''}`;
         card.innerHTML = `
             <div class="location-title">${location.name}</div>
-            <div style="margin-bottom: 6px;">
-                <span class="location-activity">${getLocalizedActivityType(location.type)}</span>
-                
+            <div style="margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+                ${getLocationActivities(location).map(activity => `<span class="location-activity">${getLocalizedActivityType(activity)}</span>`).join('')}
             </div>
             
             <div style="display: flex; flex-wrap: wrap; gap: 2px; margin-top: 6px;">

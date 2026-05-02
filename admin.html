@@ -443,10 +443,6 @@
       return String(tag || '').trim().toLowerCase();
     }
 
-    function toActivityMetaTag(activity) {
-      return `${ACTIVITY_TAG_PREFIX}${String(activity || '').trim()}`;
-    }
-
     function isActivityMetaTag(tag) {
       return normalizeTag(tag).startsWith(ACTIVITY_TAG_PREFIX);
     }
@@ -460,13 +456,16 @@
     }
 
     function getPersistedActivities(location) {
+      const fromTypes = Array.isArray(location?.types)
+        ? location.types.map(value => String(value).trim()).filter(Boolean)
+        : [];
       const fromType = location?.type ? [String(location.type)] : [];
       const fromTags = (Array.isArray(location?.tags) ? location.tags : [])
         .filter(isActivityMetaTag)
         .map(tag => String(tag).slice(ACTIVITY_TAG_PREFIX.length).trim())
         .filter(Boolean);
 
-      return [...new Set([...fromType, ...fromTags])];
+      return [...new Set([...fromTypes, ...fromType, ...fromTags])];
     }
 
     function getVisibleVibeTags(tags) {
@@ -492,24 +491,7 @@
       });
     }
 
-    function getSelectedActivity(container) {
-      if (!container) return '';
-      const active = container.querySelector('button[data-tag].active');
-      return active ? String(active.dataset.tag || '').trim() : '';
-    }
-
-    function setSelectedActivity(container, value) {
-      if (!container) return;
-      const normalizedValue = normalizeTag(value);
-
-      container.querySelectorAll('button[data-tag]').forEach(button => {
-        const active = normalizeTag(button.dataset.tag) === normalizedValue;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
-      });
-    }
-
-    function renderTagPicker(container, options, initialTags = [], singleSelect = false) {
+    function renderTagPicker(container, options, initialTags = []) {
       if (!container) return;
 
       container.innerHTML = options.map(tag => {
@@ -525,14 +507,6 @@
       container.querySelectorAll('button[data-tag]').forEach(button => {
         button.addEventListener('click', () => {
           const shouldPersistEditSelection = container === activityPickers.edit || container === vibePickers.edit;
-
-          if (singleSelect) {
-            setSelectedActivity(container, button.dataset.tag || '');
-            if (shouldPersistEditSelection) {
-              void updateSelectedFromForm();
-            }
-            return;
-          }
 
           button.classList.toggle('active');
           button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
@@ -569,19 +543,21 @@
         : String(location.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
       const mediaURL = location.mediaURL || '';
       const mediaType = location.mediaType || (mediaURL ? 'video' : 'image');
-      
+      const types = getPersistedActivities(location);
+      const primaryType = types[0] || location.type || 'Cafes';
 
       return {
         id: location.id || createId(),
         name: location.name || 'Untitled location',
-        type: location.type || 'Cafes',
+        type: primaryType,
+        types,
         lat: Number(location.lat) || DEFAULT_CENTER[1],
         lng: Number(location.lng) || DEFAULT_CENTER[0],
         mediaType,
         mediaURL,
-        tags,
+        tags: getVisibleVibeTags(tags),
         curatorChoice: Boolean(location.curatorChoice),
-        caption: location.caption || `${location.name || 'Untitled location'} ${tags.join(' ')}`.trim(),
+        caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
         address: location.address || ''
       };
     }
@@ -747,7 +723,7 @@
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
       editFields.curator.checked = Boolean(location.curatorChoice);
       selectedTitle.textContent = location.name;
-      selectedHint.textContent = `Use the Latitude and Longitude fields to reposition this location. Current type: ${location.type}`;
+      selectedHint.textContent = `Use the Latitude and Longitude fields to reposition this location. Current activities: ${getPersistedActivities(location).join(', ') || location.type}`;
       curatorBadge.classList.toggle('hidden', !location.curatorChoice);
     }
 
@@ -764,7 +740,7 @@
                 <span class="text-sm font-semibold text-white">${location.name}</span>
                 ${location.curatorChoice ? '<span class="badge curator">Curator\'s choice</span>' : ''}
               </div>
-              <p class="mt-1 text-xs text-slate-400">${location.type} • ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</p>
+              <p class="mt-1 text-xs text-slate-400">${(getPersistedActivities(location).join(', ') || location.type)} • ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</p>
             </div>
             <span class="text-xs text-cyan-300">Edit</span>
           </div>
@@ -797,6 +773,7 @@
       const location = getSelectedLocation();
       if (!location) return;
 
+      const selectedActivities = getSelectedActivities(activityPickers.edit);
       const updated = normalizeLocation({
         ...location,
         name: editFields.name.value.trim() || location.name,
@@ -804,11 +781,9 @@
         lng: Number(editFields.lng.value) || location.lng,
         mediaURL: editFields.media.value.trim(),
         mediaType: editFields.media.value.trim() ? 'video' : 'image',
-        type: getSelectedActivities(activityPickers.edit)[0] || location.type || 'Cafes',
-        tags: [
-          ...getSelectedTags(vibePickers.edit),
-          ...getSelectedActivities(activityPickers.edit).map(toActivityMetaTag)
-        ],
+        type: selectedActivities[0] || location.type || 'Cafes',
+        types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
+        tags: getSelectedTags(vibePickers.edit),
         curatorChoice: editFields.curator.checked
       });
 
@@ -849,7 +824,8 @@
           lng,
           mediaURL,
           mediaType,
-          tags: [...tags, ...activities.map(toActivityMetaTag)],
+          tags,
+          types: activities.length > 0 ? activities : [activity],
           curatorChoice: addFields.curator.checked,
           type: activity
         });
