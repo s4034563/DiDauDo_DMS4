@@ -271,6 +271,10 @@ function getLocationActivities(location) {
     return [location.type || 'Cafes'];
 }
 
+function setSelectedLocation(locationId) {
+    activeSelectedLocationId = locationId;
+}
+
 function getLocalizedVibe(vibe) {
     const vibeMap = {
         Cozy: t('vibeCozy').replace('🛋️ ', ''),
