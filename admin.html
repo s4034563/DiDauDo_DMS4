@@ -162,6 +162,30 @@
       border-color: rgba(251, 191, 36, 0.28);
       color: #fde68a;
     }
+
+    .tag-chip {
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.74);
+      color: #cbd5e1;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .tag-chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(34, 211, 238, 0.32);
+    }
+
+    .tag-chip.active {
+      background: rgba(34, 211, 238, 0.16);
+      border-color: rgba(34, 211, 238, 0.58);
+      color: #e0f2fe;
+      box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.18) inset;
+    }
+
+    .image-preview {
+      border: 1px dashed rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.6);
+    }
   </style>
 </head>
 <body>
@@ -217,8 +241,11 @@
             <input id="editMedia" class="field" placeholder="Image URL or video embed link" />
           </div>
           <div>
-            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
-            <input id="editTags" class="field" placeholder="Curator pick, cozy, viral, rooftop" />
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
+              <span class="text-[11px] text-slate-500">Pick one or more</span>
+            </div>
+            <div id="editTagsContainer" class="flex flex-wrap gap-2"></div>
           </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="editCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
@@ -232,7 +259,7 @@
             <button id="resetSelected" class="soft-btn rounded-xl px-4 py-3 text-sm">Reset</button>
             <button id="deleteSelected" class="danger-btn rounded-xl px-4 py-3 text-sm">Delete</button>
           </div>
-          <p class="text-xs text-slate-400">Tip: click on the map after selecting a marker to move it.</p>
+          <p class="text-xs text-slate-400">Tip: use the Latitude and Longitude fields to reposition the selected location.</p>
         </div>
 
         <div class="min-h-0 flex-1 overflow-auto rounded-2xl border border-white/10 bg-slate-950/45 p-3">
@@ -260,6 +287,9 @@
             <div>
               <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Image upload</label>
               <input id="addImage" type="file" accept="image/*" class="field py-2" />
+              <div id="addImagePreviewWrap" class="image-preview mt-3 hidden rounded-2xl p-2">
+                <img id="addImagePreview" alt="Location image preview" class="h-36 w-full rounded-xl object-cover" />
+              </div>
             </div>
             <div>
               <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Video embed link</label>
@@ -267,8 +297,11 @@
             </div>
           </div>
           <div>
-            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
-            <input id="addTags" class="field" placeholder="coffee, cozy, rooftop" />
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Tags</label>
+              <span class="text-[11px] text-slate-500">Pick one or more</span>
+            </div>
+            <div id="addTagsContainer" class="flex flex-wrap gap-2"></div>
           </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="addCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
@@ -312,12 +345,31 @@
       : '';
 
     const DEFAULT_CENTER = [106.69573512876413, 10.729229862661654];
+    const TAG_OPTIONS = [
+      'cozy',
+      'viral',
+      'rooftop',
+      'nightlife',
+      'music',
+      'food',
+      'cafe',
+      'shopping',
+      'nature',
+      'industrial',
+      'minimalist',
+      'hidden gem',
+      'instagrammable',
+      'curator pick',
+      'outdoor',
+      'view'
+    ];
     const state = {
       locations: [],
       selectedId: null,
       draftCoords: { lat: DEFAULT_CENTER[1], lng: DEFAULT_CENTER[0] },
       map: null,
-      overlays: []
+      overlays: [],
+      addImagePreviewUrl: ''
     };
 
     const tabMap = document.getElementById('tabMap');
@@ -336,7 +388,6 @@
       lat: document.getElementById('editLat'),
       lng: document.getElementById('editLng'),
       media: document.getElementById('editMedia'),
-      tags: document.getElementById('editTags'),
       curator: document.getElementById('editCurator')
     };
 
@@ -344,14 +395,87 @@
       name: document.getElementById('addName'),
       image: document.getElementById('addImage'),
       video: document.getElementById('addVideo'),
-      tags: document.getElementById('addTags'),
       curator: document.getElementById('addCurator'),
       lat: document.getElementById('addLat'),
       lng: document.getElementById('addLng')
     };
 
+    const tagPickers = {
+      edit: document.getElementById('editTagsContainer'),
+      add: document.getElementById('addTagsContainer')
+    };
+
+    const addImagePreviewWrap = document.getElementById('addImagePreviewWrap');
+    const addImagePreview = document.getElementById('addImagePreview');
+
     function createId(prefix = 'loc') {
       return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function normalizeTag(tag) {
+      return String(tag || '').trim().toLowerCase();
+    }
+
+    function getSelectedTags(container) {
+      if (!container) return [];
+
+      return Array.from(container.querySelectorAll('button[data-tag].active'))
+        .map(button => String(button.dataset.tag || '').trim())
+        .filter(Boolean);
+    }
+
+    function setSelectedTags(container, tags) {
+      if (!container) return;
+      const normalizedTags = new Set((Array.isArray(tags) ? tags : []).map(normalizeTag));
+
+      container.querySelectorAll('button[data-tag]').forEach(button => {
+        const active = normalizedTags.has(normalizeTag(button.dataset.tag));
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+
+    function renderTagPicker(container, initialTags = []) {
+      if (!container) return;
+
+      container.innerHTML = TAG_OPTIONS.map(tag => {
+        const normalized = normalizeTag(tag);
+        const active = (Array.isArray(initialTags) ? initialTags : []).some(value => normalizeTag(value) === normalized);
+        return `
+          <button type="button" data-tag="${tag}" class="tag-chip rounded-full px-3 py-2 text-xs font-semibold ${active ? 'active' : ''}" aria-pressed="${active ? 'true' : 'false'}">
+            ${tag}
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('button[data-tag]').forEach(button => {
+        button.addEventListener('click', () => {
+          button.classList.toggle('active');
+          button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
+        });
+      });
+    }
+
+    function syncAddImagePreview(file) {
+      if (!addImagePreview || !addImagePreviewWrap) {
+        return;
+      }
+
+      if (state.addImagePreviewUrl) {
+        URL.revokeObjectURL(state.addImagePreviewUrl);
+        state.addImagePreviewUrl = '';
+      }
+
+      if (!file) {
+        addImagePreview.src = '';
+        addImagePreviewWrap.classList.add('hidden');
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      state.addImagePreviewUrl = previewUrl;
+      addImagePreview.src = previewUrl;
+      addImagePreviewWrap.classList.remove('hidden');
     }
 
     function apiUrl(path) {
@@ -539,7 +663,7 @@
         editFields.lat.value = '';
         editFields.lng.value = '';
         editFields.media.value = '';
-        editFields.tags.value = '';
+        setSelectedTags(tagPickers.edit, []);
         editFields.curator.checked = false;
         selectedTitle.textContent = 'Choose a marker';
         selectedHint.textContent = 'Click a marker on the map to edit its details.';
@@ -552,10 +676,10 @@
       editFields.lat.value = location.lat;
       editFields.lng.value = location.lng;
       editFields.media.value = location.mediaURL || '';
-      editFields.tags.value = (location.tags || []).join(', ');
+      setSelectedTags(tagPickers.edit, location.tags || []);
       editFields.curator.checked = Boolean(location.curatorChoice);
       selectedTitle.textContent = location.name;
-      selectedHint.textContent = `Drag the marker by clicking a new point on the map. Current type: ${location.type}`;
+      selectedHint.textContent = `Use the Latitude and Longitude fields to reposition this location. Current type: ${location.type}`;
       curatorBadge.classList.toggle('hidden', !location.curatorChoice);
     }
 
@@ -612,7 +736,7 @@
         lng: Number(editFields.lng.value) || location.lng,
         mediaURL: editFields.media.value.trim(),
         mediaType: editFields.media.value.trim() ? 'video' : 'image',
-        tags: editFields.tags.value.split(',').map(tag => tag.trim()).filter(Boolean),
+        tags: getSelectedTags(tagPickers.edit),
         curatorChoice: editFields.curator.checked
       });
 
@@ -640,7 +764,7 @@
       const lat = Number(addFields.lat.value) || state.draftCoords.lat;
       const lng = Number(addFields.lng.value) || state.draftCoords.lng;
       const videoURL = addFields.video.value.trim();
-      const tags = addFields.tags.value.split(',').map(tag => tag.trim()).filter(Boolean);
+      const tags = getSelectedTags(tagPickers.add);
       const file = addFields.image.files && addFields.image.files[0];
 
       const finishSave = async (mediaURL, mediaType) => {
@@ -662,10 +786,11 @@
         addFields.name.value = '';
         addFields.image.value = '';
         addFields.video.value = '';
-        addFields.tags.value = '';
+        setSelectedTags(tagPickers.add, []);
         addFields.curator.checked = false;
         addFields.lat.value = lat;
         addFields.lng.value = lng;
+        syncAddImagePreview(null);
         renderAll();
         setTab('map');
         setMapStatus(`Added ${location.name}.`);
@@ -707,17 +832,7 @@
         return;
       }
 
-      const selected = getSelectedLocation();
-      if (!selected) return;
-
-      await persistLocation({
-        ...selected,
-        lat,
-        lng
-      });
-      state.selectedId = selected.id;
-      fillEditForm(getSelectedLocation());
-      setMapStatus(`Moved ${selected.name} to ${lat.toFixed(6)}, ${lng.toFixed(6)}.`);
+      setMapStatus('Map clicks only set coordinates in Manual Add mode. Use the Latitude and Longitude fields for existing locations.');
     }
 
     function initMap() {
@@ -756,8 +871,15 @@
     document.getElementById('editLng').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editName').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
-    document.getElementById('editTags').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
+
+    document.getElementById('addImage').addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      syncAddImagePreview(file || null);
+    });
+
+    renderTagPicker(tagPickers.edit, []);
+    renderTagPicker(tagPickers.add, []);
 
     (async () => {
       initMap();

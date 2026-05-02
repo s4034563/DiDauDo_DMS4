@@ -89,7 +89,7 @@ const translations = {
         closeDetails: 'Close details',
         clickMarkerHint: 'Click a marker to view details.',
         
-        viewViralVideo: 'View Viral Video',
+        viewViralVideo: 'View Location',
         rating: 'Rate this place',
         ratingAverage: 'Average rating',
         ratingNotAvailable: 'No ratings yet',
@@ -150,7 +150,7 @@ const translations = {
         closeDetails: 'Đóng chi tiết',
         clickMarkerHint: 'Nhấn vào ghim để xem chi tiết.',
         
-        viewViralVideo: 'Xem video viral',
+        viewViralVideo: 'Xem địa điểm',
         rating: 'Đánh giá địa điểm này',
         ratingAverage: 'Điểm trung bình',
         ratingNotAvailable: 'Chưa có đánh giá',
