@@ -946,14 +946,27 @@ function showInfoWindow(location, markerElement) {
             </div>
 
             <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-2">
-    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
-    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
-    const a = 
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400" data-rating-label>${t('rating')}</p>
+                        <p id="userRating-${location.id}" class="text-sm font-semibold text-slate-100">${t('rating')}</p>
+                    </div>
+                    <div id="ratingStars-${location.id}" class="flex items-center gap-1"></div>
+                </div>
+                <p id="ratingSummary-${location.id}" class="text-[11px] text-slate-400"></p>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <a href="${location.videoURL}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>
+            </div>
+        </div>
+    `;
+    rightInfoPanelElement.classList.add('visible');
+    rightInfoPanelElement.setAttribute('aria-hidden', 'false');
+
+    renderRatingControls(location.id);
+    updateRatingSummaryElements(location.id);
+    loadLocationRatingSummaryFromBackend(location.id);
 }
 
 function updateLocationsList(locations) {
