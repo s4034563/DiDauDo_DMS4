@@ -182,10 +182,6 @@
       box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.18) inset;
     }
 
-    .image-preview {
-      border: 1px dashed rgba(148, 163, 184, 0.3);
-      background: rgba(15, 23, 42, 0.6);
-    }
   </style>
 </head>
 <body>
@@ -287,9 +283,6 @@
             <div>
               <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Image upload</label>
               <input id="addImage" type="file" accept="image/*" class="field py-2" />
-              <div id="addImagePreviewWrap" class="image-preview mt-3 hidden rounded-2xl p-2">
-                <img id="addImagePreview" alt="Location image preview" class="h-36 w-full rounded-xl object-cover" />
-              </div>
             </div>
             <div>
               <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Video embed link</label>
@@ -368,8 +361,7 @@
       selectedId: null,
       draftCoords: { lat: DEFAULT_CENTER[1], lng: DEFAULT_CENTER[0] },
       map: null,
-      overlays: [],
-      addImagePreviewUrl: ''
+      overlays: []
     };
 
     const tabMap = document.getElementById('tabMap');
@@ -404,9 +396,6 @@
       edit: document.getElementById('editTagsContainer'),
       add: document.getElementById('addTagsContainer')
     };
-
-    const addImagePreviewWrap = document.getElementById('addImagePreviewWrap');
-    const addImagePreview = document.getElementById('addImagePreview');
 
     function createId(prefix = 'loc') {
       return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
@@ -454,28 +443,6 @@
           button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
         });
       });
-    }
-
-    function syncAddImagePreview(file) {
-      if (!addImagePreview || !addImagePreviewWrap) {
-        return;
-      }
-
-      if (state.addImagePreviewUrl) {
-        URL.revokeObjectURL(state.addImagePreviewUrl);
-        state.addImagePreviewUrl = '';
-      }
-
-      if (!file) {
-        addImagePreview.src = '';
-        addImagePreviewWrap.classList.add('hidden');
-        return;
-      }
-
-      const previewUrl = URL.createObjectURL(file);
-      state.addImagePreviewUrl = previewUrl;
-      addImagePreview.src = previewUrl;
-      addImagePreviewWrap.classList.remove('hidden');
     }
 
     function apiUrl(path) {
@@ -790,7 +757,6 @@
         addFields.curator.checked = false;
         addFields.lat.value = lat;
         addFields.lng.value = lng;
-        syncAddImagePreview(null);
         renderAll();
         setTab('map');
         setMapStatus(`Added ${location.name}.`);
@@ -872,11 +838,6 @@
     document.getElementById('editName').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
-
-    document.getElementById('addImage').addEventListener('change', (event) => {
-      const file = event.target.files && event.target.files[0];
-      syncAddImagePreview(file || null);
-    });
 
     renderTagPicker(tagPickers.edit, []);
     renderTagPicker(tagPickers.add, []);

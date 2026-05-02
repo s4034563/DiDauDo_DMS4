@@ -191,11 +191,29 @@ function mapServerLocationToAppLocation(location) {
         lng: Number(location.lng) || currentMapCenter.lng,
         caption,
         seedVibes,
+        mediaURL: location.mediaURL || location.videoURL || '',
+        mediaType: location.mediaType || (location.mediaURL ? 'image' : 'video'),
         videoURL: location.mediaURL || location.videoURL || '',
         address: location.address || '',
         vibes: assignAIVibes(caption, seedVibes),
         curatorChoice: Boolean(location.curatorChoice)
     };
+}
+
+function getLocationPreviewImageUrl(location) {
+    const mediaURL = String(location.mediaURL || '').trim();
+    if (!mediaURL) {
+        return '';
+    }
+
+    const mediaType = String(location.mediaType || '').toLowerCase();
+    const looksLikeImage = /\.(png|jpe?g|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(mediaURL) || mediaURL.startsWith('data:image/');
+
+    if (mediaType === 'image' || looksLikeImage) {
+        return mediaURL;
+    }
+
+    return '';
 }
 
 async function loadServerLocations() {
@@ -936,6 +954,12 @@ function showInfoWindow(location, markerElement) {
                 <h3 class="text-base font-bold text-slate-50">${location.name}</h3>
                 <p class="text-xs text-slate-400">${location.address}</p>
             </div>
+
+            ${getLocationPreviewImageUrl(location) ? `
+            <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
+                <img src="${getLocationPreviewImageUrl(location)}" alt="${location.name} preview" class="h-48 w-full object-cover" />
+            </div>
+            ` : ''}
 
             <div class="flex flex-wrap gap-2">
                 <span class="location-activity">${getLocalizedActivityType(location.type)}</span>
