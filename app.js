@@ -357,17 +357,29 @@ function getFilteredLocations() {
     }
 
     // Activity type filter logic:
-    // If category is enabled but NO sub-categories are checked, include all sub-categories
-    // If some sub-categories are checked, only show those
-    if (document.getElementById('categorySportsRecreation')?.checked) {
-        const selectedSubcategories = filterState.venueTypes.filter(v => v === 'Sports' || v === 'Fitness');
-        if (selectedSubcategories.length === 0) {
-            // No sub-categories manually selected = show both Sports & Fitness
-            filtered = filtered.filter(loc => getLocationActivities(loc).some(activity => activity === 'Sports' || activity === 'Fitness'));
-        } else if (selectedSubcategories.length > 0) {
-            // Show only selected sub-categories
-            filtered = filtered.filter(loc => getLocationActivities(loc).some(activity => selectedSubcategories.includes(activity)));
+    // Each checked category contributes either its selected sub-categories,
+    // or all of its sub-categories when none are selected.
+    const selectedActivities = [];
+    document.querySelectorAll('input[data-category]:checked').forEach(categoryCheckbox => {
+        const subId = categoryCheckbox.dataset.subid;
+        const subContainer = subId ? document.getElementById(subId) : null;
+        const checkedSubcategories = subContainer
+            ? Array.from(subContainer.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value)
+            : [];
+
+        if (checkedSubcategories.length > 0) {
+            selectedActivities.push(...checkedSubcategories);
+            return;
         }
+
+        if (subContainer) {
+            selectedActivities.push(...Array.from(subContainer.querySelectorAll('input[type="checkbox"]')).map(input => input.value));
+        }
+    });
+
+    if (selectedActivities.length > 0) {
+        const allowedActivities = [...new Set(selectedActivities)];
+        filtered = filtered.filter(loc => getLocationActivities(loc).some(activity => allowedActivities.includes(activity)));
     }
 
     if (filterState.vibes.length > 0) {
