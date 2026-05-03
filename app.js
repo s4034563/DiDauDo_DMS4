@@ -336,6 +336,20 @@ function applyLanguage() {
     }
 }
 
+async function isGeolocationEnabled() {
+    // Check actual browser permission status
+    if (!navigator.permissions) {
+        return geolocationPermissionGranted === true && userLocation;
+    }
+    
+    try {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        return result.state === 'granted' && userLocation;
+    } catch (e) {
+        return geolocationPermissionGranted === true && userLocation;
+    }
+}
+
 function getFilteredLocations() {
     let filtered = [...allLocations];
 
@@ -348,7 +362,7 @@ function getFilteredLocations() {
         );
     }
 
-    // Proximity filter - only apply if user location available (permission granted and location detected)
+    // Proximity filter - only apply if geolocation permission status is granted
     if (geolocationPermissionGranted === true && userLocation) {
         filtered = filtered.filter(loc => {
             const distance = getDistance(userLocation, { lat: loc.lat, lng: loc.lng });
@@ -489,7 +503,7 @@ function checkAndShowPermissionModal() {
     const storedPermission = localStorage.getItem('geolocationPermission');
     if (storedPermission !== null) {
         geolocationPermissionGranted = storedPermission === 'true';
-        updateProximityFilterState();
+        updateProximityFilterState().catch(() => {});
         return;
     }
 
@@ -509,7 +523,7 @@ function setupPermissionModalHandlers() {
         geolocationPermissionGranted = true;
         localStorage.setItem('geolocationPermission', 'true');
         permissionModal.classList.add('hidden');
-        updateProximityFilterState();
+        updateProximityFilterState().catch(() => {});
         // Optional: Auto-trigger geolocation after permission granted
         initializeUserLocation();
     });
@@ -518,21 +532,24 @@ function setupPermissionModalHandlers() {
         geolocationPermissionGranted = false;
         localStorage.setItem('geolocationPermission', 'false');
         permissionModal.classList.add('hidden');
-        updateProximityFilterState();
+        updateProximityFilterState().catch(() => {});
     });
 }
 
-function updateProximityFilterState() {
+async function updateProximityFilterState() {
     const proximitySection = document.getElementById('proximitySection');
     const proximitySlider = document.getElementById('proximitySlider');
+    
+    // Check actual browser geolocation permission status
+    const isEnabled = await isGeolocationEnabled();
 
-    if (geolocationPermissionGranted === false) {
-        // Disable proximity filter if permission denied
+    if (!isEnabled) {
+        // Disable proximity filter if permission not granted
         proximitySlider.disabled = true;
         proximitySection.style.opacity = '0.5';
         proximitySection.style.pointerEvents = 'none';
     } else {
-        // Enable proximity filter if permission granted
+        // Enable proximity filter if permission granted and location available
         proximitySlider.disabled = false;
         proximitySection.style.opacity = '1';
         proximitySection.style.pointerEvents = 'auto';
