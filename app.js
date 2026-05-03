@@ -199,7 +199,9 @@ function mapServerLocationToAppLocation(location) {
         seedVibes,
         mediaURL: location.mediaURL || location.videoURL || '',
         mediaType: location.mediaType || (location.mediaURL ? 'image' : 'video'),
-        videoURL: location.mediaURL || location.videoURL || '',
+        thumbnailUrl: location.thumbnailUrl || '',
+        externalUrl: location.externalUrl || '',
+        videoURL: location.externalUrl || location.videoURL || '',
         address: location.address || '',
         vibes: assignAIVibes(caption, seedVibes),
         curatorChoice: Boolean(location.curatorChoice)
@@ -207,6 +209,11 @@ function mapServerLocationToAppLocation(location) {
 }
 
 function getLocationPreviewImageUrl(location) {
+    const thumbnailUrl = String(location.thumbnailUrl || '').trim();
+    if (thumbnailUrl) {
+        return thumbnailUrl;
+    }
+
     const mediaURL = String(location.mediaURL || '').trim();
     if (!mediaURL) {
         return '';
@@ -217,6 +224,20 @@ function getLocationPreviewImageUrl(location) {
 
     if (mediaType === 'image' || looksLikeImage) {
         return mediaURL;
+    }
+
+    return '';
+}
+
+function getLocationActionUrl(location) {
+    const externalUrl = String(location.externalUrl || '').trim();
+    if (externalUrl) {
+        return externalUrl;
+    }
+
+    const mediaType = String(location.mediaType || '').toLowerCase();
+    if (mediaType === 'video') {
+        return String(location.videoURL || location.mediaURL || '').trim();
     }
 
     return '';
@@ -1015,9 +1036,11 @@ function showInfoWindow(location, markerElement) {
                 <p id="ratingSummary-${location.id}" class="text-[11px] text-slate-400"></p>
             </div>
 
+            ${getLocationActionUrl(location) ? `
             <div class="flex gap-2 pt-1">
-                <a href="${location.videoURL}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>
+                <a href="${getLocationActionUrl(location)}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>
             </div>
+            ` : ''}
         </div>
     `;
     rightInfoPanelElement.classList.add('visible');

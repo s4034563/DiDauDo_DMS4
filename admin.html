@@ -228,12 +228,16 @@
           </div>
           <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Media URL</label>
-            <input id="editMedia" class="field" placeholder="Image URL or video embed link" />
+            <input id="editMedia" class="field" placeholder="https://..." />
           </div>
           <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Upload Thumbnail</label>
             <input id="editThumbnail" type="file" accept="image/*" class="field py-2" />
-            <p class="mt-1 text-xs text-slate-500">Upload a new thumbnail image (optional, replaces Media URL on save)</p>
+            <p class="mt-1 text-xs text-slate-500">Upload a new thumbnail image (optional, updates Thumbnail URL on save)</p>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Thumbnail URL</label>
+            <input id="editThumbnailUrl" class="field" placeholder="Generated after upload" />
           </div>
           <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Address</label>
@@ -291,13 +295,18 @@
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Image upload</label>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Upload Thumbnail</label>
               <input id="addImage" type="file" accept="image/*" class="field py-2" />
             </div>
             <div>
-              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Video embed link</label>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Media URL</label>
               <input id="addVideo" class="field" placeholder="https://..." />
             </div>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Thumbnail URL</label>
+            <input id="addThumbnail" class="field" placeholder="Generated after upload" />
+            <p class="mt-1 text-xs text-slate-500">Enter a thumbnail URL manually, or upload a file above to auto-fill this field.</p>
           </div>
           <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Address</label>
@@ -448,6 +457,7 @@
       coordinates: document.getElementById('editCoordinates'),
       media: document.getElementById('editMedia'),
       thumbnail: document.getElementById('editThumbnail'),
+      thumbnailUrl: document.getElementById('editThumbnailUrl'),
       address: document.getElementById('editAddress'),
       curator: document.getElementById('editCurator')
     };
@@ -456,6 +466,7 @@
       name: document.getElementById('addName'),
       image: document.getElementById('addImage'),
       video: document.getElementById('addVideo'),
+      thumbnail: document.getElementById('addThumbnail'),
       address: document.getElementById('addAddress'),
       curator: document.getElementById('addCurator'),
       coordinates: document.getElementById('addCoordinates')
@@ -478,6 +489,11 @@
       if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
 
       return { lat, lng };
+    }
+
+    function isImageUrl(value) {
+      const text = String(value || '').trim();
+      return /\.(png|jpe?g|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(text) || text.startsWith('data:image/');
     }
 
     const activityPickers = {
@@ -610,6 +626,8 @@
         lng: Number(location.lng) || DEFAULT_CENTER[0],
         mediaType,
         mediaURL,
+        thumbnailUrl: location.thumbnailUrl || '',
+        externalUrl: location.externalUrl || '',
         tags: getVisibleVibeTags(tags),
         curatorChoice: Boolean(location.curatorChoice),
         caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
@@ -760,6 +778,7 @@
         editFields.coordinates.value = '';
         editFields.media.value = '';
         editFields.thumbnail.value = '';
+        editFields.thumbnailUrl.value = '';
         editFields.address.value = '';
         setSelectedActivities(activityPickers.edit, ['Cafes']);
         setSelectedTags(vibePickers.edit, []);
@@ -773,8 +792,9 @@
       editFields.id.value = location.id;
       editFields.name.value = location.name;
       editFields.coordinates.value = formatCoordinates(location.lat, location.lng);
-      editFields.media.value = location.mediaURL || '';
+      editFields.media.value = location.externalUrl || (String(location.mediaType || '').toLowerCase() === 'video' ? (location.mediaURL || '') : '');
       editFields.thumbnail.value = '';
+      editFields.thumbnailUrl.value = location.thumbnailUrl || '';
       editFields.address.value = location.address || '';
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
@@ -815,6 +835,7 @@
         || active.id === 'editCoordinates'
         || active.id === 'editMedia'
         || active.id === 'editThumbnail'
+        || active.id === 'editThumbnailUrl'
         || active.id === 'editAddress';
     }
 
@@ -849,19 +870,34 @@
         return;
       }
 
-      let mediaURL = editFields.media.value.trim();
+      let mediaURL = location.mediaURL || '';
+      let thumbnailUrl = editFields.thumbnailUrl.value.trim() || location.thumbnailUrl || '';
+      let externalUrl = location.externalUrl || '';
+      const mediaValue = editFields.media.value.trim();
       const thumbnailFile = editFields.thumbnail.files && editFields.thumbnail.files[0];
 
       if (thumbnailFile) {
         try {
           setMapStatus('Uploading thumbnail...');
-          mediaURL = await uploadImageToCloudinary(thumbnailFile);
+          thumbnailUrl = await uploadImageToCloudinary(thumbnailFile);
+          editFields.thumbnailUrl.value = thumbnailUrl;
           editFields.thumbnail.value = '';
         } catch (error) {
           setMapStatus(`Thumbnail upload failed: ${String(error?.message || 'Unknown error')}`);
           return;
         }
+      } else if (mediaValue) {
+        if (isImageUrl(mediaValue)) {
+          mediaURL = mediaValue;
+          externalUrl = '';
+        } else {
+          externalUrl = mediaValue;
+        }
       }
+
+      const mediaType = mediaURL && isImageUrl(mediaURL)
+        ? 'image'
+        : (externalUrl ? 'video' : (location.mediaType || 'video'));
 
       const selectedActivities = getSelectedActivities(activityPickers.edit);
       const updated = normalizeLocation({
@@ -870,7 +906,9 @@
         lat: parsedCoordinates.lat,
         lng: parsedCoordinates.lng,
         mediaURL: mediaURL,
-        mediaType: mediaURL ? 'image' : 'video',
+        mediaType,
+        thumbnailUrl,
+        externalUrl,
         address: editFields.address.value.trim(),
         type: selectedActivities[0] || location.type || 'Cafes',
         types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
@@ -908,20 +946,23 @@
       const lat = parsedCoordinates.lat;
       const lng = parsedCoordinates.lng;
       const videoURL = addFields.video.value.trim();
+      const thumbnailValue = addFields.thumbnail.value.trim();
       const address = addFields.address.value.trim();
       const tags = getSelectedTags(vibePickers.add);
       const activities = getSelectedActivities(activityPickers.add);
       const activity = activities[0] || 'Cafes';
       const file = addFields.image.files && addFields.image.files[0];
 
-      const finishSave = async (mediaURL, mediaType) => {
+      const finishSave = async ({ mediaURL = '', thumbnailUrl = '', externalUrl = '' }) => {
         const location = normalizeLocation({
           id: createId('custom'),
           name,
           lat,
           lng,
           mediaURL,
-          mediaType,
+          mediaType: mediaURL ? (isImageUrl(mediaURL) ? 'image' : 'video') : (externalUrl ? 'video' : 'image'),
+          thumbnailUrl: thumbnailUrl || thumbnailValue,
+          externalUrl,
           address,
           tags,
           types: activities.length > 0 ? activities : [activity],
@@ -935,6 +976,7 @@
         addFields.name.value = '';
         addFields.image.value = '';
         addFields.video.value = '';
+        addFields.thumbnail.value = '';
         addFields.address.value = '';
         setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
@@ -949,7 +991,8 @@
         try {
           setMapStatus('Uploading image to Cloudinary...');
           const thumbnailUrl = await uploadImageToCloudinary(file);
-          await finishSave(thumbnailUrl, 'image');
+          addFields.thumbnail.value = thumbnailUrl;
+          await finishSave({ mediaURL: '', thumbnailUrl, externalUrl: videoURL });
         } catch (error) {
           setMapStatus(`Upload failed: ${String(error?.message || 'Unknown error')}`);
         }
@@ -957,11 +1000,11 @@
       }
 
       if (videoURL) {
-        await finishSave(videoURL, 'video');
+        await finishSave({ mediaURL: '', externalUrl: videoURL });
         return;
       }
 
-      await finishSave('', 'image');
+      await finishSave({});
     }
 
     function useMapCenterForDraft() {
