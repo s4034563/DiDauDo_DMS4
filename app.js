@@ -1472,11 +1472,14 @@ window.addEventListener('load', () => {
         });
     }
 
-    if (!locationRefreshTimer) {
-        locationRefreshTimer = window.setInterval(() => {
-            if (map) {
-                void loadMapMarkers();
-            }
-        }, 15000);
-    }
+    // Auto-refresh disabled: prefer manual refresh via the Refresh button to avoid
+    // unexpected list changes while the user is interacting with filters.
+    // To re-enable automatic refresh, uncomment and adjust the interval below.
+    // if (!locationRefreshTimer) {
+    //     locationRefreshTimer = window.setInterval(() => {
+    //         if (map) {
+    //             void loadMapMarkers();
+    //         }
+    //     }, 15000);
+    // }
 });
