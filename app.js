@@ -268,6 +268,7 @@ const filterState = {
     proximity: 5,
     venueTypes: [],
     vibes: [],
+    curatorChoice: false,
     searchQuery: ''
 };
 
@@ -368,6 +369,11 @@ function getFilteredLocations() {
             const distance = getDistance(userLocation, { lat: loc.lat, lng: loc.lng });
             return distance <= filterState.proximity;
         });
+    }
+
+    // Curator's choice filter
+    if (filterState.curatorChoice) {
+        filtered = filtered.filter(loc => loc.curatorChoice);
     }
 
     // Activity type filter logic:
@@ -607,8 +613,8 @@ function createMarkerLabelImage(location, isSelected) {
     const hasDistance = Boolean(distanceText);
     const width = Math.max(210, Math.min(320, Math.round(Math.max(displayName.length * 10, distanceText.length * 11) + 56)));
     const height = hasDistance ? (isSelected ? 92 : 86) : (isSelected ? 68 : 62);
-    const borderColor = isSelected ? '#22c55e' : '#e2e8f0';
-    const accentColor = isSelected ? '#16a34a' : '#c084fc';
+    const borderColor = location.curatorChoice ? '#d4af37' : (isSelected ? '#22c55e' : '#e2e8f0');
+    const accentColor = location.curatorChoice ? '#d4af37' : (isSelected ? '#16a34a' : '#c084fc');
     const shadowOpacity = isSelected ? 0.28 : 0.18;
 
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
@@ -1062,6 +1068,13 @@ function showInfoWindow(location, markerElement) {
                 ${location.vibes.map(vibe => `<span class="location-vibe">${getLocalizedVibe(vibe)}</span>`).join('')}
             </div>
 
+            ${location.curatorChoice ? `
+            <div class="rounded-xl border border-yellow-500/40 bg-yellow-950/20 p-3 flex items-center gap-2">
+                <span style="font-size: 18px;">✨</span>
+                <p class="text-sm font-semibold text-yellow-200">Curator's Choice</p>
+            </div>
+            ` : ''}
+
             <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-2">
                 <div class="flex items-center justify-between gap-3">
                     <div>
@@ -1231,6 +1244,16 @@ document.querySelectorAll('.chip').forEach(chip => {
     });
 });
 
+// Curator's choice filter
+const curatorChoiceCheckbox = document.getElementById('curatorChoiceCheckbox');
+if (curatorChoiceCheckbox) {
+    curatorChoiceCheckbox.addEventListener('change', () => {
+        filterState.curatorChoice = curatorChoiceCheckbox.checked;
+        applyFilters();
+        updateFilterCount();
+    });
+}
+
 // Social momentum controls removed
 
 // Clear filters
@@ -1238,6 +1261,7 @@ document.getElementById('clearFilters').addEventListener('click', () => {
     filterState.proximity = 5;
     filterState.venueTypes = [];
     filterState.vibes = [];
+    filterState.curatorChoice = false;
     filterState.searchQuery = '';
     syncSearchInputs('');
 
@@ -1245,6 +1269,7 @@ document.getElementById('clearFilters').addEventListener('click', () => {
     document.getElementById('proximitySlider').value = 5;
     document.getElementById('proximityValue').textContent = '5 km';
     document.getElementById('searchInput').value = '';
+    document.getElementById('curatorChoiceCheckbox').checked = false;
     filterState.venueTypes = [];
     // Uncheck all category and subcategory inputs and hide subcategory lists
     document.querySelectorAll('input[data-category], input[data-parent]').forEach(cb => cb.checked = false);
@@ -1264,6 +1289,7 @@ function updateFilterCount() {
     let count = 0;
     if (filterState.searchQuery.trim()) count++;
     if (filterState.proximity < 5) count++;
+    if (filterState.curatorChoice) count++;
     if (filterState.venueTypes.length > 0) {
         const uniqueTypes = [...new Set(filterState.venueTypes)];
         count += uniqueTypes.length;
