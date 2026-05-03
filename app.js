@@ -339,14 +339,14 @@ function applyLanguage() {
 async function isGeolocationEnabled() {
     // Check actual browser permission status
     if (!navigator.permissions) {
-        return geolocationPermissionGranted === true && userLocation;
+        return geolocationPermissionGranted === true;
     }
     
     try {
         const result = await navigator.permissions.query({ name: 'geolocation' });
-        return result.state === 'granted' && userLocation;
+        return result.state === 'granted';
     } catch (e) {
-        return geolocationPermissionGranted === true && userLocation;
+        return geolocationPermissionGranted === true;
     }
 }
 
