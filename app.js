@@ -587,17 +587,26 @@ function getDistance(from, to) {
 }
 
 function getMarkerDistance(location) {
-    return getDistance(currentMapCenter, { lat: location.lat, lng: location.lng });
+    if (!userLocation) {
+        return null;
+    }
+
+    return getDistance(userLocation, { lat: location.lat, lng: location.lng });
 }
 
 function formatMarkerDistance(location) {
-    return `${getMarkerDistance(location).toFixed(2)} km`;
+    const distance = getMarkerDistance(location);
+    return distance === null ? '' : `${distance.toFixed(2)} km`;
 }
 
 function createMarkerLabelImage(location, isSelected) {
     const displayName = truncateLabel(location.name, 22);
-    const width = Math.max(210, Math.min(320, Math.round(displayName.length * 10 + 56)));
-    const height = isSelected ? 68 : 62;
+    const distanceText = (geolocationPermissionGranted === true && userLocation)
+        ? formatMarkerDistance(location)
+        : '';
+    const hasDistance = Boolean(distanceText);
+    const width = Math.max(210, Math.min(320, Math.round(Math.max(displayName.length * 10, distanceText.length * 11) + 56)));
+    const height = hasDistance ? (isSelected ? 92 : 86) : (isSelected ? 68 : 62);
     const borderColor = isSelected ? '#22c55e' : '#e2e8f0';
     const accentColor = isSelected ? '#16a34a' : '#c084fc';
     const shadowOpacity = isSelected ? 0.28 : 0.18;
@@ -613,6 +622,7 @@ function createMarkerLabelImage(location, isSelected) {
                 <rect x="2" y="2" width="${width - 4}" height="${height - 4}" rx="${Math.round(height / 2)}" ry="${Math.round(height / 2)}" fill="#ffffff" fill-opacity="0.98" stroke="${borderColor}" stroke-width="2.5" />
                 <rect x="14" y="17" width="6" height="${height - 34}" rx="3" ry="3" fill="${accentColor}" />
                 <text x="30" y="36" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#111827">${escapeXml(displayName)}</text>
+                ${hasDistance ? `<text x="30" y="63" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="500" fill="#6b7280">${escapeXml(distanceText)}</text>` : ''}
             </g>
         </svg>
     `)}`;
