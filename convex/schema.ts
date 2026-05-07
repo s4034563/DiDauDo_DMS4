@@ -26,6 +26,7 @@ export default defineSchema({
     mediaURL: v.string(),
     thumbnailUrl: v.optional(v.string()),
     externalUrl: v.optional(v.string()),
+    googleMapsUrl: v.optional(v.string()),
     tags: v.array(v.string()),
     curatorChoice: v.boolean(),
     caption: v.string(),

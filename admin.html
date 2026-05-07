@@ -244,6 +244,10 @@
             <input id="editAddress" class="field" placeholder="Street address" />
           </div>
           <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Google Maps URL</label>
+            <input id="editGoogleMapsUrl" class="field" placeholder="https://maps.google.com/..." />
+          </div>
+          <div>
             <div class="mb-2 flex items-center justify-between gap-3">
               <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Activity Tag</label>
               <span class="text-[11px] text-slate-500">Pick one</span>
@@ -311,6 +315,10 @@
           <div>
             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Address</label>
             <input id="addAddress" class="field" placeholder="Street address" />
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Google Maps URL</label>
+            <input id="addGoogleMapsUrl" class="field" placeholder="https://maps.google.com/..." />
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between gap-3">
@@ -459,6 +467,7 @@
       thumbnail: document.getElementById('editThumbnail'),
       thumbnailUrl: document.getElementById('editThumbnailUrl'),
       address: document.getElementById('editAddress'),
+      googleMapsUrl: document.getElementById('editGoogleMapsUrl'),
       curator: document.getElementById('editCurator')
     };
 
@@ -468,6 +477,7 @@
       video: document.getElementById('addVideo'),
       thumbnail: document.getElementById('addThumbnail'),
       address: document.getElementById('addAddress'),
+      googleMapsUrl: document.getElementById('addGoogleMapsUrl'),
       curator: document.getElementById('addCurator'),
       coordinates: document.getElementById('addCoordinates')
     };
@@ -628,6 +638,7 @@
         mediaURL,
         thumbnailUrl: location.thumbnailUrl || '',
         externalUrl: location.externalUrl || '',
+        googleMapsUrl: location.googleMapsUrl || '',
         tags: getVisibleVibeTags(tags),
         curatorChoice: Boolean(location.curatorChoice),
         caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
@@ -780,6 +791,7 @@
         editFields.thumbnail.value = '';
         editFields.thumbnailUrl.value = '';
         editFields.address.value = '';
+        editFields.googleMapsUrl.value = '';
         setSelectedActivities(activityPickers.edit, ['Cafes']);
         setSelectedTags(vibePickers.edit, []);
         editFields.curator.checked = false;
@@ -796,6 +808,7 @@
       editFields.thumbnail.value = '';
       editFields.thumbnailUrl.value = location.thumbnailUrl || '';
       editFields.address.value = location.address || '';
+      editFields.googleMapsUrl.value = location.googleMapsUrl || '';
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
       editFields.curator.checked = Boolean(location.curatorChoice);
@@ -836,7 +849,8 @@
         || active.id === 'editMedia'
         || active.id === 'editThumbnail'
         || active.id === 'editThumbnailUrl'
-        || active.id === 'editAddress';
+        || active.id === 'editAddress'
+        || active.id === 'editGoogleMapsUrl';
     }
 
     function renderAll({ preserveEditForm = false } = {}) {
@@ -910,6 +924,7 @@
         thumbnailUrl,
         externalUrl,
         address: editFields.address.value.trim(),
+        googleMapsUrl: editFields.googleMapsUrl.value.trim(),
         type: selectedActivities[0] || location.type || 'Cafes',
         types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
         tags: getSelectedTags(vibePickers.edit),
@@ -948,6 +963,7 @@
       const videoURL = addFields.video.value.trim();
       const thumbnailValue = addFields.thumbnail.value.trim();
       const address = addFields.address.value.trim();
+      const googleMapsUrl = addFields.googleMapsUrl.value.trim();
       const tags = getSelectedTags(vibePickers.add);
       const activities = getSelectedActivities(activityPickers.add);
       const activity = activities[0] || 'Cafes';
@@ -964,6 +980,7 @@
           thumbnailUrl: thumbnailUrl || thumbnailValue,
           externalUrl,
           address,
+          googleMapsUrl,
           tags,
           types: activities.length > 0 ? activities : [activity],
           curatorChoice: addFields.curator.checked,
@@ -978,6 +995,7 @@
         addFields.video.value = '';
         addFields.thumbnail.value = '';
         addFields.address.value = '';
+        addFields.googleMapsUrl.value = '';
         setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
@@ -1065,6 +1083,7 @@
     document.getElementById('editName').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editMedia').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editAddress').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editGoogleMapsUrl').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
 
     renderTagPicker(activityPickers.edit, ACTIVITY_OPTIONS, ['Cafes']);

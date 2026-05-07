@@ -104,7 +104,8 @@ const translations = {
         permissionTitle: 'Share Your Location',
         permissionMessage: 'Allow access to your location to show nearby places more accurately.',
         permissionAllow: 'Allow',
-        permissionDeny: 'Not Now'
+        permissionDeny: 'Not Now',
+        openGoogleMaps: 'Open in Google Maps'
     },
     vi: {
         subtitle: 'Khám phá các địa điểm thú vị xung quanh bạn',
@@ -167,7 +168,8 @@ const translations = {
         permissionTitle: 'Chia sẻ vị trí của bạn',
         permissionMessage: 'Cho phép truy cập vị trí để hiển thị các địa điểm gần đó chính xác hơn.',
         permissionAllow: 'Cho phép',
-        permissionDeny: 'Không'
+        permissionDeny: 'Không',
+        openGoogleMaps: 'Mở trên Google Maps'
     }
 };
 
@@ -205,6 +207,7 @@ function mapServerLocationToAppLocation(location) {
         mediaType: location.mediaType || (location.mediaURL ? 'image' : 'video'),
         thumbnailUrl: location.thumbnailUrl || '',
         externalUrl: location.externalUrl || '',
+        googleMapsUrl: location.googleMapsUrl || '',
         videoURL: location.externalUrl || location.videoURL || '',
         address: location.address || '',
         vibes: assignAIVibes(caption, seedVibes),
@@ -242,6 +245,19 @@ function getLocationActionUrl(location) {
     const mediaType = String(location.mediaType || '').toLowerCase();
     if (mediaType === 'video') {
         return String(location.videoURL || location.mediaURL || '').trim();
+    }
+
+    return '';
+}
+
+function getGoogleMapsUrl(location) {
+    const explicitUrl = String(location.googleMapsUrl || '').trim();
+    if (explicitUrl) {
+        return explicitUrl;
+    }
+
+    if (Number.isFinite(location.lat) && Number.isFinite(location.lng)) {
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.lat},${location.lng}`)}`;
     }
 
     return '';
@@ -1090,9 +1106,10 @@ function showInfoWindow(location, markerElement) {
                 <p id="ratingSummary-${location.id}" class="text-[11px] text-slate-400"></p>
             </div>
 
-            ${getLocationActionUrl(location) ? `
+            ${(getLocationActionUrl(location) || getGoogleMapsUrl(location)) ? `
             <div class="flex gap-2 pt-1">
-                <a href="${getLocationActionUrl(location)}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>
+                ${getLocationActionUrl(location) ? `<a href="${getLocationActionUrl(location)}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>` : ''}
+                ${getGoogleMapsUrl(location) ? `<a href="${getGoogleMapsUrl(location)}" target="_blank" rel="noreferrer" class="button-primary px-3 text-center text-xs no-underline" title="${t('openGoogleMaps')}" aria-label="${t('openGoogleMaps')}">🗺️</a>` : ''}
             </div>
             ` : ''}
         </div>
