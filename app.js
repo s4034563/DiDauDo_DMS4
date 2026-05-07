@@ -1109,7 +1109,7 @@ function showInfoWindow(location, markerElement) {
             ${(getLocationActionUrl(location) || getGoogleMapsUrl(location)) ? `
             <div class="flex gap-2 pt-1">
                 ${getLocationActionUrl(location) ? `<a href="${getLocationActionUrl(location)}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>` : ''}
-                ${getGoogleMapsUrl(location) ? `<a href="${getGoogleMapsUrl(location)}" target="_blank" rel="noreferrer" class="button-primary px-3 text-center text-xs no-underline" title="${t('openGoogleMaps')}" aria-label="${t('openGoogleMaps')}">🗺️</a>` : ''}
+                ${getGoogleMapsUrl(location) ? `<a href="${getGoogleMapsUrl(location)}" target="_blank" rel="noreferrer" class="button-primary text-center text-xs no-underline" style="width:auto;flex:0 0 auto;padding-left:12px;padding-right:12px;" title="${t('openGoogleMaps')}" aria-label="${t('openGoogleMaps')}">${t('openGoogleMaps')}</a>` : ''}
             </div>
             ` : ''}
         </div>
