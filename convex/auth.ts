@@ -3,12 +3,14 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import crypto from "crypto";
+import { api } from "./_generated/api";
 
 // Simple password hashing (in production, use bcrypt)
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Action: Signup with crypto hashing
 export const signup = action({
   args: {
     email: v.string(),
@@ -16,37 +18,38 @@ export const signup = action({
     name: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
     const emailLower = args.email.toLowerCase();
+    const displayName = args.name || args.email.split("@")[0];
     
     // Check if user already exists
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", emailLower))
-      .unique();
+    const existing = await ctx.runMutation(api.authHelpers.checkUserExists, {
+      email: emailLower,
+    });
 
     if (existing) {
       throw new Error("User already exists with this email");
     }
 
+    // Hash password
+    const passwordHash = hashPassword(args.password);
+
     // Create new user
-    const userId = await ctx.db.insert("users", {
+    const result = await ctx.runMutation(api.authHelpers.createUser, {
       email: emailLower,
-      passwordHash: hashPassword(args.password),
-      name: args.name || args.email.split("@")[0],
-      createdAt: now,
-      updatedAt: now,
+      passwordHash,
+      name: displayName,
     });
 
     return { 
       ok: true, 
-      userId, 
-      email: emailLower,
-      name: args.name || args.email.split("@")[0],
+      userId: result.userId,
+      email: result.email,
+      name: result.name,
     };
   },
 });
 
+// Action: Login with crypto hashing
 export const login = action({
   args: {
     email: v.string(),
@@ -55,15 +58,16 @@ export const login = action({
   handler: async (ctx, args) => {
     const emailLower = args.email.toLowerCase();
     
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", emailLower))
-      .unique();
+    // Get user
+    const user = await ctx.runMutation(api.authHelpers.getUserByEmail, {
+      email: emailLower,
+    });
 
     if (!user) {
       throw new Error("User not found");
     }
 
+    // Hash and verify password
     const passwordHash = hashPassword(args.password);
     if (user.passwordHash !== passwordHash) {
       throw new Error("Invalid password");
