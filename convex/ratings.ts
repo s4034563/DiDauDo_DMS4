@@ -165,8 +165,16 @@ export const getUserRatings = query({
       .withIndex("by_location", (q) => q.eq("locationId", args.locationId))
       .collect();
 
-    // Sort by newest first
-    return ratings.sort((a, b) => b.createdAt - a.createdAt);
+    // Enrich with user names and sort by newest first
+    const enriched = await Promise.all(ratings.map(async (rating) => {
+      const user = await ctx.db.get(rating.userId);
+      return {
+        ...rating,
+        userName: user?.name || 'Anonymous',
+      };
+    }));
+
+    return enriched.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 

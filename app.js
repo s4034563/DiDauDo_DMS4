@@ -1084,10 +1084,17 @@ function showInfoWindow(location, markerElement) {
 
     const ratingsSection = currentUser ? `
         <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
-            <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
-            <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
-            <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
-            <button onclick="submitUserRating('${location.id}', document.querySelector('#userRatingStars-${location.id} .star.active')?.dataset.rating || 0, document.getElementById('userComment-${location.id}').value)" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
+            <div class="space-y-2">
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Existing Ratings</p>
+                <div id="existingRatings-${location.id}" class="text-sm text-slate-300"></div>
+            </div>
+            <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
+            <div class="space-y-2">
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
+                <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
+                <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
+                <button onclick="submitUserRatingHandler('${location.id}')" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
+            </div>
         </div>
     ` : `
         <div class="rounded-xl border border-purple-500/40 bg-purple-950/20 p-3 text-center">
@@ -1133,6 +1140,7 @@ function showInfoWindow(location, markerElement) {
             </div>
             ` : ''}
 
+            ${!currentUser ? `
             <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-2">
                 <div class="flex items-center justify-between gap-3">
                     <div>
@@ -1143,6 +1151,7 @@ function showInfoWindow(location, markerElement) {
                 </div>
                 <p id="ratingSummary-${location.id}" class="text-[11px] text-slate-400"></p>
             </div>
+            ` : ''}
 
             ${ratingsSection}
 
@@ -1188,6 +1197,9 @@ function showInfoWindow(location, markerElement) {
     renderRatingControls(location.id);
     updateRatingSummaryElements(location.id);
     loadLocationRatingSummaryFromBackend(location.id);
+    if (currentUser) {
+        loadExistingUserRatings(location.id);
+    }
 }
 
 function updateLocationsList(locations) {
@@ -1760,9 +1772,25 @@ function isCurrentlyOpen(todayHours, now) {
 }
 
 // Handle rating submission for logged-in users
+// Handler for rating submission button click
+function submitUserRatingHandler(locationId) {
+    const starContainer = document.getElementById(`userRatingStars-${locationId}`);
+    const activeStars = starContainer?.querySelectorAll('.star.active');
+    const rating = activeStars?.length || 0;
+    const comment = document.getElementById(`userComment-${locationId}`).value;
+    submitUserRating(locationId, rating, comment);
+}
+
 async function submitUserRating(locationId, rating, comment) {
     if (!currentUser) {
         openLoginModal();
+        return;
+    }
+
+    // Validate rating is between 1-5
+    const ratingNum = Number(rating);
+    if (!ratingNum || ratingNum < 1 || ratingNum > 5) {
+        alert('Please select a star rating (1-5)');
         return;
     }
 
@@ -1773,20 +1801,65 @@ async function submitUserRating(locationId, rating, comment) {
             body: JSON.stringify({
                 locationId,
                 userId: currentUser.userId,
-                rating: Number(rating),
-                comment,
+                rating: ratingNum,
+                comment: comment || '',
             }),
         });
 
         const data = await response.json();
-        if (response.ok && data.ok) {
+        if (response.ok) {
+            alert('Rating submitted successfully!');
             // Refresh ratings display
             if (activeSelectedLocationId) {
                 showInfoWindow(allLocations.find(loc => loc.id === activeSelectedLocationId));
             }
+        } else {
+            alert(`Error submitting rating: ${data.error || 'Unknown error'}`);
+            console.error('Error response:', data);
         }
     } catch (error) {
         console.error('Error submitting rating:', error);
+        alert('Failed to submit rating. Please try again.');
+    }
+}
+
+// Load and display existing user ratings
+async function loadExistingUserRatings(locationId) {
+    try {
+        const response = await fetch(convexUrl(`/api/user-ratings?locationId=${encodeURIComponent(locationId)}`));
+        if (!response.ok) {
+            return;
+        }
+
+        const data = await response.json();
+        const container = document.getElementById(`existingRatings-${locationId}`);
+        if (!container) return;
+
+        if (!data.ratings || data.ratings.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 text-xs">No ratings yet</p>';
+            return;
+        }
+
+        const ratingsHtml = data.ratings.map(r => {
+            const stars = '⭐'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+            const userName = r.userName || 'Anonymous';
+            const comment = r.comment ? `<p class="text-xs text-slate-400 mt-1">"${r.comment}"</p>` : '';
+            return `
+                <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <p style="font-weight: 500; font-size: 13px; color: #e2e8f0;">${stars} ${r.rating}/5</p>
+                            <p style="font-size: 12px; color: #94a3b8;">${userName}</p>
+                        </div>
+                    </div>
+                    ${comment}
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = ratingsHtml;
+    } catch (error) {
+        console.error('Error loading ratings:', error);
     }
 }
 
