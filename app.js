@@ -1082,12 +1082,21 @@ function showInfoWindow(location, markerElement) {
         </div>
     ` : '';
 
-    const ratingsSection = currentUser ? `
+    const ratingsSection = `
         <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
             <div class="space-y-2">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Existing Ratings</p>
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Community Ratings</p>
+                <div id="ratingsSummary-${location.id}" class="text-sm text-slate-300">
+                    <p style="font-size: 13px; color: #cbd5e1;">Loading ratings...</p>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
                 <div id="existingRatings-${location.id}" class="text-sm text-slate-300"></div>
             </div>
+
+            ${currentUser ? `
             <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
             <div class="space-y-2">
                 <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
@@ -1095,10 +1104,11 @@ function showInfoWindow(location, markerElement) {
                 <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
                 <button onclick="submitUserRatingHandler('${location.id}')" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
             </div>
-        </div>
-    ` : `
-        <div class="rounded-xl border border-purple-500/40 bg-purple-950/20 p-3 text-center">
-            <p class="text-sm text-slate-300"><button onclick="openLoginModal()" class="text-neon-purple font-semibold hover:underline">Login</button> to rate and save locations</p>
+            ` : `
+            <div class="rounded-xl border border-purple-500/40 bg-purple-950/20 p-2 text-center">
+                <p class="text-xs text-slate-300"><button onclick="openLoginModal()" class="text-neon-purple font-semibold hover:underline">Login</button> to leave a rating</p>
+            </div>
+            `}
         </div>
     `;
 
@@ -1197,9 +1207,7 @@ function showInfoWindow(location, markerElement) {
     renderRatingControls(location.id);
     updateRatingSummaryElements(location.id);
     loadLocationRatingSummaryFromBackend(location.id);
-    if (currentUser) {
-        loadExistingUserRatings(location.id);
-    }
+    loadExistingUserRatings(location.id);
 }
 
 function updateLocationsList(locations) {
@@ -1832,24 +1840,44 @@ async function loadExistingUserRatings(locationId) {
         }
 
         const data = await response.json();
-        const container = document.getElementById(`existingRatings-${locationId}`);
-        if (!container) return;
+        const existingContainer = document.getElementById(`existingRatings-${locationId}`);
+        const summaryContainer = document.getElementById(`ratingsSummary-${locationId}`);
+        
+        if (!existingContainer || !summaryContainer) return;
 
         if (!data.ratings || data.ratings.length === 0) {
-            container.innerHTML = '<p class="text-slate-500 text-xs">No ratings yet</p>';
+            summaryContainer.innerHTML = '<p class="text-slate-500 text-xs">No ratings yet. Be the first to rate!</p>';
+            existingContainer.innerHTML = '';
             return;
         }
 
-        const ratingsHtml = data.ratings.map(r => {
-            const stars = '⭐'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        // Calculate average rating
+        const totalRating = data.ratings.reduce((sum, r) => sum + r.rating, 0);
+        const avgRating = (totalRating / data.ratings.length).toFixed(1);
+        const ratingCount = data.ratings.length;
+        const fullStars = Math.round(avgRating);
+        const stars = '⭐'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+
+        // Display summary
+        summaryContainer.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">${stars}</span>
+                <span style="font-size: 13px; color: #cbd5e1;"><strong>${avgRating}</strong>/5 • <span style="color: #94a3b8;">${ratingCount} ${ratingCount === 1 ? 'rating' : 'ratings'}</span></span>
+            </div>
+        `;
+
+        // Display individual ratings (show first 5)
+        const ratingsHtml = data.ratings.slice(0, 5).map(r => {
+            const ratingStars = '⭐'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const userName = r.userName || 'Anonymous';
             const comment = r.comment ? `<p class="text-xs text-slate-400 mt-1">"${r.comment}"</p>` : '';
+            const timeAgo = getTimeAgo(r.createdAt);
             return `
                 <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div>
-                            <p style="font-weight: 500; font-size: 13px; color: #e2e8f0;">${stars} ${r.rating}/5</p>
-                            <p style="font-size: 12px; color: #94a3b8;">${userName}</p>
+                            <p style="font-weight: 500; font-size: 13px; color: #e2e8f0;">${ratingStars} ${r.rating}/5</p>
+                            <p style="font-size: 12px; color: #94a3b8;">${userName} • ${timeAgo}</p>
                         </div>
                     </div>
                     ${comment}
@@ -1857,10 +1885,30 @@ async function loadExistingUserRatings(locationId) {
             `;
         }).join('');
 
-        container.innerHTML = ratingsHtml;
+        existingContainer.innerHTML = ratingsHtml;
+
+        // Show "view all" link if there are more ratings
+        if (ratingCount > 5) {
+            existingContainer.innerHTML += `<p style="text-xs; color: #7c3aed; margin-top: 8px; cursor: pointer;" onclick="alert('Showing ${ratingCount} total ratings')">View all ${ratingCount} ratings →</p>`;
+        }
     } catch (error) {
         console.error('Error loading ratings:', error);
     }
+}
+
+// Helper function to format time ago
+function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return 'just now';
 }
 
 // Handle favorite toggle
