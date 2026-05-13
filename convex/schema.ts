@@ -2,6 +2,13 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  users: defineTable({
+    email: v.string(),
+    passwordHash: v.string(),
+    name: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_email", ["email"]),
   locationRatings: defineTable({
     locationId: v.string(),
     sessionId: v.string(),
@@ -15,6 +22,19 @@ export default defineSchema({
     ratingSum: v.number(),
     updatedAt: v.number(),
   }).index("by_locationId", ["locationId"]),
+  userRatings: defineTable({
+    locationId: v.string(),
+    userId: v.id("users"),
+    rating: v.number(),
+    comment: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_location_user", ["locationId", "userId"]).index("by_location", ["locationId"]).index("by_user", ["userId"]),
+  userFavorites: defineTable({
+    locationId: v.string(),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_location_user", ["locationId", "userId"]).index("by_user", ["userId"]),
   curatedLocations: defineTable({
     id: v.string(),
     name: v.string(),
@@ -28,6 +48,16 @@ export default defineSchema({
     externalUrl: v.optional(v.string()),
     googleMapsUrl: v.optional(v.string()),
     tags: v.array(v.string()),
+    detailedTags: v.optional(v.array(v.string())),
+    hours: v.optional(v.object({
+      monday: v.optional(v.object({ open: v.string(), close: v.string() })),
+      tuesday: v.optional(v.object({ open: v.string(), close: v.string() })),
+      wednesday: v.optional(v.object({ open: v.string(), close: v.string() })),
+      thursday: v.optional(v.object({ open: v.string(), close: v.string() })),
+      friday: v.optional(v.object({ open: v.string(), close: v.string() })),
+      saturday: v.optional(v.object({ open: v.string(), close: v.string() })),
+      sunday: v.optional(v.object({ open: v.string(), close: v.string() })),
+    })),
     curatorChoice: v.boolean(),
     caption: v.string(),
     address: v.string(),

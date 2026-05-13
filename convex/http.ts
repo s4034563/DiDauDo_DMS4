@@ -197,4 +197,198 @@ http.route({
   }),
 });
 
+// Auth endpoints
+http.route({
+  path: "/api/auth/signup",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/api/auth/signup",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(api.auth.signup, {
+        email: payload.email,
+        password: payload.password,
+        name: payload.name,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Signup failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+http.route({
+  path: "/api/auth/login",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/api/auth/login",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(api.auth.login, {
+        email: payload.email,
+        password: payload.password,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Login failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+// User ratings endpoints
+http.route({
+  path: "/api/user-ratings",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/api/user-ratings",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(api.ratings.submitUserRating, {
+        locationId: payload.locationId,
+        userId: payload.userId,
+        rating: Number(payload.rating),
+        comment: payload.comment || "",
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Rating failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+http.route({
+  path: "/api/user-ratings",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const locationId = url.searchParams.get("locationId") || "";
+
+    if (!locationId) {
+      return new Response(JSON.stringify({ error: "locationId is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const ratings = await ctx.runQuery(api.ratings.getUserRatings, { locationId });
+    return new Response(JSON.stringify({ locationId, ratings }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }),
+});
+
+http.route({
+  path: "/api/user-ratings",
+  method: "DELETE",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(api.ratings.deleteUserRating, {
+        locationId: payload.locationId,
+        userId: payload.userId,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Delete failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+// Favorites endpoints
+http.route({
+  path: "/api/favorites",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/api/favorites",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(api.ratings.toggleFavorite, {
+        locationId: payload.locationId,
+        userId: payload.userId,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Toggle failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+http.route({
+  path: "/api/favorites",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const locationId = url.searchParams.get("locationId") || "";
+    const userId = url.searchParams.get("userId") || "";
+
+    if (!locationId || !userId) {
+      return new Response(JSON.stringify({ error: "locationId and userId are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const isFav = await ctx.runQuery(api.ratings.isFavorite, {
+      locationId,
+      userId,
+    });
+    return new Response(JSON.stringify({ locationId, userId, isFavorite: isFav }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }),
+});
+
 export default http;

@@ -761,9 +761,20 @@
         <div class="app-sidebar w-96 glassmorphic flex flex-col z-10">
             <!-- Header -->
             <div class="p-6 border-b border-neon-purple border-opacity-20">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="text-2xl">🗺️</span>
-                    <h1 class="text-2xl font-bold neon-text">ĐiĐâuĐó</h1>
+                <div class="flex items-center justify-between gap-2 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🗺️</span>
+                        <h1 class="text-2xl font-bold neon-text">ĐiĐâuĐó</h1>
+                    </div>
+                    <!-- Auth Buttons -->
+                    <div id="authButtons" class="flex gap-2">
+                        <button id="loginBtn" class="px-3 py-1 text-xs rounded border border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-slate-900 transition" style="display:none;">Login</button>
+                        <button id="logoutBtn" class="px-3 py-1 text-xs rounded border border-red-500 text-red-400 hover:bg-red-500 hover:text-white transition" style="display:none;">Logout</button>
+                    </div>
+                </div>
+                <!-- User Info Display -->
+                <div id="userInfoDisplay" style="display:none;" class="mb-3 p-2 bg-slate-800 rounded text-xs">
+                    <p class="text-slate-300">Logged in as: <span id="userEmail" class="text-neon-purple font-semibold"></span></p>
                 </div>
                 <p class="text-sm text-gray-400" data-i18n="subtitle">Discover interesting locations near you</p>
                 <select id="languageSelect" class="language-select" aria-label="Language selector">
@@ -1116,6 +1127,58 @@
                 <button id="permissionDenyBtn" class="permission-btn permission-btn-deny" data-i18n="permissionDeny">Not Now</button>
                 <button id="permissionAllowBtn" class="permission-btn permission-btn-allow" data-i18n="permissionAllow">Allow</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" style="display:none;">
+        <div class="bg-slate-900 rounded-lg p-8 w-full max-w-md mx-4 border border-neon-purple border-opacity-40">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold neon-text">Welcome</h2>
+                <button id="loginModalClose" type="button" class="text-2xl text-slate-400 hover:text-white">×</button>
+            </div>
+
+            <!-- Tab Selection -->
+            <div class="flex gap-4 mb-6 border-b border-slate-700">
+                <button id="loginTabBtn" class="py-2 px-4 font-semibold text-neon-purple border-b-2 border-neon-purple">Login</button>
+                <button id="signupTabBtn" class="py-2 px-4 font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-300">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Email</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Password</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="••••••••">
+                </div>
+                <div id="loginError" class="text-red-400 text-sm hidden"></div>
+                <button type="submit" class="w-full py-2 rounded bg-neon-purple text-slate-900 font-semibold hover:bg-purple-600 transition">Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="space-y-4" style="display:none;">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Email</label>
+                    <input type="email" id="signupEmail" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Name</label>
+                    <input type="text" id="signupName" class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="Your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Password</label>
+                    <input type="password" id="signupPassword" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Confirm Password</label>
+                    <input type="password" id="signupPasswordConfirm" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="••••••••">
+                </div>
+                <div id="signupError" class="text-red-400 text-sm hidden"></div>
+                <button type="submit" class="w-full py-2 rounded bg-neon-purple text-slate-900 font-semibold hover:bg-purple-600 transition">Create Account</button>
+            </form>
         </div>
     </div>
 

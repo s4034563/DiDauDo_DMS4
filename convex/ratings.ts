@@ -115,3 +115,141 @@ export const submitRating = mutation({
     };
   },
 });
+
+// New: User-based ratings with comments
+export const submitUserRating = mutation({
+  args: {
+    locationId: v.string(),
+    userId: v.id("users"),
+    rating: v.number(),
+    comment: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const rating = normalizeRating(args.rating);
+
+    // Check if user already rated this location
+    const existing = await ctx.db
+      .query("userRatings")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        rating,
+        comment: args.comment,
+        updatedAt: now,
+      });
+      return { ok: true, operation: "updated" };
+    } else {
+      await ctx.db.insert("userRatings", {
+        locationId: args.locationId,
+        userId: args.userId,
+        rating,
+        comment: args.comment,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { ok: true, operation: "created" };
+    }
+  },
+});
+
+export const getUserRatings = query({
+  args: { locationId: v.string() },
+  handler: async (ctx, args) => {
+    const ratings = await ctx.db
+      .query("userRatings")
+      .withIndex("by_location", (q) => q.eq("locationId", args.locationId))
+      .collect();
+
+    // Sort by newest first
+    return ratings.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const getUserRatingForLocation = query({
+  args: { locationId: v.string(), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("userRatings")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+  },
+});
+
+export const deleteUserRating = mutation({
+  args: { locationId: v.string(), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("userRatings")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      return { ok: true, deleted: true };
+    }
+    return { ok: true, deleted: false };
+  },
+});
+
+// Favorites
+export const toggleFavorite = mutation({
+  args: {
+    locationId: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("userFavorites")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      return { ok: true, isFavorite: false };
+    } else {
+      await ctx.db.insert("userFavorites", {
+        locationId: args.locationId,
+        userId: args.userId,
+        createdAt: now,
+      });
+      return { ok: true, isFavorite: true };
+    }
+  },
+});
+
+export const isFavorite = query({
+  args: { locationId: v.string(), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const favorite = await ctx.db
+      .query("userFavorites")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+
+    return !!favorite;
+  },
+});
+
+export const getUserFavorites = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("userFavorites")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+  },
+});

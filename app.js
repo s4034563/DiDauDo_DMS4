@@ -1051,6 +1051,7 @@ let locationRefreshTimer = null;
 
 function showInfoWindow(location, markerElement) {
     activePopupLocationId = location.id;
+    activeSelectedLocationId = location.id;
     setSelectedLocation(location.id);
     closeMobileOverlays();
 
@@ -1060,6 +1061,39 @@ function showInfoWindow(location, markerElement) {
         averageRating: 0,
         userRating: 0,
     };
+
+    const hoursDisplay = location.hours ? formatHours(location.hours) : '';
+    const detailedTagsHtml = location.detailedTags && location.detailedTags.length > 0 ? `
+        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2">Details</p>
+            <div class="flex flex-wrap gap-2">
+                ${location.detailedTags.map(tag => {
+                    const color = detailedTagColors[location.type] || '#c084fc';
+                    return `<span style="background: ${color}20; border: 1px solid ${color}; color: ${color}; padding: 4px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap;">${tag}</span>`;
+                }).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const hoursHtml = hoursDisplay ? `
+        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Hours</p>
+            <p class="mt-1 text-sm text-slate-200">${hoursDisplay}</p>
+        </div>
+    ` : '';
+
+    const ratingsSection = currentUser ? `
+        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
+            <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
+            <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
+            <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
+            <button onclick="submitUserRating('${location.id}', document.querySelector('#userRatingStars-${location.id} .star.active')?.dataset.rating || 0, document.getElementById('userComment-${location.id}').value)" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
+        </div>
+    ` : `
+        <div class="rounded-xl border border-purple-500/40 bg-purple-950/20 p-3 text-center">
+            <p class="text-sm text-slate-300"><button onclick="openLoginModal()" class="text-neon-purple font-semibold hover:underline">Login</button> to rate and save locations</p>
+        </div>
+    `;
 
     rightInfoPanelContentElement.innerHTML = `
         <div class="space-y-3">
@@ -1074,6 +1108,8 @@ function showInfoWindow(location, markerElement) {
             </div>
             ` : ''}
 
+            ${hoursHtml}
+
             ${getLocationPreviewImageUrl(location) ? `
             <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
                 <img src="${getLocationPreviewImageUrl(location)}" alt="${location.name} preview" class="h-48 w-full object-cover" />
@@ -1087,6 +1123,8 @@ function showInfoWindow(location, markerElement) {
             <div class="flex flex-wrap gap-2">
                 ${location.vibes.map(vibe => `<span class="location-vibe">${getLocalizedVibe(vibe)}</span>`).join('')}
             </div>
+
+            ${detailedTagsHtml}
 
             ${location.curatorChoice ? `
             <div class="rounded-xl border border-yellow-500/40 bg-yellow-950/20 p-3 flex items-center gap-2">
@@ -1106,6 +1144,8 @@ function showInfoWindow(location, markerElement) {
                 <p id="ratingSummary-${location.id}" class="text-[11px] text-slate-400"></p>
             </div>
 
+            ${ratingsSection}
+
             ${(getLocationActionUrl(location) || getGoogleMapsUrl(location)) ? `
             <div class="flex gap-2 pt-1">
                 ${getLocationActionUrl(location) ? `<a href="${getLocationActionUrl(location)}" target="_blank" rel="noreferrer" class="button-primary flex-1 text-center text-xs no-underline">${t('viewViralVideo')}</a>` : ''}
@@ -1116,6 +1156,34 @@ function showInfoWindow(location, markerElement) {
     `;
     rightInfoPanelElement.classList.add('visible');
     rightInfoPanelElement.setAttribute('aria-hidden', 'false');
+
+    // Render star rating picker for logged-in users
+    if (currentUser) {
+        const starContainer = document.getElementById(`userRatingStars-${location.id}`);
+        if (starContainer) {
+            starContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('button');
+                star.className = 'star';
+                star.dataset.rating = i;
+                star.textContent = '⭐';
+                star.style.fontSize = '20px';
+                star.style.border = 'none';
+                star.style.background = 'transparent';
+                star.style.cursor = 'pointer';
+                star.style.opacity = '0.4';
+                star.style.transition = 'opacity 0.2s';
+                star.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll(`#userRatingStars-${location.id} .star`).forEach((s, idx) => {
+                        s.classList.toggle('active', idx < i);
+                        s.style.opacity = idx < i ? '1' : '0.4';
+                    });
+                });
+                starContainer.appendChild(star);
+            }
+        }
+    }
 
     renderRatingControls(location.id);
     updateRatingSummaryElements(location.id);
@@ -1426,6 +1494,348 @@ function handleSearchInputChange(value) {
 }
 
 // ========================================
+// AUTHENTICATION & USER FEATURES
+// ========================================
+
+// Global auth state
+let currentUser = null;
+
+// Load user from localStorage on startup
+function loadUserSession() {
+    const stored = localStorage.getItem('didaudo_user_session');
+    if (stored) {
+        try {
+            currentUser = JSON.parse(stored);
+            updateAuthUI();
+        } catch (e) {
+            console.error('Failed to load user session:', e);
+            currentUser = null;
+        }
+    }
+}
+
+// Save user to localStorage
+function saveUserSession() {
+    if (currentUser) {
+        localStorage.setItem('didaudo_user_session', JSON.stringify(currentUser));
+    } else {
+        localStorage.removeItem('didaudo_user_session');
+    }
+}
+
+// Update UI based on auth state
+function updateAuthUI() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfoDisplay = document.getElementById('userInfoDisplay');
+    const userEmail = document.getElementById('userEmail');
+
+    if (currentUser) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (userInfoDisplay) {
+            userInfoDisplay.style.display = 'block';
+            if (userEmail) userEmail.textContent = currentUser.email;
+        }
+    } else {
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (userInfoDisplay) userInfoDisplay.style.display = 'none';
+    }
+}
+
+// Open login modal
+function openLoginModal() {
+    const modal = document.getElementById('loginModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Close login modal
+function closeLoginModal() {
+    const modal = document.getElementById('loginModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Switch between login/signup tabs
+function switchAuthTab(isSignup) {
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const loginTabBtn = document.getElementById('loginTabBtn');
+    const signupTabBtn = document.getElementById('signupTabBtn');
+
+    if (isSignup) {
+        if (loginForm) loginForm.style.display = 'none';
+        if (signupForm) signupForm.style.display = 'block';
+        if (loginTabBtn) {
+            loginTabBtn.classList.remove('text-neon-purple', 'border-neon-purple');
+            loginTabBtn.classList.add('text-slate-400', 'border-transparent');
+        }
+        if (signupTabBtn) {
+            signupTabBtn.classList.remove('text-slate-400', 'border-transparent');
+            signupTabBtn.classList.add('text-neon-purple', 'border-neon-purple');
+        }
+    } else {
+        if (loginForm) loginForm.style.display = 'block';
+        if (signupForm) signupForm.style.display = 'none';
+        if (loginTabBtn) {
+            loginTabBtn.classList.remove('text-slate-400', 'border-transparent');
+            loginTabBtn.classList.add('text-neon-purple', 'border-neon-purple');
+        }
+        if (signupTabBtn) {
+            signupTabBtn.classList.remove('text-neon-purple', 'border-neon-purple');
+            signupTabBtn.classList.add('text-slate-400', 'border-transparent');
+        }
+    }
+}
+
+// Handle login
+async function handleLogin(email, password) {
+    const loginError = document.getElementById('loginError');
+    if (loginError) loginError.classList.add('hidden');
+
+    try {
+        const response = await fetch(convexUrl('/api/auth/login'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            if (loginError) {
+                loginError.textContent = data.error || 'Login failed';
+                loginError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        currentUser = {
+            userId: data.userId,
+            email: data.email,
+            name: data.name,
+        };
+        saveUserSession();
+        updateAuthUI();
+        closeLoginModal();
+
+        // Reset form
+        const form = document.getElementById('loginForm');
+        if (form) form.reset();
+    } catch (error) {
+        console.error('Login error:', error);
+        if (loginError) {
+            loginError.textContent = 'Network error. Please try again.';
+            loginError.classList.remove('hidden');
+        }
+    }
+}
+
+// Handle signup
+async function handleSignup(email, password, passwordConfirm, name) {
+    const signupError = document.getElementById('signupError');
+    if (signupError) signupError.classList.add('hidden');
+
+    if (password !== passwordConfirm) {
+        if (signupError) {
+            signupError.textContent = 'Passwords do not match';
+            signupError.classList.remove('hidden');
+        }
+        return;
+    }
+
+    try {
+        const response = await fetch(convexUrl('/api/auth/signup'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, name }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            if (signupError) {
+                signupError.textContent = data.error || 'Signup failed';
+                signupError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        currentUser = {
+            userId: data.userId,
+            email: data.email,
+            name: data.name,
+        };
+        saveUserSession();
+        updateAuthUI();
+        closeLoginModal();
+
+        // Reset forms
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        if (loginForm) loginForm.reset();
+        if (signupForm) signupForm.reset();
+        switchAuthTab(false);
+    } catch (error) {
+        console.error('Signup error:', error);
+        if (signupError) {
+            signupError.textContent = 'Network error. Please try again.';
+            signupError.classList.remove('hidden');
+        }
+    }
+}
+
+// Handle logout
+function handleLogout() {
+    currentUser = null;
+    saveUserSession();
+    updateAuthUI();
+    // Close info panel if open
+    setInfoPanelVisibility(false);
+}
+
+// Detailed tags by category
+const detailedTagsByCategory = {
+    'Sports': ['Football', 'Basketball', 'Volleyball', 'Badminton', 'Tennis'],
+    'Fitness': ['Gym', 'Yoga', 'Pilates', 'CrossFit', 'Swimming'],
+    'Music': ['Live Band', 'DJ', 'Karaoke', 'Acoustic', 'Jazz'],
+    'Nightlife': ['Bar', 'Club', 'Pub', 'Lounge', 'Brewery'],
+    'Art': ['Gallery', 'Studio', 'Street Art', 'Installation', 'Sculpture'],
+    'Photography': ['History', 'Modern Art', 'Science', 'Design'],
+    'Shopping': ['Fashion', 'Electronics', 'Books', 'Antiques', 'Vintage'],
+    'Markets': ['Night Market', 'Flower Market', 'Art Market', 'Food Market'],
+    'Dining': ['Vietnamese', 'Italian', 'Japanese', 'Thai', 'Korean', 'Vegan'],
+    'Cafes': ['Coffee', 'Tea', 'Dessert', 'Brunch', 'Bakery'],
+    'Hiking': ['Easy Trail', 'Medium Trail', 'Mountain', 'Forest', 'Waterfall'],
+    'Parks': ['City Park', 'Botanical Garden', 'Beach', 'Lake'],
+    'Events': ['Concert', 'Conference', 'Workshop', 'Meetup', 'Expo'],
+    'Festivals': ['Music Festival', 'Street Festival', 'Cultural Festival', 'Food Festival'],
+    'Gaming': ['Arcade', 'Video Game', 'Board Game', 'VR'],
+    'Arcades': ['Classic Arcade', 'Racing', 'Fighting', 'Prize Games'],
+};
+
+const detailedTagColors = {
+    'Sports': '#3b82f6',
+    'Fitness': '#3b82f6',
+    'Music': '#a855f7',
+    'Nightlife': '#a855f7',
+    'Art': '#ec4899',
+    'Photography': '#ec4899',
+    'Shopping': '#f97316',
+    'Markets': '#f97316',
+    'Dining': '#ef4444',
+    'Cafes': '#ef4444',
+    'Hiking': '#22c55e',
+    'Parks': '#22c55e',
+    'Events': '#eab308',
+    'Festivals': '#eab308',
+    'Gaming': '#14b8a6',
+    'Arcades': '#14b8a6',
+};
+
+// Format hours for display
+function formatHours(hoursObj) {
+    if (!hoursObj) return '';
+    
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    const now = new Date();
+    const today = days[now.getDay() === 0 ? 6 : now.getDay() - 1];
+    const todayHours = hoursObj[today];
+    
+    if (!todayHours) return '';
+    
+    const isOpen = isCurrentlyOpen(todayHours, now);
+    const statusText = isOpen ? '🟢 Open' : '🔴 Closed';
+    
+    return `${statusText} • ${todayHours.open} - ${todayHours.close}`;
+}
+
+// Check if location is currently open
+function isCurrentlyOpen(todayHours, now) {
+    if (!todayHours) return false;
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    return currentTime >= todayHours.open && currentTime <= todayHours.close;
+}
+
+// Handle rating submission for logged-in users
+async function submitUserRating(locationId, rating, comment) {
+    if (!currentUser) {
+        openLoginModal();
+        return;
+    }
+
+    try {
+        const response = await fetch(convexUrl('/api/user-ratings'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                locationId,
+                userId: currentUser.userId,
+                rating: Number(rating),
+                comment,
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok && data.ok) {
+            // Refresh ratings display
+            if (activeSelectedLocationId) {
+                showInfoWindow(allLocations.find(loc => loc.id === activeSelectedLocationId));
+            }
+        }
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+    }
+}
+
+// Handle favorite toggle
+async function toggleFavorite(locationId) {
+    if (!currentUser) {
+        openLoginModal();
+        return;
+    }
+
+    try {
+        const response = await fetch(convexUrl('/api/favorites'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                locationId,
+                userId: currentUser.userId,
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok && data.ok) {
+            // Refresh if needed
+            if (activeSelectedLocationId) {
+                showInfoWindow(allLocations.find(loc => loc.id === activeSelectedLocationId));
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+    }
+}
+
+// Check if location is favorite
+async function checkIsFavorite(locationId) {
+    if (!currentUser) return false;
+
+    try {
+        const response = await fetch(
+            convexUrl(`/api/favorites?locationId=${locationId}&userId=${currentUser.userId}`)
+        );
+        const data = await response.json();
+        return data.isFavorite || false;
+    } catch (error) {
+        console.error('Error checking favorite:', error);
+        return false;
+    }
+}
+
+// ========================================
 // INITIALIZATION
 // ========================================
 
@@ -1436,12 +1846,59 @@ window.addEventListener('load', () => {
         return;
     }
 
+    // Load user session
+    loadUserSession();
+
     const languageSelect = document.getElementById('languageSelect');
     currentLanguage = languageSelect.value;
     languageSelect.addEventListener('change', (event) => {
         currentLanguage = event.target.value;
         applyLanguage();
     });
+
+    // Setup auth modal and buttons
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginModalClose = document.getElementById('loginModalClose');
+    const loginTabBtn = document.getElementById('loginTabBtn');
+    const signupTabBtn = document.getElementById('signupTabBtn');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+
+    if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
+
+    if (loginTabBtn) loginTabBtn.addEventListener('click', () => switchAuthTab(false));
+    if (signupTabBtn) signupTabBtn.addEventListener('click', () => switchAuthTab(true));
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            await handleLogin(email, password);
+        });
+    }
+
+    if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+            const name = document.getElementById('signupName').value;
+            await handleSignup(email, password, passwordConfirm, name);
+        });
+    }
+
+    // Close modal when clicking outside
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) closeLoginModal();
+        });
+    }
 
     applyLanguageToStaticText();
 
