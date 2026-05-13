@@ -261,6 +261,33 @@
             </div>
             <div id="editVibeTagsContainer" class="flex flex-wrap gap-2"></div>
           </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Detailed Tags</label>
+              <span class="text-[11px] text-slate-500">Pick relevant details</span>
+            </div>
+            <input id="editDetailedTags" class="field" placeholder="e.g., Italian, Vegan, Coffee - comma separated" />
+            <p class="mt-1 text-xs text-slate-500">Enter specific details about the location</p>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Hours (HH:MM format)</label>
+            <div class="space-y-2">
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="text-xs text-slate-400">Mon</label><input id="editHoursMonday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Tue</label><input id="editHoursTuesday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Wed</label><input id="editHoursWednesday" class="field text-sm" placeholder="09:00-17:00" /></div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="text-xs text-slate-400">Thu</label><input id="editHoursThursday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Fri</label><input id="editHoursFriday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Sat</label><input id="editHoursSaturday" class="field text-sm" placeholder="09:00-17:00" /></div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="text-xs text-slate-400">Sun</label><input id="editHoursSunday" class="field text-sm" placeholder="09:00-17:00" /></div>
+              </div>
+            </div>
+            <p class="mt-1 text-xs text-slate-500">Format: HH:MM-HH:MM (e.g., 09:00-17:00) or leave empty for closed</p>
+          </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="editCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
             <span>
@@ -333,6 +360,33 @@
               <span class="text-[11px] text-slate-500">Pick one or more</span>
             </div>
             <div id="addVibeTagsContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Detailed Tags</label>
+              <span class="text-[11px] text-slate-500">Pick relevant details</span>
+            </div>
+            <input id="addDetailedTags" class="field" placeholder="e.g., Italian, Vegan, Coffee - comma separated" />
+            <p class="mt-1 text-xs text-slate-500">Enter specific details about the location</p>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Hours (HH:MM format)</label>
+            <div class="space-y-2">
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="text-xs text-slate-400">Mon</label><input id="addHoursMonday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Tue</label><input id="addHoursTuesday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Wed</label><input id="addHoursWednesday" class="field text-sm" placeholder="09:00-17:00" /></div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="text-xs text-slate-400">Thu</label><input id="addHoursThursday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Fri</label><input id="addHoursFriday" class="field text-sm" placeholder="09:00-17:00" /></div>
+                <div><label class="text-xs text-slate-400">Sat</label><input id="addHoursSaturday" class="field text-sm" placeholder="09:00-17:00" /></div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="text-xs text-slate-400">Sun</label><input id="addHoursSunday" class="field text-sm" placeholder="09:00-17:00" /></div>
+              </div>
+            </div>
+            <p class="mt-1 text-xs text-slate-500">Format: HH:MM-HH:MM (e.g., 09:00-17:00) or leave empty for closed</p>
           </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="addCurator" type="checkbox" class="h-4 w-4 accent-amber-400" />
@@ -618,6 +672,45 @@
       return locations;
     }
 
+    function parseHours(hoursObj) {
+      if (!hoursObj || typeof hoursObj !== 'object') return {};
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const result = {};
+      days.forEach(day => {
+        if (hoursObj[day]) result[day] = hoursObj[day];
+      });
+      return result;
+    }
+
+    function formatHoursInput(day, hoursObj) {
+      if (!hoursObj || !hoursObj[day]) return '';
+      const h = hoursObj[day];
+      return `${h.open}-${h.close}`;
+    }
+
+    function parseHoursFromInputs() {
+      const days = {
+        monday: 'editHoursMonday',
+        tuesday: 'editHoursTuesday',
+        wednesday: 'editHoursWednesday',
+        thursday: 'editHoursThursday',
+        friday: 'editHoursFriday',
+        saturday: 'editHoursSaturday',
+        sunday: 'editHoursSunday'
+      };
+      const result = {};
+      Object.entries(days).forEach(([day, id]) => {
+        const val = document.getElementById(id)?.value?.trim();
+        if (val) {
+          const parts = val.split('-');
+          if (parts.length === 2) {
+            result[day] = { open: parts[0].trim(), close: parts[1].trim() };
+          }
+        }
+      });
+      return result;
+    }
+
     function normalizeLocation(location) {
       const tags = Array.isArray(location.tags)
         ? location.tags
@@ -640,6 +733,8 @@
         externalUrl: location.externalUrl || '',
         googleMapsUrl: location.googleMapsUrl || '',
         tags: getVisibleVibeTags(tags),
+        detailedTags: (location.detailedTags || []).filter(Boolean),
+        hours: parseHours(location.hours) || {},
         curatorChoice: Boolean(location.curatorChoice),
         caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
         address: location.address || ''
@@ -792,6 +887,10 @@
         editFields.thumbnailUrl.value = '';
         editFields.address.value = '';
         editFields.googleMapsUrl.value = '';
+        document.getElementById('editDetailedTags').value = '';
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day, idx) => {
+          document.getElementById(`editHours${day}`).value = '';
+        });
         setSelectedActivities(activityPickers.edit, ['Cafes']);
         setSelectedTags(vibePickers.edit, []);
         editFields.curator.checked = false;
@@ -809,6 +908,16 @@
       editFields.thumbnailUrl.value = location.thumbnailUrl || '';
       editFields.address.value = location.address || '';
       editFields.googleMapsUrl.value = location.googleMapsUrl || '';
+      document.getElementById('editDetailedTags').value = (location.detailedTags || []).join(', ');
+      
+      // Populate hours
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const dayCapitals = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      days.forEach((day, idx) => {
+        const h = location.hours && location.hours[day];
+        document.getElementById(`editHours${dayCapitals[idx]}`).value = h ? `${h.open}-${h.close}` : '';
+      });
+      
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
       editFields.curator.checked = Boolean(location.curatorChoice);
@@ -914,6 +1023,11 @@
         : (externalUrl ? 'video' : (location.mediaType || 'video'));
 
       const selectedActivities = getSelectedActivities(activityPickers.edit);
+      const detailedTags = document.getElementById('editDetailedTags').value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean);
+
       const updated = normalizeLocation({
         ...location,
         name: editFields.name.value.trim() || location.name,
@@ -928,6 +1042,8 @@
         type: selectedActivities[0] || location.type || 'Cafes',
         types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
         tags: getSelectedTags(vibePickers.edit),
+        detailedTags: detailedTags,
+        hours: parseHoursFromInputs(),
         curatorChoice: editFields.curator.checked
       });
 
@@ -968,6 +1084,34 @@
       const activities = getSelectedActivities(activityPickers.add);
       const activity = activities[0] || 'Cafes';
       const file = addFields.image.files && addFields.image.files[0];
+      const detailedTags = document.getElementById('addDetailedTags').value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean);
+
+      // Parse hours from add form
+      const parseAddHours = () => {
+        const days = {
+          monday: 'addHoursMonday',
+          tuesday: 'addHoursTuesday',
+          wednesday: 'addHoursWednesday',
+          thursday: 'addHoursThursday',
+          friday: 'addHoursFriday',
+          saturday: 'addHoursSaturday',
+          sunday: 'addHoursSunday'
+        };
+        const result = {};
+        Object.entries(days).forEach(([day, id]) => {
+          const val = document.getElementById(id)?.value?.trim();
+          if (val) {
+            const parts = val.split('-');
+            if (parts.length === 2) {
+              result[day] = { open: parts[0].trim(), close: parts[1].trim() };
+            }
+          }
+        });
+        return result;
+      };
 
       const finishSave = async ({ mediaURL = '', thumbnailUrl = '', externalUrl = '' }) => {
         const location = normalizeLocation({
@@ -982,6 +1126,8 @@
           address,
           googleMapsUrl,
           tags,
+          detailedTags,
+          hours: parseAddHours(),
           types: activities.length > 0 ? activities : [activity],
           curatorChoice: addFields.curator.checked,
           type: activity
@@ -996,6 +1142,10 @@
         addFields.thumbnail.value = '';
         addFields.address.value = '';
         addFields.googleMapsUrl.value = '';
+        document.getElementById('addDetailedTags').value = '';
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day, idx) => {
+          document.getElementById(`addHours${day}`).value = '';
+        });
         setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
