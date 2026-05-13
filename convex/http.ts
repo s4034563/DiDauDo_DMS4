@@ -212,7 +212,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runMutation(api.auth.signup, {
+      const result = await ctx.runAction(api.auth.signup, {
         email: payload.email,
         password: payload.password,
         name: payload.name,
@@ -243,7 +243,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runMutation(api.auth.login, {
+      const result = await ctx.runAction(api.auth.login, {
         email: payload.email,
         password: payload.password,
       });
