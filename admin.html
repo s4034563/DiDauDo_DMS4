@@ -673,13 +673,13 @@
     }
 
     function parseHours(hoursObj) {
-      if (!hoursObj || typeof hoursObj !== 'object') return {};
+      if (!hoursObj || typeof hoursObj !== 'object') return undefined;
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       const result = {};
       days.forEach(day => {
         if (hoursObj[day]) result[day] = hoursObj[day];
       });
-      return result;
+      return Object.keys(result).length ? result : undefined;
     }
 
     function formatHoursInput(day, hoursObj) {
@@ -734,7 +734,7 @@
         googleMapsUrl: location.googleMapsUrl || '',
         tags: getVisibleVibeTags(tags),
         detailedTags: (location.detailedTags || []).filter(Boolean),
-        hours: parseHours(location.hours) || {},
+        hours: (function(){ const _h = parseHours(location.hours); return _h && Object.keys(_h).length ? _h : undefined; })(),
         curatorChoice: Boolean(location.curatorChoice),
         caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
         address: location.address || ''
@@ -1110,7 +1110,7 @@
             }
           }
         });
-        return result;
+        return Object.keys(result).length ? result : undefined;
       };
 
       const finishSave = async ({ mediaURL = '', thumbnailUrl = '', externalUrl = '' }) => {
