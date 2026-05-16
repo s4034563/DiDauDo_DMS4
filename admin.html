@@ -742,7 +742,22 @@
     }
 
     function normalizeLocations(remoteLocations) {
-      return Array.isArray(remoteLocations) ? remoteLocations.map(normalizeLocation) : [];
+      const mapped = Array.isArray(remoteLocations) ? remoteLocations.map(normalizeLocation) : [];
+      // Preserve existing detailedTags and hours when server response omits them
+      return mapped.map(loc => {
+        const prev = state.locations.find(l => l.id === loc.id);
+        if (prev) {
+          if ((!loc.detailedTags || loc.detailedTags.length === 0) && prev.detailedTags && prev.detailedTags.length > 0) {
+            loc.detailedTags = prev.detailedTags;
+          }
+          const locHoursEmpty = !loc.hours || Object.keys(loc.hours || {}).length === 0;
+          const prevHoursPresent = prev.hours && Object.keys(prev.hours || {}).length > 0;
+          if (locHoursEmpty && prevHoursPresent) {
+            loc.hours = prev.hours;
+          }
+        }
+        return loc;
+      });
     }
 
     async function refreshLocations({ selectedId = state.selectedId, quiet = false } = {}) {
