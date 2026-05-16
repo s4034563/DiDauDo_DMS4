@@ -720,6 +720,18 @@
       const types = getPersistedActivities(location);
       const primaryType = types[0] || location.type || 'Cafes';
 
+      // Helper: check if hours is already in correct format
+      const isValidHoursFormat = (obj) => {
+        if (!obj || typeof obj !== 'object') return false;
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        return days.some(day => obj[day] && obj[day].open && obj[day].close);
+      };
+
+      // Use hours as-is if already formatted, otherwise parse
+      const normalizedHours = isValidHoursFormat(location.hours) 
+        ? location.hours 
+        : parseHours(location.hours);
+
       return {
         id: location.id || createId(),
         name: location.name || 'Untitled location',
@@ -734,7 +746,7 @@
         googleMapsUrl: location.googleMapsUrl || '',
         tags: getVisibleVibeTags(tags),
         detailedTags: (location.detailedTags || []).filter(Boolean),
-        hours: (function(){ const _h = parseHours(location.hours); return _h && Object.keys(_h).length ? _h : undefined; })(),
+        hours: normalizedHours,
         curatorChoice: Boolean(location.curatorChoice),
         caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
         address: location.address || ''
@@ -794,12 +806,15 @@
     }
 
     async function persistLocation(updatedLocation) {
+      const normalized = normalizeLocation(updatedLocation);
+      console.log('📤 Sending location to server:', JSON.stringify(normalized, null, 2));
+      
       const response = await fetch(apiUrl('/api/locations'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ location: normalizeLocation(updatedLocation) })
+        body: JSON.stringify({ location: normalized })
       });
 
       if (!response.ok) {
@@ -807,7 +822,11 @@
       }
 
       const payload = await response.json();
+      console.log('📥 Server response locations:', JSON.stringify(payload.locations, null, 2));
+      
       state.locations = normalizeLocations(payload.locations || []);
+      console.log('🔄 After normalizeLocations:', JSON.stringify(state.locations.find(l => l.id === updatedLocation.id), null, 2));
+      
       state.selectedId = updatedLocation.id;
       renderAll();
     }
