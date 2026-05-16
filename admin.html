@@ -1038,10 +1038,17 @@
         : (externalUrl ? 'video' : (location.mediaType || 'video'));
 
       const selectedActivities = getSelectedActivities(activityPickers.edit);
-      const detailedTags = document.getElementById('editDetailedTags').value
+      const detailedTagsFromForm = document.getElementById('editDetailedTags').value
         .split(',')
         .map(tag => tag.trim())
         .filter(Boolean);
+      
+      // Preserve original detailedTags if form is empty
+      const detailedTags = detailedTagsFromForm.length > 0 ? detailedTagsFromForm : (location.detailedTags || []);
+      
+      // Preserve original hours if form didn't change them
+      const hoursFromForm = parseHoursFromInputs();
+      const hours = (hoursFromForm && Object.keys(hoursFromForm).length > 0) ? hoursFromForm : (location.hours || undefined);
 
       const updated = normalizeLocation({
         ...location,
@@ -1058,7 +1065,7 @@
         types: selectedActivities.length > 0 ? selectedActivities : getPersistedActivities(location),
         tags: getSelectedTags(vibePickers.edit),
         detailedTags: detailedTags,
-        hours: parseHoursFromInputs(),
+        hours: hours,
         curatorChoice: editFields.curator.checked
       });
 
