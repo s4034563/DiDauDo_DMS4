@@ -942,14 +942,19 @@
       editFields.thumbnailUrl.value = location.thumbnailUrl || '';
       editFields.address.value = location.address || '';
       editFields.googleMapsUrl.value = location.googleMapsUrl || '';
-      document.getElementById('editDetailedTags').value = (location.detailedTags || []).join(', ');
+      
+      const detailedTagsValue = (location.detailedTags || []).join(', ');
+      document.getElementById('editDetailedTags').value = detailedTagsValue;
+      console.log('📝 Filled editDetailedTags:', detailedTagsValue, 'from location.detailedTags:', location.detailedTags);
       
       // Populate hours
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       const dayCapitals = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       days.forEach((day, idx) => {
         const h = location.hours && location.hours[day];
-        document.getElementById(`editHours${dayCapitals[idx]}`).value = h ? `${h.open}-${h.close}` : '';
+        const hoursValue = h ? `${h.open}-${h.close}` : '';
+        document.getElementById(`editHours${dayCapitals[idx]}`).value = hoursValue;
+        if (h) console.log(`📝 Filled ${day}:`, hoursValue);
       });
       
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));

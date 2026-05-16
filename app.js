@@ -211,6 +211,8 @@ function mapServerLocationToAppLocation(location) {
         videoURL: location.externalUrl || location.videoURL || '',
         address: location.address || '',
         vibes: assignAIVibes(caption, seedVibes),
+        detailedTags: location.detailedTags || [],
+        hours: location.hours || undefined,
         curatorChoice: Boolean(location.curatorChoice)
     };
 }
