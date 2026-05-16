@@ -1308,15 +1308,6 @@
       const selected = state.locations[0];
       if (selected) selectLocation(selected.id);
       addFields.coordinates.value = formatCoordinates(Number(DEFAULT_CENTER[1].toFixed(6)), Number(DEFAULT_CENTER[0].toFixed(6)));
-
-      window.setInterval(() => {
-        // Skip refresh if user is actively editing a form field
-        if (isEditFormActive()) {
-          console.log('⏸️  Skipping auto-refresh: user is editing form');
-          return;
-        }
-        void refreshLocations({ selectedId: state.selectedId, quiet: true });
-      }, 8000);
     })();
   </script>
 </body>
