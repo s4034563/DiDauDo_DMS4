@@ -992,13 +992,27 @@
     function isEditFormActive() {
       const active = document.activeElement;
       if (!active) return false;
-      return active.id === 'editName'
-        || active.id === 'editCoordinates'
-        || active.id === 'editMedia'
-        || active.id === 'editThumbnail'
-        || active.id === 'editThumbnailUrl'
-        || active.id === 'editAddress'
-        || active.id === 'editGoogleMapsUrl';
+      const id = active.id || '';
+      
+      // Check main edit fields
+      if (id === 'editName'
+        || id === 'editCoordinates'
+        || id === 'editMedia'
+        || id === 'editThumbnail'
+        || id === 'editThumbnailUrl'
+        || id === 'editAddress'
+        || id === 'editGoogleMapsUrl'
+        || id === 'editDetailedTags'
+        || id === 'editCurator') {
+        return true;
+      }
+      
+      // Check all hours fields
+      if (id.startsWith('editHours')) {
+        return true;
+      }
+      
+      return false;
     }
 
     function renderAll({ preserveEditForm = false } = {}) {
@@ -1296,6 +1310,11 @@
       addFields.coordinates.value = formatCoordinates(Number(DEFAULT_CENTER[1].toFixed(6)), Number(DEFAULT_CENTER[0].toFixed(6)));
 
       window.setInterval(() => {
+        // Skip refresh if user is actively editing a form field
+        if (isEditFormActive()) {
+          console.log('⏸️  Skipping auto-refresh: user is editing form');
+          return;
+        }
         void refreshLocations({ selectedId: state.selectedId, quiet: true });
       }, 8000);
     })();
