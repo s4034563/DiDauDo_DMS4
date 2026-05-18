@@ -676,7 +676,8 @@
       const text = String(value || '').trim();
       if (!text) return null;
 
-      const amPmMatch = text.match(/^(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+      // More flexible AM/PM regex with optional spaces
+      const amPmMatch = text.match(/^\s*(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])\s*$/);
       if (amPmMatch) {
         let hour = Number(amPmMatch[1]);
         const minute = Number(amPmMatch[2] || '0');
@@ -692,7 +693,8 @@
         return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       }
 
-      const twentyFourMatch = text.match(/^(\d{1,2}):(\d{2})$/);
+      // 24-hour format with optional spaces
+      const twentyFourMatch = text.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
       if (!twentyFourMatch) return null;
       const hour = Number(twentyFourMatch[1]);
       const minute = Number(twentyFourMatch[2]);
@@ -702,16 +704,7 @@
       return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     }
 
-    function formatTimeTo12Hour(value) {
-      const normalized = parseTimeTo24Hour(value);
-      if (!normalized) return '';
-      const [hourText, minuteText] = normalized.split(':');
-      const hour24 = Number(hourText);
-      const minute = Number(minuteText);
-      const meridiem = hour24 >= 12 ? 'PM' : 'AM';
-      const hour12 = hour24 % 12 || 12;
-      return `${hour12}:${String(minute).padStart(2, '0')} ${meridiem}`;
-    }
+    function formatTimeTo12Hour(value) {\n      const normalized = parseTimeTo24Hour(value);\n      if (!normalized) {\n        console.warn(`  formatTimeTo12Hour: FAILED to normalize '${value}'`);\n        return '';\n      }\n      const [hourText, minuteText] = normalized.split(':');\n      const hour24 = Number(hourText);\n      const minute = Number(minuteText);\n      const meridiem = hour24 >= 12 ? 'PM' : 'AM';\n      const hour12 = hour24 % 12 || 12;\n      const result = `${hour12}:${String(minute).padStart(2, '0')} ${meridiem}`;\n      console.log(`  formatTimeTo12Hour: '${value}' \u2192 '${result}'`);\n      return result;\n    }
 
     function parseHours(hoursObj) {
       if (!hoursObj || typeof hoursObj !== 'object') return undefined;
@@ -741,10 +734,12 @@
     function parseDayHoursValue(value) {
       const text = String(value || '').trim();
       if (!text) return { empty: true };
-      const parts = text.split('-');
+      // Handle both hyphen and en-dash (–) as separator
+      const parts = text.split(/[\-–]/).map(p => p.trim());
       if (parts.length !== 2) return { empty: false, value: null };
       const open = parseTimeTo24Hour(parts[0]);
       const close = parseTimeTo24Hour(parts[1]);
+      console.log(`  parseDayHoursValue: input='${text}' → open='${open}' close='${close}'`);
       if (!open || !close) return { empty: false, value: null };
       return { empty: false, value: { open, close } };
     }
@@ -776,13 +771,16 @@
 
       Object.entries(days).forEach(([day, id]) => {
         const rawValue = document.getElementById(id)?.value;
+        console.log(`  parseHoursFromInputs: ${day} field value='${rawValue}'`);
         const parsed = parseDayHoursValue(rawValue);
         if (parsed.empty) return;
         hasInput = true;
         if (!parsed.value) {
+          console.log(`  parseHoursFromInputs: INVALID ${day}`);
           invalidDay = dayLabels[day];
           return;
         }
+        console.log(`  parseHoursFromInputs: VALID ${day}`, parsed.value);
         result[day] = parsed.value;
       });
 
@@ -907,10 +905,13 @@
       console.log('📥 Server response locations:', JSON.stringify(payload.locations, null, 2));
       
       state.locations = normalizeLocations(payload.locations || []);
-      console.log('🔄 After normalizeLocations:', JSON.stringify(state.locations.find(l => l.id === updatedLocation.id), null, 2));
+      const updatedInState = state.locations.find(l => l.id === updatedLocation.id);
+      console.log('🔄 After normalizeLocations, location.hours:', updatedInState?.hours);
       
       state.selectedId = updatedLocation.id;
       renderAll();
+      const afterRenderForm = getSelectedLocation();
+      console.log('✅ After renderAll & fillEditForm, location.hours in state:', afterRenderForm?.hours);
     }
 
     async function deleteLocation(id) {
@@ -1167,12 +1168,16 @@
       const detailedTags = detailedTagsFromForm.length > 0 ? detailedTagsFromForm : (location.detailedTags || []);
       
       // Preserve original hours if all day fields are empty; validate AM/PM input when provided.
+      console.log('🔍 updateSelectedFromForm: parsing edit hours...');
       const parsedEditHours = parseHoursFromInputs('edit');
+      console.log('🔍 updateSelectedFromForm: parsedEditHours result:', parsedEditHours);
       if (parsedEditHours.invalidDay) {
+        console.log(`❌ Invalid hours for ${parsedEditHours.invalidDay}`);
         setMapStatus(`Invalid hours for ${parsedEditHours.invalidDay}. Use format like 9:00 AM-5:00 PM.`);
         return;
       }
       const hours = parsedEditHours.hasInput ? parsedEditHours.hours : (location.hours || undefined);
+      console.log('✅ Final hours object to save:', hours);
 
       const updated = normalizeLocation({
         ...location,
