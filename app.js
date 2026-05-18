@@ -1755,30 +1755,98 @@ const detailedTagColors = {
     'Arcades': '#14b8a6',
 };
 
-// Format hours for display
-function formatHours(hoursObj) {
-    if (!hoursObj) return '';
-    
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
-    const now = new Date();
-    const today = days[now.getDay() === 0 ? 6 : now.getDay() - 1];
-    const todayHours = hoursObj[today];
-    
-    if (!todayHours) return '';
-    
-    const isOpen = isCurrentlyOpen(todayHours, now);
-    const statusText = isOpen ? '🟢 Open' : '🔴 Closed';
-    
-    return `${statusText} • ${todayHours.open} - ${todayHours.close}`;
+function parseTimeToMinutes(timeText) {
+    const match = String(timeText || '').match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        return null;
+    }
+    return (hour * 60) + minute;
 }
 
-// Check if location is currently open
-function isCurrentlyOpen(todayHours, now) {
-    if (!todayHours) return false;
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    return currentTime >= todayHours.open && currentTime <= todayHours.close;
+function formatTimeTo12Hour(timeText) {
+    const minutes = parseTimeToMinutes(timeText);
+    if (minutes === null) return '';
+    const hour24 = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+    const meridiem = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 % 12 || 12;
+    return `${hour12}:${String(minute).padStart(2, '0')} ${meridiem}`;
+}
+
+function getVietnamNowParts() {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        weekday: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    const parts = formatter.formatToParts(new Date());
+    const weekday = (parts.find(part => part.type === 'weekday')?.value || '').toLowerCase();
+    const hour = Number(parts.find(part => part.type === 'hour')?.value || '0');
+    const minute = Number(parts.find(part => part.type === 'minute')?.value || '0');
+    return {
+        weekday,
+        currentMinutes: (hour * 60) + minute
+    };
+}
+
+function hasConfiguredHours(hoursObj) {
+    if (!hoursObj || typeof hoursObj !== 'object') return false;
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    return days.some(day => {
+        const dayHours = hoursObj[day];
+        if (!dayHours) return false;
+        return parseTimeToMinutes(dayHours.open) !== null && parseTimeToMinutes(dayHours.close) !== null;
+    });
+}
+
+// Format hours for display using Vietnam local time.
+function formatHours(hoursObj) {
+    if (!hasConfiguredHours(hoursObj)) return '';
+
+    const { weekday, currentMinutes } = getVietnamNowParts();
+    const dayKey = {
+        monday: 'monday',
+        tuesday: 'tuesday',
+        wednesday: 'wednesday',
+        thursday: 'thursday',
+        friday: 'friday',
+        saturday: 'saturday',
+        sunday: 'sunday'
+    }[weekday];
+
+    if (!dayKey) return '';
+
+    const todayHours = hoursObj[dayKey];
+    if (!todayHours) {
+        return '🔴 Closed now (VN) • Closed today';
+    }
+
+    const openMinutes = parseTimeToMinutes(todayHours.open);
+    const closeMinutes = parseTimeToMinutes(todayHours.close);
+    if (openMinutes === null || closeMinutes === null) return '';
+
+    const isOpen = isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes);
+    const openDisplay = formatTimeTo12Hour(todayHours.open);
+    const closeDisplay = formatTimeTo12Hour(todayHours.close);
+    const rangeText = `${openDisplay} - ${closeDisplay}`;
+
+    return isOpen
+        ? `🟢 Open now (VN) • ${rangeText}`
+        : `🔴 Closed now (VN) • ${rangeText}`;
+}
+
+// Supports same-day and overnight ranges (e.g., 8:30 PM-4:30 AM).
+function isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes) {
+    if (openMinutes === closeMinutes) return true;
+    if (openMinutes < closeMinutes) {
+        return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+    }
+    return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
 }
 
 // Handle rating submission for logged-in users
