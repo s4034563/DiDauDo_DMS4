@@ -704,7 +704,21 @@
       return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     }
 
-    function formatTimeTo12Hour(value) {\n      const normalized = parseTimeTo24Hour(value);\n      if (!normalized) {\n        console.warn(`  formatTimeTo12Hour: FAILED to normalize '${value}'`);\n        return '';\n      }\n      const [hourText, minuteText] = normalized.split(':');\n      const hour24 = Number(hourText);\n      const minute = Number(minuteText);\n      const meridiem = hour24 >= 12 ? 'PM' : 'AM';\n      const hour12 = hour24 % 12 || 12;\n      const result = `${hour12}:${String(minute).padStart(2, '0')} ${meridiem}`;\n      console.log(`  formatTimeTo12Hour: '${value}' \u2192 '${result}'`);\n      return result;\n    }
+    function formatTimeTo12Hour(value) {
+      const normalized = parseTimeTo24Hour(value);
+      if (!normalized) {
+        console.warn(`  formatTimeTo12Hour: FAILED to normalize '${value}'`);
+        return '';
+      }
+      const [hourText, minuteText] = normalized.split(':');
+      const hour24 = Number(hourText);
+      const minute = Number(minuteText);
+      const meridiem = hour24 >= 12 ? 'PM' : 'AM';
+      const hour12 = hour24 % 12 || 12;
+      const result = `${hour12}:${String(minute).padStart(2, '0')} ${meridiem}`;
+      console.log(`  formatTimeTo12Hour: '${value}' → '${result}'`);
+      return result;
+    }
 
     function parseHours(hoursObj) {
       if (!hoursObj || typeof hoursObj !== 'object') return undefined;
