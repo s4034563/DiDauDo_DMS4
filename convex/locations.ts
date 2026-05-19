@@ -37,6 +37,19 @@ export const listLocations = query({
   },
 });
 
+export const getLocationsByIds = query({
+  args: { ids: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    if (args.ids.length === 0) {
+      return [];
+    }
+
+    const allLocations = await ctx.db.query("curatedLocations").collect();
+    const wanted = new Set(args.ids);
+    return allLocations.filter(location => wanted.has(location.id));
+  },
+});
+
 export const upsertLocation = mutation({
   args: { location: locationValidator },
   handler: async (ctx, args) => {

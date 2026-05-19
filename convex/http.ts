@@ -3,6 +3,7 @@ import { httpAction } from "./_generated/server";
 import { api } from "./_generated/api";
 
 const http = httpRouter();
+const apiAny = api as any;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +62,7 @@ http.route({
       });
     }
 
-    const summary = await ctx.runMutation(api.ratings.submitRating, { locationId, sessionId, rating });
+    const summary = await ctx.runMutation(apiAny.ratings.submitRating, { locationId, sessionId, rating });
 
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -84,7 +85,7 @@ http.route({
       });
     }
 
-    const summary = await ctx.runQuery(api.ratings.getSummary, {
+    const summary = await ctx.runQuery(apiAny.ratings.getSummary, {
       locationId,
       sessionId: sessionId || undefined,
     });
@@ -107,7 +108,7 @@ http.route({
   path: "/api/locations",
   method: "GET",
   handler: httpAction(async (ctx) => {
-    const rows = await ctx.runQuery(api.locations.listLocations, {});
+    const rows = await ctx.runQuery(apiAny.locations.listLocations, {});
     return new Response(JSON.stringify({ locations: rows }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -128,9 +129,9 @@ http.route({
       });
     }
 
-    await ctx.runMutation(api.locations.upsertLocation, { location });
+    await ctx.runMutation(apiAny.locations.upsertLocation, { location });
 
-    const rows = await ctx.runQuery(api.locations.listLocations, {});
+    const rows = await ctx.runQuery(apiAny.locations.listLocations, {});
     return new Response(JSON.stringify({ ok: true, locations: rows }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -151,9 +152,9 @@ http.route({
       });
     }
 
-    await ctx.runMutation(api.locations.deleteLocation, { id });
+    await ctx.runMutation(apiAny.locations.deleteLocation, { id });
 
-    const rows = await ctx.runQuery(api.locations.listLocations, {});
+    const rows = await ctx.runQuery(apiAny.locations.listLocations, {});
     return new Response(JSON.stringify({ ok: true, locations: rows }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -182,7 +183,7 @@ http.route({
       });
     }
 
-    const allLocations = await ctx.runQuery(api.locations.listLocations, {});
+    const allLocations = await ctx.runQuery(apiAny.locations.listLocations, {});
     const searchLower = query.toLowerCase();
     
     // Filter locations by name or address substring match
@@ -212,7 +213,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runAction(api.auth.signup, {
+      const result = await ctx.runAction(apiAny.auth.signup, {
         email: payload.email,
         password: payload.password,
         name: payload.name,
@@ -243,7 +244,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runAction(api.auth.login, {
+      const result = await ctx.runAction(apiAny.auth.login, {
         email: payload.email,
         password: payload.password,
       });
@@ -274,7 +275,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runMutation(api.ratings.submitUserRating, {
+      const result = await ctx.runMutation(apiAny.ratings.submitUserRating, {
         locationId: payload.locationId,
         userId: payload.userId,
         rating: Number(payload.rating),
@@ -306,7 +307,7 @@ http.route({
       });
     }
 
-    const ratings = await ctx.runQuery(api.ratings.getUserRatings, { locationId });
+    const ratings = await ctx.runQuery(apiAny.ratings.getUserRatings, { locationId });
     return new Response(JSON.stringify({ locationId, ratings }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -319,7 +320,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runMutation(api.ratings.deleteUserRating, {
+      const result = await ctx.runMutation(apiAny.ratings.deleteUserRating, {
         locationId: payload.locationId,
         userId: payload.userId,
       });
@@ -350,7 +351,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const result = await ctx.runMutation(api.ratings.toggleFavorite, {
+      const result = await ctx.runMutation(apiAny.ratings.toggleFavorite, {
         locationId: payload.locationId,
         userId: payload.userId,
       });
@@ -381,11 +382,143 @@ http.route({
       });
     }
 
-    const isFav = await ctx.runQuery(api.ratings.isFavorite, {
+    const isFav = await ctx.runQuery(apiAny.ratings.isFavorite, {
       locationId,
-      userId,
+      userId: userId as any,
     });
     return new Response(JSON.stringify({ locationId, userId, isFavorite: isFav }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }),
+});
+
+// Friends endpoints
+http.route({
+  path: "/api/friends/request",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/api/friends/request",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(apiAny.friends.sendFriendRequestByEmail, {
+        senderId: payload.senderId,
+        receiverEmail: payload.receiverEmail,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Friend request failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+http.route({
+  path: "/api/friends/respond",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+http.route({
+  path: "/api/friends/respond",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+      const result = await ctx.runMutation(apiAny.friends.respondToFriendRequest, {
+        requestId: payload.requestId,
+        userId: payload.userId,
+        action: payload.action,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Response failed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
+http.route({
+  path: "/api/friends",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get("userId") || "";
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "userId is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const friends = await ctx.runQuery(apiAny.friends.getFriends, { userId: userId as any });
+    const requests = await ctx.runQuery(apiAny.friends.getFriendRequests, { userId: userId as any });
+
+    return new Response(JSON.stringify({ userId, friends, requests }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }),
+});
+
+http.route({
+  path: "/api/profile",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get("userId") || "";
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "userId is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const profile = await ctx.runQuery(apiAny.friends.getUserProfile, { userId: userId as any });
+    return new Response(JSON.stringify(profile), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }),
+});
+
+http.route({
+  path: "/api/favorites/compare",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get("userId") || "";
+    const friendIds = url.searchParams.getAll("friendId");
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "userId is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const compare = await ctx.runQuery(apiAny.friends.compareFavorites, {
+      userId: userId as any,
+      friendIds: friendIds.slice(0, 3),
+    });
+
+    return new Response(JSON.stringify(compare), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }),

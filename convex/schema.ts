@@ -35,6 +35,20 @@ export default defineSchema({
     userId: v.id("users"),
     createdAt: v.number(),
   }).index("by_location_user", ["locationId", "userId"]).index("by_user", ["userId"]),
+  friendRequests: defineTable({
+    senderId: v.id("users"),
+    receiverId: v.id("users"),
+    senderEmail: v.string(),
+    receiverEmail: v.string(),
+    status: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_receiver_status", ["receiverId", "status"]).index("by_sender_status", ["senderId", "status"]).index("by_pair", ["senderId", "receiverId"]),
+  friendships: defineTable({
+    userId: v.id("users"),
+    friendUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_user_friend", ["userId", "friendUserId"]).index("by_user", ["userId"]),
   curatedLocations: defineTable({
     id: v.string(),
     name: v.string(),

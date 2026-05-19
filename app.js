@@ -1145,10 +1145,17 @@ function showInfoWindow(location, markerElement) {
         </div>
     `;
 
+    const favoriteButtonHtml = currentUser
+        ? `<button id="favoriteBtn-${location.id}" type="button" class="rounded-full border border-white/10 bg-slate-900/80 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200">♡ Favorite</button>`
+        : `<button id="favoriteBtn-${location.id}" type="button" class="rounded-full border border-white/10 bg-slate-900/50 px-3 py-2 text-xs font-semibold text-slate-500 cursor-not-allowed" title="Sign in to save favorites" aria-label="Sign in to save favorites">♡ Favorite</button>`;
+
     rightInfoPanelContentElement.innerHTML = `
         <div class="space-y-3">
             <div>
-                <h3 class="text-base font-bold text-slate-50">${location.name}</h3>
+                <div class="flex items-center justify-between gap-3">
+                    <h3 class="text-base font-bold text-slate-50">${location.name}</h3>
+                    ${favoriteButtonHtml}
+                </div>
             </div>
 
             ${location.address ? `
@@ -1208,6 +1215,24 @@ function showInfoWindow(location, markerElement) {
     `;
     rightInfoPanelElement.classList.add('visible');
     rightInfoPanelElement.setAttribute('aria-hidden', 'false');
+
+    const favoriteBtn = document.getElementById(`favoriteBtn-${location.id}`);
+    if (favoriteBtn) {
+        if (currentUser) {
+            void checkIsFavorite(location.id).then((isFavorite) => {
+                favoriteBtn.textContent = isFavorite ? '♥ Favorited' : '♡ Favorite';
+                favoriteBtn.classList.toggle('text-cyan-200', isFavorite);
+                favoriteBtn.classList.toggle('border-cyan-400', isFavorite);
+            });
+            favoriteBtn.addEventListener('click', () => {
+                void toggleFavorite(location.id);
+            });
+        } else {
+            favoriteBtn.addEventListener('click', () => {
+                openLoginModal('You need to be signed in to save favorites.');
+            });
+        }
+    }
 
     // Wire up hours toggle
     if (location.hours && hasConfiguredHours(location.hours)) {
@@ -1577,6 +1602,17 @@ function handleSearchInputChange(value) {
 
 // Global auth state
 let currentUser = null;
+let activeProfileUserId = null;
+
+function requireSignedIn(featureLabel) {
+    if (currentUser) {
+        return true;
+    }
+
+    openLoginModal(`You need to be signed in to use ${featureLabel}.`);
+    switchAuthTab(false);
+    return false;
+}
 
 // Load user from localStorage on startup
 function loadUserSession() {
@@ -1604,12 +1640,14 @@ function saveUserSession() {
 // Update UI based on auth state
 function updateAuthUI() {
     const loginBtn = document.getElementById('loginBtn');
+    const profileBtn = document.getElementById('profileBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const userInfoDisplay = document.getElementById('userInfoDisplay');
     const userEmail = document.getElementById('userEmail');
 
     if (currentUser) {
         if (loginBtn) loginBtn.style.display = 'none';
+        if (profileBtn) profileBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'block';
         if (userInfoDisplay) {
             userInfoDisplay.style.display = 'block';
@@ -1617,20 +1655,48 @@ function updateAuthUI() {
         }
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
+        if (profileBtn) profileBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (userInfoDisplay) userInfoDisplay.style.display = 'none';
     }
 }
 
 // Open login modal
-function openLoginModal() {
+function openLoginModal(promptText = '') {
     const modal = document.getElementById('loginModal');
+    const prompt = document.getElementById('loginPrompt');
     if (modal) modal.style.display = 'flex';
+    if (prompt) {
+        const hasPrompt = Boolean(String(promptText || '').trim());
+        prompt.textContent = hasPrompt ? promptText : '';
+        prompt.classList.toggle('hidden', !hasPrompt);
+    }
 }
 
 // Close login modal
 function closeLoginModal() {
     const modal = document.getElementById('loginModal');
+    const prompt = document.getElementById('loginPrompt');
+    if (modal) modal.style.display = 'none';
+    if (prompt) {
+        prompt.textContent = '';
+        prompt.classList.add('hidden');
+    }
+}
+
+function openProfileModal(userId = currentUser?.userId) {
+    if (!requireSignedIn('profiles and friends')) {
+        return;
+    }
+
+    activeProfileUserId = userId || currentUser.userId;
+    const modal = document.getElementById('profileModal');
+    if (modal) modal.style.display = 'flex';
+    void loadProfileModalData(activeProfileUserId);
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
     if (modal) modal.style.display = 'none';
 }
 
@@ -1770,6 +1836,250 @@ function handleLogout() {
     updateAuthUI();
     // Close info panel if open
     setInfoPanelVisibility(false);
+    closeProfileModal();
+}
+
+async function loadProfileModalData(userId) {
+    const content = document.getElementById('profileModalContent');
+    const title = document.getElementById('profileModalTitle');
+    if (!content || !userId) return;
+
+    content.innerHTML = '<p class="text-slate-400">Loading profile...</p>';
+
+    try {
+        const response = await fetch(convexUrl(`/api/profile?userId=${userId}`));
+        const profile = await response.json();
+        if (!response.ok || !profile || profile.error) {
+            throw new Error(profile?.error || 'Could not load profile');
+        }
+
+        if (title) {
+            title.textContent = profile.user?.name || profile.user?.email || 'Profile';
+        }
+
+        renderProfileModal(profile);
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        content.innerHTML = `<p class="text-red-300">${String(error?.message || 'Could not load profile')}</p>`;
+    }
+}
+
+function renderProfileModal(profile) {
+    const content = document.getElementById('profileModalContent');
+    if (!content) return;
+
+    const isOwnProfile = profile?.user?._id === currentUser?.userId;
+    const friendRequests = profile?.requests?.incoming || [];
+    const friends = profile?.friends || [];
+    const favorites = profile?.favoriteLocations || [];
+    const ratings = profile?.ratings || [];
+
+    content.innerHTML = `
+        <div class="space-y-4">
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">User</p>
+                <p class="mt-1 text-lg font-bold text-white">${profile.user?.name || profile.user?.email || 'Profile'}</p>
+                <p class="text-sm text-slate-400">${profile.user?.email || ''}</p>
+            </div>
+
+            ${isOwnProfile ? `
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4 space-y-3">
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Add Friend</p>
+                <div class="flex gap-2">
+                    <input id="friendEmailInput" type="email" class="flex-1 rounded bg-slate-800 border border-slate-600 px-3 py-2 text-white" placeholder="friend@email.com" />
+                    <button id="sendFriendRequestBtn" class="rounded bg-cyan-500 px-3 py-2 font-semibold text-slate-900">Send</button>
+                </div>
+                <div id="friendRequestStatus" class="text-xs text-slate-400"></div>
+            </div>
+            ` : ''}
+
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Compare favorites</p>
+                    <span class="text-xs text-slate-500">Up to 3 friends</span>
+                </div>
+                <div class="space-y-2">
+                    ${friends.length > 0 ? friends.slice(0, 3).map(friend => `
+                        <label class="flex items-center gap-2 text-sm text-slate-200">
+                            <input type="checkbox" class="friend-compare-checkbox h-4 w-4" value="${friend._id}" />
+                            <span>${friend.name || friend.email}</span>
+                        </label>
+                    `).join('') : '<p class="text-sm text-slate-400">No friends yet.</p>'}
+                </div>
+                <div class="flex gap-2">
+                    <button id="compareFavoritesBtn" class="rounded bg-neon-purple px-3 py-2 font-semibold text-slate-900">Compare</button>
+                    ${!isOwnProfile && currentUser ? `<button id="compareWithMeBtn" class="rounded border border-cyan-400 px-3 py-2 font-semibold text-cyan-300">Compare with me</button>` : ''}
+                </div>
+                <div id="compareFavoritesResult" class="text-sm text-slate-300"></div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Friends</p>
+                <div class="mt-3 space-y-2">
+                    ${friends.length > 0 ? friends.map(friend => `
+                        <div class="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2">
+                            <div>
+                                <p class="font-semibold text-white">${friend.name || friend.email}</p>
+                                <p class="text-xs text-slate-400">${friend.email}</p>
+                            </div>
+                            <button class="view-friend-btn rounded border border-cyan-400 px-3 py-1 text-xs font-semibold text-cyan-300" data-user-id="${friend._id}">View</button>
+                        </div>
+                    `).join('') : '<p class="text-sm text-slate-400">No accepted friends yet.</p>'}
+                </div>
+            </div>
+
+            ${isOwnProfile && friendRequests.length > 0 ? `
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Friend Requests</p>
+                <div class="mt-3 space-y-2">
+                    ${friendRequests.map(request => `
+                        <div class="rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2">
+                            <p class="font-semibold text-white">${request.senderEmail}</p>
+                            <div class="mt-2 flex gap-2">
+                                <button class="respond-friend-btn rounded bg-emerald-500 px-3 py-1 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">Accept</button>
+                                <button class="respond-friend-btn rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Favorite Locations</p>
+                <div class="mt-3 space-y-2">
+                    ${favorites.length > 0 ? favorites.map(location => `
+                        <button class="w-full text-left rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 hover:border-cyan-400" data-location-id="${location.id}">
+                            <p class="font-semibold text-white">${location.name}</p>
+                            <p class="text-xs text-slate-400">${location.address || ''}</p>
+                        </button>
+                    `).join('') : '<p class="text-sm text-slate-400">No favorite locations yet.</p>'}
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Ratings</p>
+                <div class="mt-3 space-y-2">
+                    ${ratings.length > 0 ? ratings.map(rating => `
+                        <div class="rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2">
+                            <p class="font-semibold text-white">${rating.locationId}</p>
+                            <p class="text-xs text-slate-300">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating)))}</p>
+                            ${rating.comment ? `<p class="mt-1 text-sm text-slate-400">${rating.comment}</p>` : ''}
+                        </div>
+                    `).join('') : '<p class="text-sm text-slate-400">No ratings yet.</p>'}
+                </div>
+            </div>
+        </div>
+    `;
+
+    const sendBtn = document.getElementById('sendFriendRequestBtn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+            const input = document.getElementById('friendEmailInput');
+            const status = document.getElementById('friendRequestStatus');
+            const receiverEmail = String(input?.value || '').trim();
+            if (!receiverEmail) {
+                if (status) status.textContent = 'Enter an email address.';
+                return;
+            }
+            try {
+                const response = await fetch(convexUrl('/api/friends/request'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senderId: currentUser.userId, receiverEmail }),
+                });
+                const data = await response.json();
+                if (!response.ok || !data.ok) throw new Error(data.error || 'Friend request failed');
+                if (status) status.textContent = 'Friend request sent.';
+                if (input) input.value = '';
+                void loadProfileModalData(activeProfileUserId || currentUser.userId);
+            } catch (error) {
+                if (status) status.textContent = String(error?.message || 'Friend request failed');
+            }
+        });
+    }
+
+    document.querySelectorAll('.respond-friend-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            try {
+                const response = await fetch(convexUrl('/api/friends/respond'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requestId: button.dataset.requestId,
+                        userId: currentUser.userId,
+                        action: button.dataset.action,
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok || !data.ok) throw new Error(data.error || 'Could not respond to request');
+                void loadProfileModalData(activeProfileUserId || currentUser.userId);
+            } catch (error) {
+                alert(String(error?.message || 'Could not respond to request'));
+            }
+        });
+    });
+
+    document.querySelectorAll('.view-friend-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            activeProfileUserId = button.dataset.userId;
+            void loadProfileModalData(activeProfileUserId);
+        });
+    });
+
+    const compareBtn = document.getElementById('compareFavoritesBtn');
+    if (compareBtn) {
+        compareBtn.addEventListener('click', async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.friend-compare-checkbox:checked')).map(input => input.value).slice(0, 3);
+            if (selectedIds.length === 0) {
+                const result = document.getElementById('compareFavoritesResult');
+                if (result) result.textContent = 'Pick at least one friend.';
+                return;
+            }
+
+            await renderFavoriteComparison(selectedIds);
+        });
+    }
+
+    const compareWithMeBtn = document.getElementById('compareWithMeBtn');
+    if (compareWithMeBtn) {
+        compareWithMeBtn.addEventListener('click', async () => {
+            await renderFavoriteComparison([activeProfileUserId || currentUser.userId]);
+        });
+    }
+
+    document.querySelectorAll('[data-location-id]').forEach(button => {
+        button.addEventListener('click', () => {
+            const location = allLocations.find(loc => loc.id === button.dataset.locationId);
+            if (location) {
+                setInfoPanelVisibility(true);
+                showInfoWindow(location);
+            }
+        });
+    });
+}
+
+async function renderFavoriteComparison(friendIds) {
+    const result = document.getElementById('compareFavoritesResult');
+    if (!result || !currentUser) return;
+
+    try {
+        const params = new URLSearchParams();
+        params.set('userId', currentUser.userId);
+        friendIds.forEach(id => params.append('friendId', id));
+        const response = await fetch(convexUrl(`/api/favorites/compare?${params.toString()}`));
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Comparison failed');
+
+        const sharedNames = (data.sharedLocations || []).map(location => location.name).join(', ');
+        result.innerHTML = sharedNames
+            ? `<p class="text-slate-200">Shared favorites: ${sharedNames}</p>`
+            : '<p class="text-slate-400">No shared favorites found.</p>';
+    } catch (error) {
+        result.textContent = String(error?.message || 'Comparison failed');
+    }
 }
 
 // Detailed tags by category
@@ -1950,8 +2260,7 @@ function submitUserRatingHandler(locationId) {
 }
 
 async function submitUserRating(locationId, rating, comment) {
-    if (!currentUser) {
-        openLoginModal();
+    if (!requireSignedIn('rating this place')) {
         return;
     }
 
@@ -2073,8 +2382,7 @@ function getTimeAgo(timestamp) {
 
 // Handle favorite toggle
 async function toggleFavorite(locationId) {
-    if (!currentUser) {
-        openLoginModal();
+    if (!requireSignedIn('favorite locations')) {
         return;
     }
 
@@ -2139,16 +2447,20 @@ window.addEventListener('load', () => {
 
     // Setup auth modal and buttons
     const loginBtn = document.getElementById('loginBtn');
+    const profileBtn = document.getElementById('profileBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const loginModalClose = document.getElementById('loginModalClose');
+    const profileModalClose = document.getElementById('profileModalClose');
     const loginTabBtn = document.getElementById('loginTabBtn');
     const signupTabBtn = document.getElementById('signupTabBtn');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
 
     if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
+    if (profileBtn) profileBtn.addEventListener('click', () => openProfileModal());
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
+    if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
 
     if (loginTabBtn) loginTabBtn.addEventListener('click', () => switchAuthTab(false));
     if (signupTabBtn) signupTabBtn.addEventListener('click', () => switchAuthTab(true));
@@ -2178,6 +2490,13 @@ window.addEventListener('load', () => {
     if (loginModal) {
         loginModal.addEventListener('click', (e) => {
             if (e.target === loginModal) closeLoginModal();
+        });
+    }
+
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) closeProfileModal();
         });
     }
 
