@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ĐiĐâuĐó - Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-1: #050816;
+            --bg-2: #0a1024;
+            --panel: rgba(15, 23, 42, 0.82);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #06b6d4;
+            --accent-2: #c084fc;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            background:
+                radial-gradient(circle at top left, rgba(6, 182, 212, 0.14), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(192, 132, 252, 0.14), transparent 26%),
+                linear-gradient(135deg, var(--bg-1), var(--bg-2));
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 24px 60px rgba(2, 6, 23, 0.4);
+        }
+
+        .field {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+            padding: 0.75rem 0.9rem;
+            outline: none;
+        }
+
+        .field:focus {
+            border-color: rgba(6, 182, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12);
+        }
+
+        .soft-btn {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.74);
+            color: var(--text);
+        }
+
+        .soft-btn:hover {
+            border-color: rgba(6, 182, 212, 0.4);
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+            color: #04111f;
+            font-weight: 800;
+        }
+
+        .ghost-btn {
+            border: 1px solid rgba(192, 132, 252, 0.35);
+            color: #e9d5ff;
+            background: rgba(88, 28, 135, 0.15);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            padding: 0.25rem 0.55rem;
+            font-size: 11px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .badge.friend {
+            background: rgba(6, 182, 212, 0.12);
+            border-color: rgba(6, 182, 212, 0.25);
+            color: #a5f3fc;
+        }
+
+        .badge.pending {
+            background: rgba(251, 191, 36, 0.12);
+            border-color: rgba(251, 191, 36, 0.24);
+            color: #fde68a;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <header class="sticky top-0 z-20 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
+            <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/90">Profile Center</p>
+                    <h1 class="mt-1 text-2xl font-black text-white">ĐiĐâuĐó</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="./index.html" class="soft-btn rounded-xl px-3 py-2 text-sm font-semibold no-underline">Back to map</a>
+                    <button id="profileLoginBtn" class="ghost-btn rounded-xl px-3 py-2 text-sm font-semibold">Login</button>
+                    <button id="profileLogoutBtn" class="soft-btn rounded-xl px-3 py-2 text-sm font-semibold" style="display:none;">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div id="signedOutNotice" class="panel mb-6 rounded-2xl p-5">
+                <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Sign in required</p>
+                <h2 class="mt-2 text-2xl font-bold text-white">Use profiles, friends, favorites, and comparison</h2>
+                <p class="mt-2 max-w-2xl text-sm text-slate-300">You need to sign in to manage friends, view profile data, and compare favorite locations.</p>
+                <div class="mt-4">
+                    <button id="signedOutLoginBtn" class="primary-btn rounded-xl px-4 py-3 text-sm">Sign in</button>
+                </div>
+            </div>
+
+            <div id="profileShell" class="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+                <section class="panel rounded-3xl p-5">
+                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Account</p>
+                    <div id="profileSummary" class="mt-3 space-y-2">
+                        <p class="text-slate-400">Loading profile...</p>
+                    </div>
+
+                    <div class="mt-5 rounded-2xl border border-white/10 bg-slate-950/55 p-4">
+                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">View profile</p>
+                        <div class="mt-3 flex gap-2">
+                            <input id="profileLookupInput" class="field flex-1" placeholder="friend user id" />
+                            <button id="profileLookupBtn" class="primary-btn rounded-xl px-3 py-2 text-sm">Open</button>
+                        </div>
+                        <p class="mt-2 text-xs text-slate-500">Use a friend profile id from the friends list to open their page.</p>
+                    </div>
+                </section>
+
+                <section class="space-y-6">
+                    <div class="grid gap-6 xl:grid-cols-2">
+                        <div class="panel rounded-3xl p-5">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Friends</p>
+                                    <h3 class="mt-1 text-lg font-bold text-white">Connections</h3>
+                                </div>
+                                <span class="badge friend">Friends</span>
+                            </div>
+                            <div id="friendsList" class="mt-4 space-y-3 text-sm text-slate-200"></div>
+                        </div>
+
+                        <div class="panel rounded-3xl p-5">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Requests</p>
+                                    <h3 class="mt-1 text-lg font-bold text-white">Friend requests</h3>
+                                </div>
+                                <span class="badge pending">Inbox</span>
+                            </div>
+                            <div id="requestsList" class="mt-4 space-y-3 text-sm text-slate-200"></div>
+                        </div>
+                    </div>
+
+                    <div class="panel rounded-3xl p-5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Favorites</p>
+                                <h3 class="mt-1 text-lg font-bold text-white">Favorite locations</h3>
+                            </div>
+                            <button id="compareFavoritesBtn" class="ghost-btn rounded-xl px-3 py-2 text-sm font-semibold">Compare selected</button>
+                        </div>
+                        <div class="mt-4 flex flex-col gap-4 xl:flex-row">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-sm font-semibold text-slate-200">Favorites list</p>
+                                    <span class="text-xs text-slate-500">Select up to 3 friends</span>
+                                </div>
+                                <div id="favoritesList" class="mt-3 space-y-3"></div>
+                            </div>
+                            <div class="xl:w-[360px] rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                                <p class="text-sm font-semibold text-slate-200">Compare panel</p>
+                                <div id="compareFriendPicker" class="mt-3 space-y-2 text-sm text-slate-200"></div>
+                                <div id="compareResult" class="mt-4 text-sm text-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel rounded-3xl p-5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Ratings</p>
+                                <h3 class="mt-1 text-lg font-bold text-white">Your rated places</h3>
+                            </div>
+                        </div>
+                        <div id="ratingsList" class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 px-4">
+        <div class="panel w-full max-w-md rounded-3xl p-6">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Welcome</h2>
+                    <p id="loginPrompt" class="mt-2 hidden rounded-xl border border-cyan-400/30 bg-cyan-950/30 px-3 py-2 text-sm text-cyan-100"></p>
+                </div>
+                <button id="loginModalClose" class="text-2xl leading-none text-slate-400 hover:text-white">×</button>
+            </div>
+
+            <div class="mt-5 flex gap-2 rounded-2xl border border-white/10 bg-slate-950/40 p-1">
+                <button id="loginTabBtn" class="flex-1 rounded-xl bg-cyan-400 px-3 py-2 text-sm font-bold text-slate-900">Login</button>
+                <button id="signupTabBtn" class="flex-1 rounded-xl px-3 py-2 text-sm font-bold text-slate-400">Sign up</button>
+            </div>
+
+            <form id="loginForm" class="mt-5 space-y-4">
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Email</label>
+                    <input id="loginEmail" type="email" class="field" placeholder="your@email.com" required />
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Password</label>
+                    <input id="loginPassword" type="password" class="field" placeholder="••••••••" required />
+                </div>
+                <div id="loginError" class="hidden text-sm text-red-300"></div>
+                <button class="primary-btn w-full rounded-xl px-4 py-3 text-sm" type="submit">Login</button>
+            </form>
+
+            <form id="signupForm" class="mt-5 hidden space-y-4">
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Email</label>
+                    <input id="signupEmail" type="email" class="field" placeholder="your@email.com" required />
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Name</label>
+                    <input id="signupName" type="text" class="field" placeholder="Your name" />
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Password</label>
+                    <input id="signupPassword" type="password" class="field" placeholder="••••••••" required />
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Confirm password</label>
+                    <input id="signupPasswordConfirm" type="password" class="field" placeholder="••••••••" required />
+                </div>
+                <div id="signupError" class="hidden text-sm text-red-300"></div>
+                <button class="primary-btn w-full rounded-xl px-4 py-3 text-sm" type="submit">Create account</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./profile.js"></script>
+</body>
+</html>

@@ -179,6 +179,15 @@ export const getUserProfile = query({
       })()),
     ]);
 
+    const ratingsWithLocations = ratings.map((rating) => {
+      const location = ratingsLocations.find((row: any) => row.id === rating.locationId);
+      return {
+        ...rating,
+        locationName: location?.name || rating.locationId,
+        locationAddress: location?.address || '',
+      };
+    });
+
     return {
       user: {
         _id: user._id,
@@ -190,6 +199,7 @@ export const getUserProfile = query({
       favoriteLocations,
       ratings,
       ratingsLocations,
+      ratingsWithLocations,
       friends,
       requests,
     };

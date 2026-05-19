@@ -1689,15 +1689,12 @@ function openProfileModal(userId = currentUser?.userId) {
         return;
     }
 
-    activeProfileUserId = userId || currentUser.userId;
-    const modal = document.getElementById('profileModal');
-    if (modal) modal.style.display = 'flex';
-    void loadProfileModalData(activeProfileUserId);
+    const targetUserId = userId || currentUser.userId;
+    window.location.href = `./profile.html?userId=${encodeURIComponent(targetUserId)}`;
 }
 
 function closeProfileModal() {
-    const modal = document.getElementById('profileModal');
-    if (modal) modal.style.display = 'none';
+    return;
 }
 
 // Switch between login/signup tabs
