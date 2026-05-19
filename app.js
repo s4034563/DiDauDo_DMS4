@@ -1065,6 +1065,7 @@ function showInfoWindow(location, markerElement) {
     };
 
     const hoursDisplay = location.hours ? formatHours(location.hours) : '';
+    // Build detailed weekly hours HTML and interactive summary
     const detailedTagsHtml = location.detailedTags && location.detailedTags.length > 0 ? `
         <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
             <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2">Details</p>
@@ -1077,12 +1078,42 @@ function showInfoWindow(location, markerElement) {
         </div>
     ` : '';
 
-    const hoursHtml = hoursDisplay ? `
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Hours</p>
-            <p class="mt-1 text-sm text-slate-200">${hoursDisplay}</p>
-        </div>
-    ` : '';
+    // Weekly hours panel (click to expand)
+    let hoursHtml = '';
+    if (location.hours && hasConfiguredHours(location.hours)) {
+        const weeklyHtml = (() => {
+            const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+            const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            return `
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    ${days.map((day, idx) => {
+                        const h = location.hours[day];
+                        const line = h && h.open && h.close ? `${formatTimeTo12Hour(h.open)} - ${formatTimeTo12Hour(h.close)}` : 'Closed';
+                        return `<div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1"><span>${dayLabels[idx]}</span><span>${line}</span></div>`;
+                    }).join('')}
+                </div>
+            `;
+        })();
+
+        const nextOpening = (function() {
+            const next = getNextOpening(location.hours);
+            return next ? `<div style="font-size:12px;color:#94a3b8;margin-top:6px">Opens ${next}</div>` : '';
+        })();
+
+        hoursHtml = `
+            <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3" id="hoursBlock-${location.id}">
+                <div id="hoursSummary-${location.id}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Hours</p>
+                        <p class="mt-1 text-sm text-slate-200">${hoursDisplay}</p>
+                        ${nextOpening}
+                    </div>
+                    <div id="hoursChevron-${location.id}" style="transform:rotate(0deg);transition:transform 160ms;">▶</div>
+                </div>
+                <div id="hoursFull-${location.id}" style="display:none;margin-top:8px;">${weeklyHtml}</div>
+            </div>
+        `;
+    }
 
     const ratingsSection = `
         <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
@@ -1177,6 +1208,31 @@ function showInfoWindow(location, markerElement) {
     `;
     rightInfoPanelElement.classList.add('visible');
     rightInfoPanelElement.setAttribute('aria-hidden', 'false');
+
+    // Wire up hours toggle
+    if (location.hours && hasConfiguredHours(location.hours)) {
+        console.log('🕐 Setting up hours toggle for location:', location.id);
+        const summary = document.getElementById(`hoursSummary-${location.id}`);
+        const full = document.getElementById(`hoursFull-${location.id}`);
+        const chevron = document.getElementById(`hoursChevron-${location.id}`);
+        console.log('  summary:', summary ? '✓' : '✗', 'full:', full ? '✓' : '✗', 'chevron:', chevron ? '✓' : '✗');
+        if (summary && full && chevron) {
+            summary.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('🕐 Hours toggle clicked!');
+                const isHidden = full.style.display === 'none' || full.style.display === '';
+                full.style.display = isHidden ? 'block' : 'none';
+                chevron.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+                console.log('🕐 Hours now:', isHidden ? 'EXPANDED' : 'COLLAPSED');
+            });
+        } else {
+            console.warn('🕐 Could not find all hours elements:', {
+                summaryId: `hoursSummary-${location.id}`,
+                fullId: `hoursFull-${location.id}`,
+                chevronId: `hoursChevron-${location.id}`
+            });
+        }
+    }
 
     // Render star rating picker for logged-in users
     if (currentUser) {
@@ -1847,6 +1903,40 @@ function isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes) {
         return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
     }
     return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+}
+
+// Return next opening in human readable form (e.g., "Tue 8:30 PM") or null if none
+function getNextOpening(hoursObj) {
+    if (!hasConfiguredHours(hoursObj)) return null;
+    const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const nowParts = getVietnamNowParts();
+    const startIndex = days.indexOf(nowParts.weekday);
+    const currentMinutes = nowParts.currentMinutes;
+
+    for (let i = 0; i < 7; i++) {
+        const idx = (startIndex + i) % 7;
+        const dayKey = days[idx];
+        const h = hoursObj[dayKey];
+        if (!h || !h.open || !h.close) continue;
+        const openMin = parseTimeToMinutes(h.open);
+        const closeMin = parseTimeToMinutes(h.close);
+        if (openMin === null || closeMin === null) continue;
+        if (i === 0) {
+            // Today: only consider openings later today if currently closed
+            if (!isCurrentlyOpen(openMin, closeMin, currentMinutes)) {
+                if (currentMinutes < openMin) {
+                    return `${dayLabels[idx]} ${formatTimeTo12Hour(h.open)}`;
+                }
+                // otherwise continue to next day
+            } else {
+                return null; // already open
+            }
+        } else {
+            return `${dayLabels[idx]} ${formatTimeTo12Hour(h.open)}`;
+        }
+    }
+    return null;
 }
 
 // Handle rating submission for logged-in users
