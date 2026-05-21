@@ -1350,13 +1350,14 @@ function updateLocationsList(locations) {
     locations.forEach(location => {
         const card = document.createElement('div');
         const isSelected = activeSelectedLocationId === location.id;
+        const thumbnailHeight = mobileMode ? 96 : 120;
         card.className = mobileMode
             ? `location-card mobile-location-card${isSelected ? ' selected' : ''}`
             : `location-card carousel-location-card${isSelected ? ' selected' : ''}`;
         
         const thumbnailUrl = location.thumbnailUrl || getLocationPreviewImageUrl(location);
         const thumbnailHtml = thumbnailUrl ? `
-            <div style="width: 100%; height: 120px; overflow: hidden; border-radius: 8px; margin-bottom: 8px; background: rgba(0,0,0,0.2);">
+            <div style="width: 100%; height: ${thumbnailHeight}px; overflow: hidden; border-radius: 8px; margin-bottom: 8px; background: rgba(0,0,0,0.2);">
                 <img src="${thumbnailUrl}" alt="${location.name} thumbnail" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" decoding="async" />
             </div>
         ` : '';
