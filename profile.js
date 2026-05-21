@@ -9,6 +9,7 @@ let currentUser = null;
 let profileUserId = null;
 let activeProfile = null;
 let locationNameById = new Map();
+let avatarMenuDismissBound = false;
 
 function getProfileAvatarUrl(user) {
   const seed = String(user?.avatarSeed || user?.name || user?.email || user?._id || 'guest').trim().toLowerCase() || 'guest';
@@ -18,6 +19,110 @@ function getProfileAvatarUrl(user) {
 function normalizeUserSession(user) {
   if (!user) return null;
   return { ...user, avatarUrl: user.avatarUrl || getProfileAvatarUrl(user) };
+}
+
+function getDisplayedProfileAvatar(profileUser) {
+  if (currentUser && profileUser?._id === currentUser.userId && currentUser.avatarUrl) {
+    return currentUser.avatarUrl;
+  }
+
+  if (profileUser?.avatarUrl) {
+    return profileUser.avatarUrl;
+  }
+
+  return getProfileAvatarUrl(profileUser || currentUser);
+}
+
+function closeAvatarMenu() {
+  const menu = document.getElementById('avatarMenu');
+  if (menu) {
+    menu.classList.add('hidden');
+  }
+}
+
+function toggleAvatarMenu() {
+  const menu = document.getElementById('avatarMenu');
+  if (!menu) return;
+  menu.classList.toggle('hidden');
+}
+
+function setCustomAvatar(dataUrl) {
+  if (!currentUser) return;
+
+  currentUser = normalizeUserSession({
+    ...currentUser,
+    avatarUrl: dataUrl,
+  });
+  saveUserSession();
+  updateAuthUI();
+}
+
+function removeCustomAvatar() {
+  if (!currentUser) return;
+
+  currentUser = normalizeUserSession({
+    ...currentUser,
+    avatarUrl: undefined,
+  });
+  saveUserSession();
+  updateAuthUI();
+}
+
+function bindAvatarControls() {
+  const avatarButton = document.getElementById('profileAvatarButton');
+  const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+  const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+  const avatarFileInput = document.getElementById('avatarFileInput');
+
+  avatarButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (currentUser && activeProfile?.user?._id === currentUser.userId) {
+      toggleAvatarMenu();
+    }
+  });
+
+  changeAvatarBtn?.addEventListener('click', () => {
+    avatarFileInput?.click();
+  });
+
+  removeAvatarBtn?.addEventListener('click', () => {
+    removeCustomAvatar();
+    closeAvatarMenu();
+    renderProfile(activeProfile);
+  });
+
+  avatarFileInput?.addEventListener('change', () => {
+    const file = avatarFileInput.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please choose an image file.');
+      avatarFileInput.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      if (!dataUrl) return;
+      setCustomAvatar(dataUrl);
+      closeAvatarMenu();
+      renderProfile(activeProfile);
+      avatarFileInput.value = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  if (!avatarMenuDismissBound) {
+    document.addEventListener('click', (event) => {
+      const menu = document.getElementById('avatarMenu');
+      const avatarButtonElement = document.getElementById('profileAvatarButton');
+      if (!menu || menu.classList.contains('hidden')) return;
+      if (menu.contains(event.target) || avatarButtonElement?.contains(event.target)) return;
+      closeAvatarMenu();
+    });
+    avatarMenuDismissBound = true;
+  }
 }
 
 function loadUserSession() {
@@ -119,7 +224,7 @@ async function handleLogin(email, password) {
     throw new Error(data.error || 'Login failed');
   }
 
-  currentUser = { userId: data.userId, email: data.email, name: data.name };
+  currentUser = normalizeUserSession({ userId: data.userId, email: data.email, name: data.name });
   saveUserSession();
   updateAuthUI();
   closeLoginModal();
@@ -144,7 +249,7 @@ async function handleSignup(email, password, passwordConfirm, name) {
     throw new Error(data.error || 'Signup failed');
   }
 
-  currentUser = { userId: data.userId, email: data.email, name: data.name };
+  currentUser = normalizeUserSession({ userId: data.userId, email: data.email, name: data.name });
   saveUserSession();
   updateAuthUI();
   closeLoginModal();
@@ -192,6 +297,7 @@ function renderEmptyState() {
   if (compareFriendPicker) compareFriendPicker.innerHTML = '';
   if (compareResult) compareResult.innerHTML = '';
   if (ratingsList) ratingsList.innerHTML = '';
+  closeAvatarMenu();
 }
 
 function formatTimeAgo(timestamp) {
@@ -259,7 +365,18 @@ function renderProfile(profile) {
       <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
         <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
         <div class="mt-3 flex items-center gap-3">
-          <img src="${getProfileAvatarUrl(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover shadow-lg" />
+          <div class="relative shrink-0">
+            <button id="profileAvatarButton" type="button" class="block rounded-full outline-none ${isOwnProfile ? 'cursor-pointer' : 'cursor-default'}" ${isOwnProfile ? 'aria-label="Profile image options"' : 'aria-hidden="true" tabindex="-1"'}>
+              <img id="profileAvatarImage" src="${getDisplayedProfileAvatar(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover shadow-lg transition ${isOwnProfile ? 'hover:ring-2 hover:ring-cyan-400/60' : ''}" />
+            </button>
+            ${isOwnProfile ? `
+            <div id="avatarMenu" class="absolute left-0 top-[calc(100%+8px)] hidden min-w-52 rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl backdrop-blur-xl z-20">
+              <button id="changeAvatarBtn" type="button" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-100 hover:bg-slate-800">Change profile image</button>
+              <button id="removeAvatarBtn" type="button" class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/10">Remove profile image</button>
+            </div>
+            <input id="avatarFileInput" type="file" accept="image/*" class="hidden" />
+            ` : ''}
+          </div>
           <div class="min-w-0">
             <h2 class="text-2xl font-black text-white">${profile.user?.name || profile.user?.email || 'Profile'}</h2>
             <p class="mt-1 truncate text-sm text-slate-400">${profile.user?.email || ''}</p>
@@ -426,6 +543,8 @@ function renderProfile(profile) {
       openLocationOnMap(button.dataset.locationId || '');
     });
   });
+
+  bindAvatarControls();
 
   const compareBtn = document.getElementById('compareFavoritesBtn');
   if (compareBtn) {
