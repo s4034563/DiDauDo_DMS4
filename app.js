@@ -1800,8 +1800,9 @@ function openLoginModal(promptText = '') {
     const prompt = document.getElementById('loginPrompt');
     if (modal) modal.style.display = 'flex';
     if (prompt) {
-        const hasPrompt = Boolean(String(promptText || '').trim());
-        prompt.textContent = hasPrompt ? promptText : '';
+        const safePromptText = typeof promptText === 'string' ? promptText : '';
+        const hasPrompt = Boolean(String(safePromptText || '').trim());
+        prompt.textContent = hasPrompt ? safePromptText : '';
         prompt.classList.toggle('hidden', !hasPrompt);
     }
 }
@@ -2586,7 +2587,7 @@ window.addEventListener('load', () => {
     const signupForm = document.getElementById('signupForm');
     const userInfoDisplay = document.getElementById('userInfoDisplay');
 
-    if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
+    if (loginBtn) loginBtn.addEventListener('click', () => openLoginModal());
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
     if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
