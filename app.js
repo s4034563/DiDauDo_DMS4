@@ -983,8 +983,8 @@ function updateVectorFeatures(locations) {
 function initMap() {
     const rasterLayer = new ol.layer.Tile({
         source: new ol.source.XYZ({
-            url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            attributions: '© OpenStreetMap contributors'
+            url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+            attributions: '© OpenStreetMap contributors, © CARTO'
         })
     });
 
