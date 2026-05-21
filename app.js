@@ -1750,12 +1750,13 @@ function loadUserSession() {
         try {
             currentUser = normalizeUserSession(JSON.parse(stored));
             saveUserSession();
-            updateAuthUI();
         } catch (e) {
             console.error('Failed to load user session:', e);
             currentUser = null;
         }
     }
+
+    updateAuthUI();
 }
 
 // Save user to localStorage
