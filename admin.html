@@ -920,7 +920,7 @@
       
       state.locations = normalizeLocations(payload.locations || []);
       const updatedInState = state.locations.find(l => l.id === updatedLocation.id);
-      console.log('🔄 After normalizeLocations, location.hours:', updatedInState?.hours);
+      console.log('After normalizeLocations, location.hours:', updatedInState?.hours);
       
       state.selectedId = updatedLocation.id;
       renderAll();

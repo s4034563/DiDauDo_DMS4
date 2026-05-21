@@ -24,12 +24,12 @@ A sophisticated single-page web application that integrates OpenLayers to discov
 - 🏞️ Sightseeing
 
 #### The Vibe (Multi-Select Chips)
-- 🛋️ Cozy
-- 🏭 Industrial
-- 🎊 Loud/Party
-- ✨ Minimalist
-- 💎 Hidden Gem
-- 📸 Instagrammable
+- Cozy
+- Industrial
+- Loud/Party
+- Minimalist
+- Hidden Gem
+- Instagrammable
 
 #### Activity Filters
 - **Normal**: Show all locations
@@ -156,7 +156,7 @@ Locations are loaded from Convex and edited through the admin panel. Social-mome
 ### AI-Tagged Vibes
 Each location is assigned 2-3 vibes from the available categories, simulating AI categorization of social media captions.
 
-## 🎮 User Guide
+## User Guide
 
 ### Finding Trending Locations
 
@@ -185,7 +185,7 @@ Each location is assigned 2-3 vibes from the available categories, simulating AI
 - **Filter Count**: Check active filter count in sidebar
 - **Clear All**: Use "Clear All Filters" to reset everything at once
 
-## 🎨 Customization
+## Customization
 
 ### Color Theme (in index.html `<style>` section)
 ```css
@@ -262,7 +262,7 @@ Use the admin panel or Convex data model to:
 4. **Admin Access Is Not Authenticated Yet**: Write endpoints are public right now
    - Add proper auth before exposing the admin panel outside trusted environments
 
-## 🔐 API Key Security
+## API Key Security
 
 ⚠️ **Important**: In production:
 - Never commit API keys to version control

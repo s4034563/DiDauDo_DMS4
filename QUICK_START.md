@@ -19,7 +19,7 @@ Double-click `index.html` in Windows Explorer or drag it into your browser.
 |---------|-----------|
 | **Find Trends** | Use the search and filters in the sidebar to narrow results |
 | **Filter by Area** | Use the proximity slider (1-50 km) and location filters |
-| **Find Vibes** | Click the emoji chips: 🎊, 🛋️, 💎, etc. |
+| **Find Vibes** | Click the vibe chips in the sidebar. |
 | **View Details** | Click any marker to see the popup |
 | **Rate Place** | Click a star in the place details panel |
 | **Browse Nearby** | Use proximity slider (1-50 km) |
@@ -39,9 +39,9 @@ DMS4_A2/
 
 ---
 
-## 🎨 What You're Getting
+## What You're Getting
 
-### ✨ Visual Features
+### Visual Features
 - Dark mode interface with neon purple/cyan theme
 - Glassmorphic floating sidebar
 - Smooth animations and transitions
@@ -55,7 +55,7 @@ DMS4_A2/
 - **Social Momentum**: Removed in this version
 - **Real-time**: All filters apply instantly
 
-### 📍 Interactive Map
+### Interactive Map
 - Click markers to see details
 - Click locations in sidebar to pan
 - 8 pre-loaded locations

@@ -6,6 +6,9 @@
     <title>ĐiĐâuĐó - Social-Driven Location Explorer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@10.6.1/ol.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&display=block" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -34,6 +37,93 @@
             height: 100%;
             width: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 20px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-flex;
+            vertical-align: middle;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            -moz-osx-font-smoothing: grayscale;
+            font-feature-settings: 'liga';
+        }
+
+        .ui-icon {
+            width: 1.1em;
+            height: 1.1em;
+            justify-content: center;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+
+        .ui-icon-small {
+            font-size: 18px;
+        }
+
+        .ui-icon-large {
+            font-size: 24px;
+        }
+
+        .ui-icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .ui-icon-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        [data-icon] {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        [data-icon]::before {
+            content: attr(data-icon);
+            font-family: 'Material Symbols Rounded';
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 1.05em;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        [data-icon].icon-only {
+            justify-content: center;
+            gap: 0;
+        }
+
+        [data-icon].icon-only::before {
+            font-size: 1.15em;
+        }
+
+        [data-icon].icon-large::before {
+            font-size: 1.35em;
+        }
+
+        [data-icon].icon-filled::before {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .desktop-nav-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            flex: 0 0 auto;
         }
 
         body {
@@ -923,7 +1013,7 @@
         .desktop-nav-avatar {
             width: 48px;
             height: 48px;
-            border-radius: 9999px;
+            border-radius: 50%;
             object-fit: cover;
             border: 2px solid rgba(255, 255, 255, 0.15);
             flex: 0 0 auto;
@@ -973,12 +1063,19 @@
 
         .desktop-nav-collapsed .desktop-nav-profile {
             justify-content: center;
-            padding: 10px;
+            width: 56px;
+            height: 56px;
+            min-height: 56px;
+            margin-inline: auto;
+            padding: 0;
+            border-radius: 50%;
+            overflow: hidden;
         }
 
         .desktop-nav-collapsed .desktop-nav-avatar {
-            width: 52px;
-            height: 52px;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
         }
 
         .desktop-nav-item {
@@ -1136,12 +1233,10 @@
 
                 <div class="desktop-nav-middle">
                     <div class="desktop-nav-section-title">Main</div>
-                    <button id="mapNavBtn" type="button" class="desktop-nav-item active" aria-label="Map">
-                        <span class="desktop-nav-item-icon">🗺️</span>
+                    <button id="mapNavBtn" type="button" class="desktop-nav-item active" aria-label="Map" data-icon="map">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
                     </button>
-                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends">
-                        <span class="desktop-nav-item-icon">👥</span>
+                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends" data-icon="group">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="friends">Friends</span>
                     </button>
                 </div>
@@ -1156,17 +1251,16 @@
                         </select>
                     </div>
                     <div class="desktop-nav-theme-row">
-                        <button id="themeToggleBtn" type="button" class="desktop-nav-theme-btn desktop-nav-auth-btn" aria-label="Toggle theme">
+                        <button id="themeToggleBtn" type="button" class="desktop-nav-theme-btn desktop-nav-auth-btn" aria-label="Toggle theme" data-icon="dark_mode">
                             <span class="desktop-nav-label" data-i18n="theme">Theme</span>
-                            <span id="themeToggleIcon">🌙</span>
                             <span id="themeToggleText" class="desktop-nav-text-only">Dark mode</span>
                         </button>
                     </div>
                     <div class="desktop-nav-divider"></div>
                     <div class="desktop-nav-footer-text">Account</div>
                     <div class="desktop-nav-auth-group">
-                        <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login"><span>🔐</span><span class="desktop-nav-text-only">Login</span></button>
-                        <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout"><span>🚪</span><span class="desktop-nav-text-only">Logout</span></button>
+                        <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login" data-icon="login"><span class="desktop-nav-text-only">Login</span></button>
+                        <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout" data-icon="logout"><span class="desktop-nav-text-only">Logout</span></button>
                     </div>
                 </div>
             </div>
@@ -1178,7 +1272,7 @@
             <div class="p-6 border-b border-neon-purple border-opacity-20">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="flex items-center gap-2">
-                        <span class="text-2xl">🗺️</span>
+                        <span class="text-2xl material-symbols-rounded ui-icon ui-icon-large ui-icon-filled" aria-hidden="true">map</span>
                         <h1 class="text-2xl font-bold neon-text">ĐiĐâuĐó</h1>
                     </div>
                 </div>
@@ -1190,13 +1284,13 @@
                 
                 <!-- Search Filter -->
                 <div>
-                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="search">Search Places</label>
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="search" data-icon="search">Search Places</label>
                     <input type="text" id="searchInput" class="search-input w-full" placeholder="Type a location name..." data-i18n-placeholder="searchPlaceholder">
                 </div>
                 
                 <!-- Proximity Filter -->
                 <div id="proximitySection">
-                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="proximity">Proximity</label>
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="proximity" data-icon="near_me">Proximity</label>
                     <div class="flex items-center gap-4">
                         <input type="range" id="proximitySlider" class="range-slider flex-1" min="1" max="50" value="5">
                         <span id="proximityValue" class="text-sm font-bold neon-cyan min-w-12">5 km</span>
@@ -1205,7 +1299,7 @@
 
                 <!-- Activity Categories Filter -->
                 <div>
-                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="activityCategory">Activity Category</label>
+                    <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="activityCategory" data-icon="category">Activity Category</label>
                     <div class="space-y-3">
                         <!-- Sports & Recreation -->
                         <div>
@@ -1214,7 +1308,7 @@
                                     <input type="checkbox" id="categorySportsRecreation" value="Sports & Recreation" data-category="true" data-subid="sportsRecreationSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="sportsRecreation">🏀 Sports & Recreation</span>
+                                <span class="text-sm font-medium" data-i18n="sportsRecreation" data-icon="sports_basketball">Sports & Recreation</span>
                             </label>
                             <div id="sportsRecreationSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1222,14 +1316,14 @@
                                         <input type="checkbox" id="activitySports" value="Sports" data-parent="Sports & Recreation">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="sports">⚽ Sports</span>
+                                    <span class="text-sm" data-i18n="sports" data-icon="sports_soccer">Sports</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="activityFitness" value="Fitness" data-parent="Sports & Recreation">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="fitness">💪 Fitness</span>
+                                    <span class="text-sm" data-i18n="fitness" data-icon="fitness_center">Fitness</span>
                                 </label>
                             </div>
                         </div>
@@ -1241,7 +1335,7 @@
                                     <input type="checkbox" id="categoryMusicNightlife" value="Music & Nightlife" data-category="true" data-subid="musicNightlifeSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="musicNightlife">🎵 Music & Nightlife</span>
+                                <span class="text-sm font-medium" data-i18n="musicNightlife" data-icon="music_note">Music & Nightlife</span>
                             </label>
                             <div id="musicNightlifeSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1249,14 +1343,14 @@
                                         <input type="checkbox" id="activityMusic" value="Music" data-parent="Music & Nightlife">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="music">🎵 Music</span>
+                                    <span class="text-sm" data-i18n="music" data-icon="music_note">Music</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="activityNightlife" value="Nightlife" data-parent="Music & Nightlife">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="nightlife">🍺 Nightlife</span>
+                                    <span class="text-sm" data-i18n="nightlife" data-icon="sports_bar">Nightlife</span>
                                 </label>
                             </div>
                         </div>
@@ -1268,7 +1362,7 @@
                                     <input type="checkbox" id="categoryArtCulture" value="Art & Culture" data-category="true" data-subid="artCultureSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="artCulture">🎨 Art & Culture</span>
+                                <span class="text-sm font-medium" data-i18n="artCulture" data-icon="palette">Art & Culture</span>
                             </label>
                             <div id="artCultureSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1276,14 +1370,14 @@
                                         <input type="checkbox" id="activityArt" value="Art" data-parent="Art & Culture">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="art">🎨 Art</span>
+                                    <span class="text-sm" data-i18n="art" data-icon="palette">Art</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="activityPhotography" value="Photography" data-parent="Art & Culture">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="photography">📸 Museum</span>
+                                    <span class="text-sm" data-i18n="photography" data-icon="photo_camera">Museum</span>
                                 </label>
                             </div>
                         </div>
@@ -1295,7 +1389,7 @@
                                     <input type="checkbox" id="categoryShoppingSocial" value="Shopping & Social" data-category="true" data-subid="shoppingSocialSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="shoppingSocial">🛍️ Shopping & Social</span>
+                                <span class="text-sm font-medium" data-i18n="shoppingSocial" data-icon="shopping_bag">Shopping & Social</span>
                             </label>
                             <div id="shoppingSocialSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1303,14 +1397,14 @@
                                         <input type="checkbox" id="activityShopping" value="Shopping" data-parent="Shopping & Social">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="shopping">🛍️ Shopping</span>
+                                    <span class="text-sm" data-i18n="shopping" data-icon="shopping_bag">Shopping</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="activityMarkets" value="Markets" data-parent="Shopping & Social">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="markets">🎪 Markets</span>
+                                    <span class="text-sm" data-i18n="markets" data-icon="storefront">Markets</span>
                                 </label>
                             </div>
                         </div>
@@ -1322,7 +1416,7 @@
                                     <input type="checkbox" id="categoryDiningSocial" value="Dining & Social" data-category="true" data-subid="diningSocialSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="diningSocial">🍽️ Dining & Social</span>
+                                <span class="text-sm font-medium" data-i18n="diningSocial" data-icon="restaurant">Dining & Social</span>
                             </label>
                             <div id="diningSocialSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1330,14 +1424,14 @@
                                         <input type="checkbox" id="activityDining" value="Dining" data-parent="Dining & Social">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="dining">🍽️ Dining</span>
+                                    <span class="text-sm" data-i18n="dining" data-icon="restaurant">Dining</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="activityCafes" value="Cafes" data-parent="Dining & Social">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="cafes">☕ Cafes</span>
+                                    <span class="text-sm" data-i18n="cafes" data-icon="local_cafe">Cafes</span>
                                 </label>
                             </div>
                         </div>
@@ -1349,7 +1443,7 @@
                                     <input type="checkbox" id="categoryOutdoorNature" value="Outdoor & Nature" data-category="true" data-subid="outdoorNatureSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="outdoorNature">🌳 Outdoor & Nature</span>
+                                <span class="text-sm font-medium" data-i18n="outdoorNature" data-icon="park">Outdoor & Nature</span>
                             </label>
                             <div id="outdoorNatureSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1357,14 +1451,14 @@
                                         <input type="checkbox" id="activityHiking" value="Hiking" data-parent="Outdoor & Nature">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="hiking">🥾 Hiking</span>
+                                    <span class="text-sm" data-i18n="hiking" data-icon="hiking">Hiking</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="activityParks" value="Parks" data-parent="Outdoor & Nature">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="parks">🌳 Parks</span>
+                                    <span class="text-sm" data-i18n="parks" data-icon="park">Parks</span>
                                 </label>
                             </div>
                         </div>
@@ -1376,7 +1470,7 @@
                                     <input type="checkbox" id="categoryEventsFestivals" value="Events & Festivals" data-category="true" data-subid="eventsFestivalsSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="eventsFestivals">🎪 Events & Festivals</span>
+                                <span class="text-sm font-medium" data-i18n="eventsFestivals" data-icon="event">Events & Festivals</span>
                             </label>
                             <div id="eventsFestivalsSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1403,7 +1497,7 @@
                                     <input type="checkbox" id="categoryWorkspace" value="Workspace" data-category="true">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="workspace">💻 Workspace</span>
+                                <span class="text-sm font-medium" data-i18n="workspace" data-icon="computer">Workspace</span>
                             </label>
                         </div>
 
@@ -1414,7 +1508,7 @@
                                     <input type="checkbox" id="categoryGamingEsports" value="Gaming & Esports" data-category="true" data-subid="gamingEsportsSubcategories">
                                     <span class="slider"></span>
                                 </label>
-                                <span class="text-sm font-medium" data-i18n="gamingEsports">🎮 Gaming & Esports</span>
+                                <span class="text-sm font-medium" data-i18n="gamingEsports" data-icon="sports_esports">Gaming & Esports</span>
                             </label>
                             <div id="gamingEsportsSubcategories" class="pl-6 space-y-2 hidden">
                                 <label class="flex items-center gap-3 cursor-pointer">
@@ -1422,7 +1516,7 @@
                                         <input type="checkbox" id="activityGaming" value="Gaming" data-parent="Gaming & Esports">
                                         <span class="slider"></span>
                                     </label>
-                                    <span class="text-sm" data-i18n="gaming">🎮 Gaming</span>
+                                    <span class="text-sm" data-i18n="gaming" data-icon="sports_esports">Gaming</span>
                                 </label>
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <label class="toggle-switch">
@@ -1440,13 +1534,13 @@
                 <div>
                     <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="theVibe">The Vibe</label>
                     <div class="flex flex-wrap">
-                        <div class="chip" data-vibe="Cozy" data-i18n="vibeCozy">🛋️ Cozy</div>
-                        <div class="chip" data-vibe="Industrial" data-i18n="vibeIndustrial">🏭 Industrial</div>
-                        <div class="chip" data-vibe="Loud/Party" data-i18n="vibeLoudParty">🎊 Loud/Party</div>
-                        <div class="chip" data-vibe="Minimalist" data-i18n="vibeMinimalist">✨ Minimalist</div>
-                        <div class="chip" data-vibe="Hidden Gem" data-i18n="vibeHiddenGem">💎 Hidden Gem</div>
-                        <div class="chip" data-vibe="Instagrammable" data-i18n="vibeInstagrammable">📸 Instagrammable</div>
-                        <div class="chip" data-vibe="Quiet" data-i18n="vibeQuiet">🤫 Quiet</div>
+                        <div class="chip" data-vibe="Cozy" data-i18n="vibeCozy" data-icon="bedtime">Cozy</div>
+                        <div class="chip" data-vibe="Industrial" data-i18n="vibeIndustrial" data-icon="factory">Industrial</div>
+                        <div class="chip" data-vibe="Loud/Party" data-i18n="vibeLoudParty" data-icon="celebration">Loud/Party</div>
+                        <div class="chip" data-vibe="Minimalist" data-i18n="vibeMinimalist" data-icon="auto_awesome">Minimalist</div>
+                        <div class="chip" data-vibe="Hidden Gem" data-i18n="vibeHiddenGem" data-icon="diamond">Hidden Gem</div>
+                        <div class="chip" data-vibe="Instagrammable" data-i18n="vibeInstagrammable" data-icon="photo_camera">Instagrammable</div>
+                        <div class="chip" data-vibe="Quiet" data-i18n="vibeQuiet" data-icon="nightlight">Quiet</div>
                     </div>
                 </div>
 
@@ -1454,7 +1548,7 @@
                 <div>
                     <label class="flex items-center gap-3 cursor-pointer">
                         <input type="checkbox" id="curatorChoiceCheckbox" class="w-4 h-4 rounded">
-                        <span class="text-sm font-semibold neon-text">✨ Curator's Picks</span>
+                        <span class="text-sm font-semibold neon-text" data-icon="star">Curator's Picks</span>
                     </label>
                 </div>
 
@@ -1466,11 +1560,11 @@
                 </div>
 
                 <!-- Use My Location Button -->
-                <button id="useLocationBtn" class="button-primary text-sm" style="width: 100%; margin-bottom: 12px;" data-i18n="useMyLocation">📍 Use My Location</button>
+                <button id="useLocationBtn" class="button-primary text-sm" style="width: 100%; margin-bottom: 12px;" data-i18n="useMyLocation" data-icon="my_location">Use My Location</button>
 
                 <!-- Refresh & Clear Filters Buttons -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                    <button id="refreshLocationsBtn" class="button-primary text-sm" style="width: 100%;" title="Refresh locations from server">🔄 Refresh</button>
+                    <button id="refreshLocationsBtn" class="button-primary text-sm" style="width: 100%;" title="Refresh locations from server" data-icon="refresh">Refresh</button>
                     <button id="clearFilters" class="button-primary text-sm" data-i18n="clearFilters">Clear All Filters</button>
                 </div>
 
@@ -1490,7 +1584,7 @@
             <aside id="rightInfoPanel" class="right-info-panel" aria-hidden="true">
                 <div class="right-info-panel-header">
                     <p class="text-xs font-semibold tracking-wide text-slate-300 uppercase" data-i18n="locationDetails">Location Details</p>
-                    <button id="rightInfoPanelClose" type="button" class="right-info-panel-close" aria-label="Close details" data-i18n-aria-label="closeDetails">×</button>
+                    <button id="rightInfoPanelClose" type="button" class="right-info-panel-close icon-only" aria-label="Close details" data-i18n-aria-label="closeDetails" data-icon="close"></button>
                 </div>
                 <div id="rightInfoPanelContent" class="right-info-panel-content text-slate-100 text-sm">
                     <p class="text-slate-400" data-i18n="clickMarkerHint">Click a marker to view details.</p>
@@ -1500,14 +1594,14 @@
             <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 
             <div class="mobile-action-bar" aria-label="Mobile tools">
-                <button id="mobileSearchBtn" type="button" class="mobile-action-btn" aria-label="Search places">⌕</button>
-                <button id="mobileFiltersBtn" type="button" class="mobile-action-btn" aria-label="Filters">☰</button>
+                <button id="mobileSearchBtn" type="button" class="mobile-action-btn icon-only" aria-label="Search places" data-icon="search"></button>
+                <button id="mobileFiltersBtn" type="button" class="mobile-action-btn icon-only" aria-label="Filters" data-icon="menu"></button>
             </div>
 
             <div id="mobileSearchTray" class="mobile-search-tray" aria-hidden="true">
                 <div class="mobile-search-header">
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300" data-i18n="search">Search Places</p>
-                    <button id="mobileSearchCloseBtn" type="button" class="mobile-search-close" aria-label="Close search">×</button>
+                    <button id="mobileSearchCloseBtn" type="button" class="mobile-search-close icon-only" aria-label="Close search" data-icon="close"></button>
                 </div>
                 <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Type a location name..." data-i18n-placeholder="searchPlaceholder">
             </div>
@@ -1537,7 +1631,7 @@
         <div class="bg-slate-900 rounded-lg p-8 w-full max-w-md mx-4 border border-neon-purple border-opacity-40">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold neon-text">Welcome</h2>
-                <button id="loginModalClose" type="button" class="text-2xl text-slate-400 hover:text-white">×</button>
+                <button id="loginModalClose" type="button" class="text-2xl text-slate-400 hover:text-white icon-only" data-icon="close"></button>
             </div>
 
             <!-- Tab Selection -->

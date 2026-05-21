@@ -60,39 +60,39 @@ const translations = {
         guest: 'Guest',
         proximity: 'Proximity',
         activityCategory: 'Activity Category',
-        sportsRecreation: '🏀 Sports & Recreation',
-        sports: '⚽ Sports',
-        fitness: '💪 Fitness',
-        musicNightlife: '🎵 Music & Nightlife',
-        music: '🎵 Music',
-        nightlife: '🍺 Nightlife',
-        artCulture: '🎨 Art & Culture',
-        art: '🎨 Art',
-        photography: '📸 Museum',
-        shoppingSocial: '🛍️ Shopping & Social',
-        shopping: '🛍️ Shopping',
-        markets: '🎪 Markets',
-        diningSocial: '🍽️ Dining & Social',
-        dining: '🍽️ Dining',
-        cafes: '☕ Cafes',
-        outdoorNature: '🌳 Outdoor & Nature',
-        hiking: '🥾 Hiking',
-        parks: '🌳 Parks',
-        eventsFestivals: '🎪 Events & Festivals',
+        sportsRecreation: 'Sports & Recreation',
+        sports: 'Sports',
+        fitness: 'Fitness',
+        musicNightlife: 'Music & Nightlife',
+        music: 'Music',
+        nightlife: 'Nightlife',
+        artCulture: 'Art & Culture',
+        art: 'Art',
+        photography: 'Museum',
+        shoppingSocial: 'Shopping & Social',
+        shopping: 'Shopping',
+        markets: 'Markets',
+        diningSocial: 'Dining & Social',
+        dining: 'Dining',
+        cafes: 'Cafes',
+        outdoorNature: 'Outdoor & Nature',
+        hiking: 'Hiking',
+        parks: 'Parks',
+        eventsFestivals: 'Events & Festivals',
         events: '🎫 Events',
         festivals: '🎆 Festivals',
-        gamingEsports: '🎮 Gaming & Esports',
-        gaming: '🎮 Gaming',
-        arcades: '🕹️ Arcades',
-        workspace: '💻 Workspace',
+        gamingEsports: 'Gaming & Esports',
+        gaming: 'Gaming',
+        arcades: 'Arcades',
+        workspace: 'Workspace',
         theVibe: 'The Vibe',
-        vibeCozy: '🛋️ Cozy',
-        vibeIndustrial: '🏭 Industrial',
-        vibeLoudParty: '🎊 Loud/Party',
-        vibeMinimalist: '✨ Minimalist',
-        vibeHiddenGem: '💎 Hidden Gem',
-        vibeInstagrammable: '📸 Instagrammable',
-        vibeQuiet: '🤫 Quiet',
+        vibeCozy: 'Cozy',
+        vibeIndustrial: 'Industrial',
+        vibeLoudParty: 'Loud/Party',
+        vibeMinimalist: 'Minimalist',
+        vibeHiddenGem: 'Hidden Gem',
+        vibeInstagrammable: 'Instagrammable',
+        vibeQuiet: 'Quiet',
         normal: 'Normal',
         trending: 'Trending',
         useMyLocation: 'Use My Location',
@@ -133,39 +133,39 @@ const translations = {
         guest: 'Khách',
         proximity: 'Khoảng cách',
         activityCategory: 'Danh mục hoạt động',
-        sportsRecreation: '🏀 Thể thao & Giải trí',
-        sports: '⚽ Thể thao',
-        fitness: '💪 Gym & Fitness',
-        musicNightlife: '🎵 Âm nhạc & Giải trí đêm',
-        music: '🎵 Âm nhạc',
-        nightlife: '🍺 Giải trí đêm',
-        artCulture: '🎨 Nghệ thuật & Văn hóa',
-        art: '🎨 Nghệ thuật',
-        photography: '📸 Bảo tàng',
-        shoppingSocial: '🛍️ Mua sắm & Giao lưu',
-        shopping: '🛍️ Mua sắm',
-        markets: '🎪 Chợ & Hội chợ',
-        diningSocial: '🍽️ Ăn uống & Giao lưu',
-        dining: '🍽️ Ăn uống',
-        cafes: '☕ Quán cà phê',
-        outdoorNature: '🌳 Ngoại trời & Thiên nhiên',
-        hiking: '🥾 Đi bộ/Leo núi',
-        parks: '🌳 Công viên',
-        eventsFestivals: '🎪 Sự kiện & Lễ hội',
+        sportsRecreation: 'Thể thao & Giải trí',
+        sports: 'Thể thao',
+        fitness: 'Gym & Fitness',
+        musicNightlife: 'Âm nhạc & Giải trí đêm',
+        music: 'Âm nhạc',
+        nightlife: 'Giải trí đêm',
+        artCulture: 'Nghệ thuật & Văn hóa',
+        art: 'Nghệ thuật',
+        photography: 'Bảo tàng',
+        shoppingSocial: 'Mua sắm & Giao lưu',
+        shopping: 'Mua sắm',
+        markets: 'Chợ & Hội chợ',
+        diningSocial: 'Ăn uống & Giao lưu',
+        dining: 'Ăn uống',
+        cafes: 'Quán cà phê',
+        outdoorNature: 'Ngoại trời & Thiên nhiên',
+        hiking: 'Đi bộ/Leo núi',
+        parks: 'Công viên',
+        eventsFestivals: 'Sự kiện & Lễ hội',
         events: '🎫 Sự kiện',
         festivals: '🎆 Lễ hội',
-        gamingEsports: '🎮 Game & Esports',
-        gaming: '🎮 Game',
-        arcades: '🕹️ Máy chơi/Arcade',
-        workspace: '💻 Không gian làm việc',
+        gamingEsports: 'Game & Esports',
+        gaming: 'Game',
+        arcades: 'Máy chơi/Arcade',
+        workspace: 'Không gian làm việc',
         theVibe: 'Phong cách',
-        vibeCozy: '🛋️ Ấm cúng',
-        vibeIndustrial: '🏭 Công nghiệp',
-        vibeLoudParty: '🎊 Sôi động/Tiệc tùng',
-        vibeMinimalist: '✨ Tối giản',
-        vibeHiddenGem: '💎 Bí mật',
-        vibeInstagrammable: '📸 Lên hình đẹp',
-        vibeQuiet: '🤫 Yên tĩnh',
+        vibeCozy: 'Ấm cúng',
+        vibeIndustrial: 'Công nghiệp',
+        vibeLoudParty: 'Sôi động/Tiệc tùng',
+        vibeMinimalist: 'Tối giản',
+        vibeHiddenGem: 'Bí mật',
+        vibeInstagrammable: 'Lên hình đẹp',
+        vibeQuiet: 'Yên tĩnh',
         normal: 'Bình thường',
         trending: 'Đang xu hướng',
         useMyLocation: 'Sử dụng vị trí của tôi',
@@ -323,8 +323,8 @@ function t(key) {
 
 function getLocalizedActivityType(type) {
     const mapType = {
-        'Sports': t('sports').replace('⚽ ', ''),
-        'Fitness': t('fitness').replace('💪 ', '')
+        'Sports': t('sports'),
+        'Fitness': t('fitness')
     };
     return mapType[type] || type;
 }
@@ -353,12 +353,12 @@ function refreshSelectedMarkerStyles() {
 
 function getLocalizedVibe(vibe) {
     const vibeMap = {
-        Cozy: t('vibeCozy').replace('🛋️ ', ''),
-        Industrial: t('vibeIndustrial').replace('🏭 ', ''),
-        'Loud/Party': t('vibeLoudParty').replace('🎊 ', ''),
-        Minimalist: t('vibeMinimalist').replace('✨ ', ''),
-        'Hidden Gem': t('vibeHiddenGem').replace('💎 ', ''),
-        Instagrammable: t('vibeInstagrammable').replace('📸 ', '')
+        Cozy: t('vibeCozy'),
+        Industrial: t('vibeIndustrial'),
+        'Loud/Party': t('vibeLoudParty'),
+        Minimalist: t('vibeMinimalist'),
+        'Hidden Gem': t('vibeHiddenGem'),
+        Instagrammable: t('vibeInstagrammable')
     };
     return vibeMap[vibe] || vibe;
 }
@@ -414,14 +414,14 @@ function getStoredTheme() {
 
 function updateThemeToggleLabel() {
     const themeToggleText = document.getElementById('themeToggleText');
-    const themeToggleIcon = document.getElementById('themeToggleIcon');
+    const themeToggleButton = document.getElementById('themeToggleBtn');
 
     if (themeToggleText) {
         themeToggleText.textContent = currentTheme === 'light' ? t('darkMode') : t('lightMode');
     }
 
-    if (themeToggleIcon) {
-        themeToggleIcon.textContent = currentTheme === 'light' ? '☀️' : '🌙';
+    if (themeToggleButton) {
+        themeToggleButton.setAttribute('data-icon', currentTheme === 'light' ? 'dark_mode' : 'light_mode');
     }
 }
 
@@ -1281,7 +1281,7 @@ function showInfoWindow(location, markerElement) {
 
             ${location.curatorChoice ? `
             <div class="rounded-xl border border-yellow-500/40 bg-yellow-950/20 p-3 flex items-center gap-2">
-                <span style="font-size: 18px;">✨</span>
+                <span class="material-symbols-rounded ui-icon ui-icon-filled ui-icon-small text-yellow-300" aria-hidden="true">star</span>
                 <p class="text-sm font-semibold text-yellow-200">Curator's Choice</p>
             </div>
             ` : ''}
@@ -2840,14 +2840,14 @@ window.addEventListener('load', () => {
     if (refreshBtn) {
         refreshBtn.addEventListener('click', async () => {
             refreshBtn.disabled = true;
-            refreshBtn.textContent = '🔄 Loading...';
+            refreshBtn.textContent = 'Loading...';
             try {
                 await loadMapMarkers();
             } catch (error) {
                 console.error('Refresh failed:', error);
             } finally {
                 refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Refresh';
+                refreshBtn.textContent = 'Refresh';
             }
         });
     }
