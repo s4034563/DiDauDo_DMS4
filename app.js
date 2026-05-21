@@ -1281,7 +1281,6 @@ function showInfoWindow(location, markerElement) {
                 <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
                 <div id="existingRatings-${location.id}" class="text-sm text-slate-300"></div>
             </div>
-
             ${currentUser ? `
             <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
             <div class="space-y-2">
@@ -1290,17 +1289,13 @@ function showInfoWindow(location, markerElement) {
                 <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
                 <button onclick="submitUserRatingHandler('${location.id}')" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
             </div>
-            ` : `
-            <div class="rounded-xl border border-purple-500/40 bg-purple-950/20 p-2 text-center">
-                <p class="text-xs text-slate-300"><button onclick="openLoginModal()" class="text-neon-purple font-semibold hover:underline">Login</button> to leave a rating</p>
-            </div>
-            `}
+            ` : ``}
         </div>
     `;
 
     const favoriteButtonHtml = currentUser
-        ? `<button id="favoriteBtn-${location.id}" type="button" class="rounded-full border border-white/10 bg-slate-900/80 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200">♡ Favorite</button>`
-        : `<button id="favoriteBtn-${location.id}" type="button" class="rounded-full border border-white/10 bg-slate-900/50 px-3 py-2 text-xs font-semibold text-slate-500 cursor-not-allowed" title="Sign in to save favorites" aria-label="Sign in to save favorites">♡ Favorite</button>`;
+        ? `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn rounded-full border border-white/10 bg-transparent p-2 text-slate-200 transition" aria-pressed="false" title="Save to favorites" aria-label="Save to favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`
+        : `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn rounded-full border border-white/10 bg-transparent p-2 text-slate-500" title="Sign in to save favorites" aria-label="Sign in to save favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`;
 
     rightInfoPanelContentElement.innerHTML = `
         <div class="space-y-3">
@@ -1343,20 +1338,9 @@ function showInfoWindow(location, markerElement) {
             </div>
             ` : ''}
 
-            ${!currentUser ? `
-            <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-2">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400" data-rating-label>${t('rating')}</p>
-                        <p id="userRating-${location.id}" class="text-sm font-semibold text-slate-100">${t('rating')}</p>
-                    </div>
-                    <div id="ratingStars-${location.id}" class="flex items-center gap-1"></div>
-                </div>
-                <p id="ratingSummary-${location.id}" class="text-[11px] text-slate-400"></p>
-            </div>
-            ` : ''}
+            
 
-            ${ratingsSection}
+            ${currentUser ? ratingsSection : ''}
 
             ${(getLocationActionUrl(location) || getGoogleMapsUrl(location)) ? `
             <div class="flex gap-2 pt-1">
@@ -1373,12 +1357,19 @@ function showInfoWindow(location, markerElement) {
     if (favoriteBtn) {
         if (currentUser) {
             void checkIsFavorite(location.id).then((isFavorite) => {
-                favoriteBtn.textContent = isFavorite ? '♥ Favorited' : '♡ Favorite';
-                favoriteBtn.classList.toggle('text-cyan-200', isFavorite);
-                favoriteBtn.classList.toggle('border-cyan-400', isFavorite);
+                const icon = favoriteBtn.querySelector('.material-symbols-rounded');
+                favoriteBtn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+                favoriteBtn.classList.toggle('favorited', isFavorite);
+                if (icon) icon.textContent = isFavorite ? 'favorite' : 'favorite_border';
             });
-            favoriteBtn.addEventListener('click', () => {
-                void toggleFavorite(location.id);
+            favoriteBtn.addEventListener('click', async () => {
+                await toggleFavorite(location.id);
+                // refresh UI state after toggle
+                const isFav = await checkIsFavorite(location.id);
+                const icon = favoriteBtn.querySelector('.material-symbols-rounded');
+                favoriteBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+                favoriteBtn.classList.toggle('favorited', isFav);
+                if (icon) icon.textContent = isFav ? 'favorite' : 'favorite_border';
             });
         } else {
             favoriteBtn.addEventListener('click', () => {
@@ -1440,10 +1431,12 @@ function showInfoWindow(location, markerElement) {
         }
     }
 
-    renderRatingControls(location.id);
-    updateRatingSummaryElements(location.id);
-    loadLocationRatingSummaryFromBackend(location.id);
-    loadExistingUserRatings(location.id);
+    if (currentUser) {
+        renderRatingControls(location.id);
+        updateRatingSummaryElements(location.id);
+        loadLocationRatingSummaryFromBackend(location.id);
+        loadExistingUserRatings(location.id);
+    }
 }
 
 function openLocationFromUrlIfPresent() {
@@ -1953,7 +1946,8 @@ function updateAuthUI() {
             profileButton.setAttribute('aria-label', t('signInContinue'));
         }
         if (userAvatar) {
-            userAvatar.src = getProfileAvatarUrl({ name: t('guest'), email: 'guest' });
+            const defaultGuestAvatar = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
+            userAvatar.src = defaultGuestAvatar;
             userAvatar.alt = `${t('guest')} profile picture`;
         }
         if (userName) {

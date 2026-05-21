@@ -88,6 +88,11 @@
             gap: 0.55rem;
         }
 
+        /* increase icon/text gap for better spacing */
+        [data-icon] {
+            gap: 0.8rem;
+        }
+
         [data-icon]::before {
             content: attr(data-icon);
             font-family: 'Material Symbols Rounded';
@@ -98,6 +103,9 @@
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
+            margin-right: 8px;
+            vertical-align: middle;
+            height: 1.2em;
         }
 
         [data-icon].icon-only {
@@ -1272,6 +1280,17 @@
             cursor: pointer;
         }
 
+        /* Favorite heart styling */
+        .favorite-btn .material-symbols-rounded {
+            transition: transform 0.12s ease, color 0.14s ease;
+            color: inherit;
+        }
+
+        .favorite-btn.favorited .material-symbols-rounded {
+            color: #ef4444;
+            transform: scale(1.08);
+        }
+
         @media (max-width: 768px) {
             .desktop-nav-rail {
                 display: none !important;
@@ -1598,13 +1617,13 @@
                 <div>
                     <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="theVibe">The Vibe</label>
                     <div class="flex flex-wrap">
-                        <div class="chip" data-vibe="Cozy" data-i18n="vibeCozy" data-icon="bedtime">Cozy</div>
-                        <div class="chip" data-vibe="Industrial" data-i18n="vibeIndustrial" data-icon="factory">Industrial</div>
-                        <div class="chip" data-vibe="Loud/Party" data-i18n="vibeLoudParty" data-icon="celebration">Loud/Party</div>
-                        <div class="chip" data-vibe="Minimalist" data-i18n="vibeMinimalist" data-icon="auto_awesome">Minimalist</div>
-                        <div class="chip" data-vibe="Hidden Gem" data-i18n="vibeHiddenGem" data-icon="diamond">Hidden Gem</div>
-                        <div class="chip" data-vibe="Instagrammable" data-i18n="vibeInstagrammable" data-icon="photo_camera">Instagrammable</div>
-                        <div class="chip" data-vibe="Quiet" data-i18n="vibeQuiet" data-icon="nightlight">Quiet</div>
+                        <div class="chip" data-vibe="Cozy" data-i18n="vibeCozy">Cozy</div>
+                        <div class="chip" data-vibe="Industrial" data-i18n="vibeIndustrial">Industrial</div>
+                        <div class="chip" data-vibe="Loud/Party" data-i18n="vibeLoudParty">Loud/Party</div>
+                        <div class="chip" data-vibe="Minimalist" data-i18n="vibeMinimalist">Minimalist</div>
+                        <div class="chip" data-vibe="Hidden Gem" data-i18n="vibeHiddenGem">Hidden Gem</div>
+                        <div class="chip" data-vibe="Instagrammable" data-i18n="vibeInstagrammable">Instagrammable</div>
+                        <div class="chip" data-vibe="Quiet" data-i18n="vibeQuiet">Quiet</div>
                     </div>
                 </div>
 
