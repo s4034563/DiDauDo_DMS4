@@ -803,18 +803,15 @@
                     <!-- Auth Buttons -->
                     <div id="authButtons" class="flex gap-2">
                         <button id="loginBtn" class="px-3 py-1 text-xs rounded border border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-slate-900 transition" style="display:none;">Login</button>
-                        <button id="profileBtn" class="px-3 py-1 text-xs rounded border border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-slate-900 transition" style="display:none;">Profile</button>
                         <button id="logoutBtn" class="px-3 py-1 text-xs rounded border border-red-500 text-red-400 hover:bg-red-500 hover:text-white transition" style="display:none;">Logout</button>
                     </div>
                 </div>
                 <!-- User Info Display -->
-                <div id="userInfoDisplay" style="display:none;" class="mb-3 rounded bg-slate-800 p-2 text-xs">
+                <div id="userInfoDisplay" style="display:none;" class="mb-3 rounded bg-slate-800 p-2 text-xs transition hover:bg-slate-700/80" role="button" tabindex="0" aria-label="Open profile">
                     <div class="flex items-center gap-2">
                         <img id="userAvatar" src="" alt="Profile picture" class="h-9 w-9 rounded-full border border-white/10 object-cover shadow-sm" />
                         <div class="min-w-0">
-                            <p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">Logged in as</p>
                             <p id="userName" class="truncate font-semibold text-neon-purple"></p>
-                            <p id="userEmail" class="truncate text-[11px] text-slate-300"></p>
                         </div>
                     </div>
                 </div>

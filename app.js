@@ -1770,16 +1770,13 @@ function saveUserSession() {
 // Update UI based on auth state
 function updateAuthUI() {
     const loginBtn = document.getElementById('loginBtn');
-    const profileBtn = document.getElementById('profileBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const userInfoDisplay = document.getElementById('userInfoDisplay');
     const userAvatar = document.getElementById('userAvatar');
     const userName = document.getElementById('userName');
-    const userEmail = document.getElementById('userEmail');
 
     if (currentUser) {
         if (loginBtn) loginBtn.style.display = 'none';
-        if (profileBtn) profileBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'block';
         if (userInfoDisplay) {
             userInfoDisplay.style.display = 'block';
@@ -1788,11 +1785,9 @@ function updateAuthUI() {
                 userAvatar.alt = `${currentUser.name || currentUser.email || 'User'} profile picture`;
             }
             if (userName) userName.textContent = currentUser.name || currentUser.email;
-            if (userEmail) userEmail.textContent = currentUser.email;
         }
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
-        if (profileBtn) profileBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (userInfoDisplay) userInfoDisplay.style.display = 'none';
     }
@@ -2581,7 +2576,6 @@ window.addEventListener('load', () => {
 
     // Setup auth modal and buttons
     const loginBtn = document.getElementById('loginBtn');
-    const profileBtn = document.getElementById('profileBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const loginModalClose = document.getElementById('loginModalClose');
     const profileModalClose = document.getElementById('profileModalClose');
@@ -2589,12 +2583,30 @@ window.addEventListener('load', () => {
     const signupTabBtn = document.getElementById('signupTabBtn');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
+    const userInfoDisplay = document.getElementById('userInfoDisplay');
 
     if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
-    if (profileBtn) profileBtn.addEventListener('click', () => openProfileModal());
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
     if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
+
+    if (userInfoDisplay) {
+        userInfoDisplay.addEventListener('click', () => {
+            if (currentUser) {
+                openProfileModal();
+            }
+        });
+        userInfoDisplay.addEventListener('keydown', (event) => {
+            if (!currentUser) {
+                return;
+            }
+
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openProfileModal();
+            }
+        });
+    }
 
     if (loginTabBtn) loginTabBtn.addEventListener('click', () => switchAuthTab(false));
     if (signupTabBtn) signupTabBtn.addEventListener('click', () => switchAuthTab(true));
