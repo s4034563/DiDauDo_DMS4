@@ -395,21 +395,21 @@ const locationPinCategoryDefinitions = [
 ];
 
 const locationActivityIconMap = {
-    Sports: ['sports_soccer', 'sports_basketball'],
+    Sports: ['sports_soccer'],
     Fitness: ['fitness_center'],
-    Music: ['music_note', 'graphic_eq'],
-    Nightlife: ['sports_bar', 'celebration'],
-    Art: ['palette', 'brush'],
-    Photography: ['photo_camera', 'image'],
-    Shopping: ['shopping_bag', 'storefront'],
-    Markets: ['storefront', 'shopping_basket'],
-    Dining: ['restaurant', 'dinner_dining'],
-    Cafes: ['local_cafe', 'coffee'],
+    Music: ['music_note'],
+    Nightlife: ['sports_bar'],
+    Art: ['palette'],
+    Photography: ['photo_camera'],
+    Shopping: ['shopping_bag'],
+    Markets: ['storefront'],
+    Dining: ['restaurant'],
+    Cafes: ['local_cafe'],
     Hiking: ['hiking'],
-    Parks: ['park', 'nature_people'],
+    Parks: ['park'],
     Events: ['event'],
-    Festivals: ['festival', 'celebration'],
-    Gaming: ['sports_esports', 'stadia_controller'],
+    Festivals: ['festival'],
+    Gaming: ['sports_esports'],
     Arcades: ['stadia_controller'],
     Workspace: ['computer'],
 };
@@ -541,7 +541,7 @@ function createPinStyles(location, isSelected, resolution) {
     const labelAlign = labelSide === 'right' ? 'left' : 'right';
     const labelPadding = [6, 10, 6, 10];
     const selectedStroke = isSelected ? '#ffffff' : 'rgba(255,255,255,0.9)';
-    const labelFill = '#0f172a';
+    const labelFill = category.color;
 
     const pinStyle = new ol.style.Style({
         image: new ol.style.Circle({
@@ -568,8 +568,7 @@ function createPinStyles(location, isSelected, resolution) {
             text: label,
             font: '600 13px "Segoe UI", sans-serif',
             fill: new ol.style.Fill({ color: labelFill }),
-            backgroundFill: new ol.style.Fill({ color: 'rgba(255,255,255,0.97)' }),
-            backgroundStroke: new ol.style.Stroke({ color: category.color, width: 1.5 }),
+            stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 }),
             padding: labelPadding,
             offsetX: labelOffset,
             textAlign: labelAlign,
