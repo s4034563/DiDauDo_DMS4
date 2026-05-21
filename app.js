@@ -407,6 +407,70 @@ async function isGeolocationEnabled() {
     }
 }
 
+function getStoredTheme() {
+    const storedTheme = localStorage.getItem(themeStorageKey);
+    return storedTheme === 'light' ? 'light' : 'dark';
+}
+
+function updateThemeToggleLabel() {
+    const themeToggleText = document.getElementById('themeToggleText');
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+    if (themeToggleText) {
+        themeToggleText.textContent = currentTheme === 'light' ? t('darkMode') : t('lightMode');
+    }
+
+    if (themeToggleIcon) {
+        themeToggleIcon.textContent = currentTheme === 'light' ? '☀️' : '🌙';
+    }
+}
+
+function applyTheme(theme) {
+    currentTheme = theme === 'light' ? 'light' : 'dark';
+    document.body.classList.toggle('theme-light', currentTheme === 'light');
+    document.documentElement.dataset.theme = currentTheme;
+    localStorage.setItem(themeStorageKey, currentTheme);
+    updateThemeToggleLabel();
+}
+
+function toggleTheme() {
+    applyTheme(currentTheme === 'light' ? 'dark' : 'light');
+}
+
+function getStoredDesktopNavState() {
+    return localStorage.getItem(desktopNavStorageKey) === 'true';
+}
+
+function applyDesktopNavState(collapsed) {
+    desktopNavCollapsed = Boolean(collapsed);
+    document.body.classList.toggle('desktop-nav-collapsed', desktopNavCollapsed);
+
+    const navToggle = document.getElementById('desktopNavToggle');
+    if (navToggle) {
+        navToggle.textContent = desktopNavCollapsed ? '›' : '‹';
+        navToggle.setAttribute('aria-label', desktopNavCollapsed ? 'Expand navigation' : 'Collapse navigation');
+    }
+
+    localStorage.setItem(desktopNavStorageKey, String(desktopNavCollapsed));
+}
+
+function toggleDesktopNav() {
+    applyDesktopNavState(!desktopNavCollapsed);
+}
+
+function setDesktopNavActive(section) {
+    const mapNavBtn = document.getElementById('mapNavBtn');
+    const friendsNavBtn = document.getElementById('friendsNavBtn');
+
+    if (mapNavBtn) {
+        mapNavBtn.classList.toggle('active', section === 'map');
+    }
+
+    if (friendsNavBtn) {
+        friendsNavBtn.classList.toggle('active', section === 'friends');
+    }
+}
+
 function getFilteredLocations() {
     let filtered = [...allLocations];
 
@@ -433,70 +497,6 @@ function getFilteredLocations() {
     }
 
     // Activity type filter logic:
-
-        function getStoredTheme() {
-            const storedTheme = localStorage.getItem(themeStorageKey);
-            return storedTheme === 'light' ? 'light' : 'dark';
-        }
-
-        function updateThemeToggleLabel() {
-            const themeToggleText = document.getElementById('themeToggleText');
-            const themeToggleIcon = document.getElementById('themeToggleIcon');
-
-            if (themeToggleText) {
-                themeToggleText.textContent = currentTheme === 'light' ? t('darkMode') : t('lightMode');
-            }
-
-            if (themeToggleIcon) {
-                themeToggleIcon.textContent = currentTheme === 'light' ? '☀️' : '🌙';
-            }
-        }
-
-        function applyTheme(theme) {
-            currentTheme = theme === 'light' ? 'light' : 'dark';
-            document.body.classList.toggle('theme-light', currentTheme === 'light');
-            document.documentElement.dataset.theme = currentTheme;
-            localStorage.setItem(themeStorageKey, currentTheme);
-            updateThemeToggleLabel();
-        }
-
-        function toggleTheme() {
-            applyTheme(currentTheme === 'light' ? 'dark' : 'light');
-        }
-
-        function getStoredDesktopNavState() {
-            return localStorage.getItem(desktopNavStorageKey) === 'true';
-        }
-
-        function applyDesktopNavState(collapsed) {
-            desktopNavCollapsed = Boolean(collapsed);
-            document.body.classList.toggle('desktop-nav-collapsed', desktopNavCollapsed);
-
-            const navToggle = document.getElementById('desktopNavToggle');
-            if (navToggle) {
-                navToggle.textContent = desktopNavCollapsed ? '›' : '‹';
-                navToggle.setAttribute('aria-label', desktopNavCollapsed ? 'Expand navigation' : 'Collapse navigation');
-            }
-
-            localStorage.setItem(desktopNavStorageKey, String(desktopNavCollapsed));
-        }
-
-        function toggleDesktopNav() {
-            applyDesktopNavState(!desktopNavCollapsed);
-        }
-
-        function setDesktopNavActive(section) {
-            const mapNavBtn = document.getElementById('mapNavBtn');
-            const friendsNavBtn = document.getElementById('friendsNavBtn');
-
-            if (mapNavBtn) {
-                mapNavBtn.classList.toggle('active', section === 'map');
-            }
-
-            if (friendsNavBtn) {
-                friendsNavBtn.classList.toggle('active', section === 'friends');
-            }
-        }
     // Each checked category contributes either its selected sub-categories,
     // or all of its sub-categories when none are selected.
     const selectedActivities = [];
@@ -2831,9 +2831,6 @@ window.addEventListener('load', () => {
 
     // Setup geolocation permission modal handlers
     setupPermissionModalHandlers();
-
-    // Check and show permission modal if needed
-    checkAndShowPermissionModal();
 
     // Use My Location button
     document.getElementById('useLocationBtn').addEventListener('click', initializeUserLocation);
