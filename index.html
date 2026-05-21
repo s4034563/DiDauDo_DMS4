@@ -170,6 +170,26 @@
             user-select: none;
         }
 
+        #locationsList {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 0 12px calc(env(safe-area-inset-bottom, 0px) + 10px);
+            z-index: 24;
+            pointer-events: none;
+            display: block;
+            background: rgba(15, 23, 42, 0.92);
+            border-top: 1px solid rgba(192, 132, 252, 0.18);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 -16px 40px rgba(2, 6, 23, 0.3);
+        }
+
+        #locationsContainer {
+            pointer-events: auto;
+            padding: 12px;
+        }
+
         .locations-carousel.is-dragging {
             cursor: grabbing;
         }
@@ -378,14 +398,6 @@
 
             .mobile-location-card .location-title {
                 font-size: 16px;
-            }
-
-            #locationsList {
-                display: block;
-            }
-
-            #locationsContainer {
-                padding: 12px;
             }
 
             .carousel-location-card {
