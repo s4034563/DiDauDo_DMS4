@@ -1352,7 +1352,7 @@ function updateLocationsList(locations) {
         const isSelected = activeSelectedLocationId === location.id;
         card.className = mobileMode
             ? `location-card mobile-location-card${isSelected ? ' selected' : ''}`
-            : `location-card${isSelected ? ' selected' : ''}`;
+            : `location-card carousel-location-card${isSelected ? ' selected' : ''}`;
         
         const thumbnailUrl = location.thumbnailUrl || getLocationPreviewImageUrl(location);
         const thumbnailHtml = thumbnailUrl ? `
@@ -1391,6 +1391,81 @@ function updateLocationsList(locations) {
 
         container.appendChild(card);
     });
+}
+
+function setupCarouselDragScroll(container) {
+    if (!container) {
+        return;
+    }
+
+    let pointerDown = false;
+    let pointerId = null;
+    let startX = 0;
+    let startScrollLeft = 0;
+    let isDragging = false;
+
+    container.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) {
+            return;
+        }
+
+        pointerDown = true;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startScrollLeft = container.scrollLeft;
+        isDragging = false;
+        container.classList.add('is-dragging');
+        container.setPointerCapture(pointerId);
+    });
+
+    container.addEventListener('pointermove', (event) => {
+        if (!pointerDown || pointerId !== event.pointerId) {
+            return;
+        }
+
+        const deltaX = event.clientX - startX;
+        if (Math.abs(deltaX) > 4) {
+            isDragging = true;
+        }
+
+        if (!isDragging) {
+            return;
+        }
+
+        event.preventDefault();
+        container.scrollLeft = startScrollLeft - deltaX;
+    });
+
+    const finishDrag = (event) => {
+        if (!pointerDown || pointerId !== event.pointerId) {
+            return;
+        }
+
+        pointerDown = false;
+        pointerId = null;
+        container.classList.remove('is-dragging');
+
+        window.setTimeout(() => {
+            isDragging = false;
+        }, 0);
+
+        if (container.hasPointerCapture(event.pointerId)) {
+            container.releasePointerCapture(event.pointerId);
+        }
+    };
+
+    container.addEventListener('pointerup', finishDrag);
+    container.addEventListener('pointercancel', finishDrag);
+    container.addEventListener('pointerleave', finishDrag);
+
+    container.addEventListener('click', (event) => {
+        if (!isDragging) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+    }, true);
 }
 
 // ========================================
@@ -2537,6 +2612,9 @@ window.addEventListener('load', () => {
     applyLanguageToStaticText();
 
     initMap();
+
+    setupCarouselDragScroll(document.getElementById('locationsContainer'));
+    setupCarouselDragScroll(document.getElementById('mobileLocationsContainer'));
 
     mobileSearchInputElement = document.getElementById('mobileSearchInput');
     syncSearchInputs(filterState.searchQuery);

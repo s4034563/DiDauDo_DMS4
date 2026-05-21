@@ -157,6 +157,36 @@
             pointer-events: auto;
         }
 
+        .locations-carousel {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 2px 8px;
+            scroll-snap-type: x mandatory;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .locations-carousel.is-dragging {
+            cursor: grabbing;
+        }
+
+        .locations-carousel::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .locations-carousel::-webkit-scrollbar-thumb {
+            background: rgba(192, 132, 252, 0.7);
+            border-radius: 999px;
+        }
+
+        .locations-carousel::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.2);
+        }
+
         .mobile-action-bar,
         .mobile-search-tray,
         .mobile-locations-list {
@@ -348,6 +378,25 @@
 
             .mobile-location-card .location-title {
                 font-size: 16px;
+            }
+
+            #locationsList {
+                display: block;
+            }
+
+            #locationsContainer {
+                padding: 12px;
+            }
+
+            .carousel-location-card {
+                min-width: min(320px, 82vw);
+                flex: 0 0 min(320px, 82vw);
+                scroll-snap-align: start;
+                margin: 0;
+            }
+
+            .carousel-location-card:hover {
+                transform: translateY(-2px);
             }
         }
 
@@ -623,7 +672,7 @@
         .location-card:hover {
             border-color: #c084fc;
             background: rgba(30, 41, 59, 1);
-            transform: translateX(4px);
+            transform: translateY(-2px);
         }
 
         .location-card.selected {
@@ -1076,8 +1125,8 @@
             </div>
 
             <!-- Locations List -->
-            <div id="locationsList" class="border-t border-neon-purple border-opacity-20 max-h-96 overflow-y-auto flex-shrink-0">
-                <div id="locationsContainer" class="p-4 space-y-2">
+            <div id="locationsList" class="border-t border-neon-purple border-opacity-20 flex-shrink-0">
+                <div id="locationsContainer" class="locations-carousel p-4">
                     <!-- Populated dynamically -->
                 </div>
             </div>
