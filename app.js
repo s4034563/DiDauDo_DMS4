@@ -14,6 +14,9 @@ let geolocationPermissionGranted = null; // null=not asked, true=granted, false=
 let rightInfoPanelElement;
 let rightInfoPanelContentElement;
 let rightInfoPanelCloseElement;
+let hoverPreviewElement;
+let hoverPreviewInnerElement;
+let activeHoverLocationId = null;
 let mobileSearchInputElement;
 let mobileSidebarTouchStart = null;
 let activePopupLocationId = null;
@@ -114,6 +117,10 @@ const translations = {
         ratingNotAvailable: 'No ratings yet',
         ratings: 'ratings',
         ratingUpdated: 'Rating saved',
+        overallRating: 'Overall rating',
+        openNow: 'Open now',
+        closedNow: 'Closed now',
+        tags: 'Tags',
         
         search: 'Search Places',
         searchPlaceholder: 'Type a location name...',
@@ -190,6 +197,10 @@ const translations = {
         ratingNotAvailable: 'Chưa có đánh giá',
         ratings: 'lượt đánh giá',
         ratingUpdated: 'Đã lưu đánh giá',
+        overallRating: 'Đánh giá chung',
+        openNow: 'Đang mở',
+        closedNow: 'Đang đóng',
+        tags: 'Thẻ',
         
         search: 'Tìm địa điểm',
         searchPlaceholder: 'Gõ tên địa điểm...',
@@ -228,6 +239,7 @@ function mapServerLocationToAppLocation(location) {
         name: location.name || 'Untitled',
         type: types[0] || 'Cafes',
         types,
+        tags,
         lat: Number(location.lat) || currentMapCenter.lat,
         lng: Number(location.lng) || currentMapCenter.lng,
         caption,
@@ -368,6 +380,206 @@ function getLocalizedVibe(vibe) {
         Instagrammable: t('vibeInstagrammable')
     };
     return vibeMap[vibe] || vibe;
+}
+
+const locationPinCategoryDefinitions = [
+    { name: 'Sports & Recreation', activities: ['Sports', 'Fitness'], color: '#3b82f6', icons: ['sports_soccer', 'fitness_center'] },
+    { name: 'Music & Nightlife', activities: ['Music', 'Nightlife'], color: '#a855f7', icons: ['music_note', 'sports_bar'] },
+    { name: 'Art & Culture', activities: ['Art', 'Photography'], color: '#ec4899', icons: ['palette', 'photo_camera'] },
+    { name: 'Shopping & Social', activities: ['Shopping', 'Markets'], color: '#f97316', icons: ['shopping_bag', 'storefront'] },
+    { name: 'Dining & Social', activities: ['Dining', 'Cafes'], color: '#ef4444', icons: ['restaurant', 'local_cafe'] },
+    { name: 'Outdoor & Nature', activities: ['Hiking', 'Parks'], color: '#22c55e', icons: ['park', 'hiking'] },
+    { name: 'Events & Festivals', activities: ['Events', 'Festivals'], color: '#eab308', icons: ['event', 'festival'] },
+    { name: 'Gaming & Esports', activities: ['Gaming', 'Arcades'], color: '#14b8a6', icons: ['sports_esports', 'stadia_controller'] },
+    { name: 'Workspace', activities: ['Workspace'], color: '#6366f1', icons: ['computer'] },
+];
+
+const locationActivityIconMap = {
+    Sports: ['sports_soccer', 'sports_basketball'],
+    Fitness: ['fitness_center'],
+    Music: ['music_note', 'graphic_eq'],
+    Nightlife: ['sports_bar', 'celebration'],
+    Art: ['palette', 'brush'],
+    Photography: ['photo_camera', 'image'],
+    Shopping: ['shopping_bag', 'storefront'],
+    Markets: ['storefront', 'shopping_basket'],
+    Dining: ['restaurant', 'dinner_dining'],
+    Cafes: ['local_cafe', 'coffee'],
+    Hiking: ['hiking'],
+    Parks: ['park', 'nature_people'],
+    Events: ['event'],
+    Festivals: ['festival', 'celebration'],
+    Gaming: ['sports_esports', 'stadia_controller'],
+    Arcades: ['stadia_controller'],
+    Workspace: ['computer'],
+};
+
+function stableHash(text) {
+    const value = String(text || '');
+    let hash = 0;
+    for (let index = 0; index < value.length; index += 1) {
+        hash = ((hash << 5) - hash) + value.charCodeAt(index);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+function getLocationActivitiesForPins(location) {
+    return getLocationActivities(location)
+        .map(activity => String(activity || '').trim())
+        .filter(Boolean);
+}
+
+function getLocationPinCategory(location) {
+    const activities = getLocationActivitiesForPins(location);
+    for (const definition of locationPinCategoryDefinitions) {
+        if (activities.some(activity => definition.activities.includes(activity))) {
+            return definition;
+        }
+    }
+
+    return locationPinCategoryDefinitions[0];
+}
+
+function getLocationPinIcon(location) {
+    const activities = getLocationActivitiesForPins(location);
+    const icons = activities.flatMap(activity => locationActivityIconMap[activity] || []);
+    const uniqueIcons = [...new Set(icons)];
+
+    if (uniqueIcons.length > 0) {
+        return uniqueIcons[stableHash(location.id) % uniqueIcons.length];
+    }
+
+    const category = getLocationPinCategory(location);
+    return category.icons[stableHash(location.id) % category.icons.length] || 'place';
+}
+
+function getFeatureLocation(feature) {
+    const cluster = feature && typeof feature.get === 'function' ? feature.get('features') : null;
+    if (cluster && cluster.length > 0) {
+        return cluster[0].get('location') || null;
+    }
+
+    return feature && typeof feature.get === 'function' ? feature.get('location') || null : null;
+}
+
+function getFeatureClusterSize(feature) {
+    const cluster = feature && typeof feature.get === 'function' ? feature.get('features') : null;
+    return cluster && cluster.length > 0 ? cluster.length : 1;
+}
+
+function getLocationLabelSide(location, displayName) {
+    if (!map || typeof map.getSize !== 'function') {
+        return 'right';
+    }
+
+    const size = map.getSize();
+    if (!size || size[0] === 0) {
+        return 'right';
+    }
+
+    const coordinate = ol.proj.fromLonLat([location.lng, location.lat]);
+    const pixel = map.getPixelFromCoordinate(coordinate);
+    if (!pixel) {
+        return 'right';
+    }
+
+    const labelWidth = Math.max(110, Math.min(200, Math.round((String(displayName || '').length * 7.4) + 34)));
+    const leftSpace = pixel[0] - 24;
+    const rightSpace = size[0] - pixel[0] - 24;
+    const overlapThreshold = 26;
+    const features = vectorSource ? vectorSource.getFeatures() : [];
+
+    const hasCollisionOnSide = (side) => {
+        if (!features.length) {
+            return false;
+        }
+
+        return features.some((feature) => {
+            const otherLocation = feature.get('location');
+            if (!otherLocation || otherLocation.id === location.id) {
+                return false;
+            }
+
+            const otherPixel = map.getPixelFromCoordinate(feature.getGeometry().getCoordinates());
+            if (!otherPixel) {
+                return false;
+            }
+
+            const verticalDistance = Math.abs(otherPixel[1] - pixel[1]);
+            if (verticalDistance > overlapThreshold) {
+                return false;
+            }
+
+            const horizontalDistance = side === 'right'
+                ? otherPixel[0] - pixel[0]
+                : pixel[0] - otherPixel[0];
+
+            return horizontalDistance > 0 && horizontalDistance < (labelWidth + 34);
+        });
+    };
+
+    if (rightSpace >= labelWidth + 24 && !hasCollisionOnSide('right')) {
+        return 'right';
+    }
+
+    if (leftSpace >= labelWidth + 24 && !hasCollisionOnSide('left')) {
+        return 'left';
+    }
+
+    return rightSpace >= leftSpace ? 'right' : 'left';
+}
+
+function createPinStyles(location, isSelected, resolution) {
+    const category = getLocationPinCategory(location);
+    const label = truncateLabel(location.name, 24);
+    const labelSide = getLocationLabelSide(location, label);
+    const iconName = getLocationPinIcon(location);
+    const radius = isSelected ? 16 : 14;
+    const strokeWidth = isSelected ? 3 : 2;
+    const labelOffset = labelSide === 'right' ? 28 : -28;
+    const labelAlign = labelSide === 'right' ? 'left' : 'right';
+    const labelPadding = [6, 10, 6, 10];
+    const selectedStroke = isSelected ? '#ffffff' : 'rgba(255,255,255,0.9)';
+    const labelFill = '#0f172a';
+
+    const pinStyle = new ol.style.Style({
+        image: new ol.style.Circle({
+            radius,
+            fill: new ol.style.Fill({ color: category.color }),
+            stroke: new ol.style.Stroke({ color: selectedStroke, width: strokeWidth })
+        })
+    });
+
+    const iconStyle = new ol.style.Style({
+        text: new ol.style.Text({
+            text: iconName,
+            font: '400 17px "Material Symbols Rounded"',
+            fill: new ol.style.Fill({ color: '#ffffff' }),
+            textAlign: 'center',
+            textBaseline: 'middle',
+            offsetY: 0,
+            overflow: true,
+        })
+    });
+
+    const labelStyle = new ol.style.Style({
+        text: new ol.style.Text({
+            text: label,
+            font: '600 13px "Segoe UI", sans-serif',
+            fill: new ol.style.Fill({ color: labelFill }),
+            backgroundFill: new ol.style.Fill({ color: 'rgba(255,255,255,0.97)' }),
+            backgroundStroke: new ol.style.Stroke({ color: category.color, width: 1.5 }),
+            padding: labelPadding,
+            offsetX: labelOffset,
+            textAlign: labelAlign,
+            textBaseline: 'middle',
+            placement: 'point',
+            overflow: true,
+        })
+    });
+
+    return [pinStyle, iconStyle, labelStyle];
 }
 
 function applyLanguageToStaticText() {
@@ -892,7 +1104,7 @@ async function loadLocationRatingSummaryFromBackend(locationId) {
         };
         renderRatingControls(locationId);
         updateRatingSummaryElements(locationId);
-        return;
+        return ratingSummaryByLocation[locationId];
     }
 
     try {
@@ -911,8 +1123,10 @@ async function loadLocationRatingSummaryFromBackend(locationId) {
 
         renderRatingControls(locationId);
         updateRatingSummaryElements(locationId);
+        return ratingSummaryByLocation[locationId];
     } catch (error) {
         console.warn('Could not load rating summary from Convex backend.', error);
+        return ratingSummaryByLocation[locationId] || null;
     }
 }
 
@@ -988,31 +1202,22 @@ async function submitLocationRating(locationId, rating) {
 // ========================================
 
 function styleClusterOrMarker(feature, resolution) {
-    const size = feature.get('features').length;
+    const size = getFeatureClusterSize(feature);
 
     const selectedLocationId = activeSelectedLocationId;
     
     // If cluster has only one feature, style as individual marker
     if (size === 1) {
-        const location = feature.get('features')[0].get('location');
+        const location = getFeatureLocation(feature);
         const isSelected = selectedLocationId === location.id;
-        const cacheKey = `${location.id}|${Math.round(getMarkerDistance(location) * 100) / 100}|${isSelected ? 'selected' : 'normal'}|${Math.round(resolution * 1000)}`;
+        const cacheKey = `${location.id}|${isSelected ? 'selected' : 'normal'}|${Math.round(resolution * 1000)}|${getLocationPinIcon(location)}`;
         const cachedStyle = markerStyleCache.get(cacheKey);
 
         if (cachedStyle) {
             return cachedStyle;
         }
-        
-        const style = new ol.style.Style({
-            image: new ol.style.Icon({
-                src: createMarkerLabelImage(location, isSelected),
-                anchor: [0.5, 1],
-                anchorXUnits: 'fraction',
-                anchorYUnits: 'fraction',
-                scale: 1,
-                crossOrigin: 'anonymous'
-            })
-        });
+
+        const style = createPinStyles(location, isSelected, resolution);
 
         markerStyleCache.set(cacheKey, style);
         return style;
@@ -1047,10 +1252,10 @@ function styleClusterOrMarker(feature, resolution) {
 function handleMapClick(event) {
     let featureFound = false;
     map.forEachFeatureAtPixel(event.pixel, (feature) => {
-        const cluster = feature.get('features');
-        if (cluster && cluster.length === 1) {
-            const location = cluster[0].get('location');
+        const location = getFeatureLocation(feature);
+        if (location) {
             if (location) {
+                hideHoverPreview();
                 showInfoWindow(location, null);
                 featureFound = true;
                 return false; // Stop iteration
@@ -1059,6 +1264,7 @@ function handleMapClick(event) {
     });
     
     if (!featureFound) {
+        hideHoverPreview();
         hidePopup();
     }
 }
@@ -1136,16 +1342,9 @@ function initMap() {
     // Initialize vector source for location markers
     vectorSource = new ol.source.Vector();
     
-    // Create cluster source for automatic marker clustering
-    clusterSource = new ol.source.Cluster({
-        distance: 100,
-        minDistance: 0,
-        source: vectorSource
-    });
-
-    // Create vector layer with cluster styling
+    // Create vector layer with direct per-location styling
     vectorLayer = new ol.layer.Vector({
-        source: clusterSource,
+        source: vectorSource,
         style: styleClusterOrMarker
     });
 
@@ -1159,6 +1358,8 @@ function initMap() {
     rightInfoPanelElement = document.getElementById('rightInfoPanel');
     rightInfoPanelContentElement = document.getElementById('rightInfoPanelContent');
     rightInfoPanelCloseElement = document.getElementById('rightInfoPanelClose');
+    hoverPreviewElement = document.getElementById('hoverPreview');
+    hoverPreviewInnerElement = document.getElementById('hoverPreviewInner');
 
     map = new ol.Map({
         target: 'map',
@@ -1180,10 +1381,37 @@ function initMap() {
         const center = ol.proj.toLonLat(map.getView().getCenter());
         currentMapCenter = { lat: center[1], lng: center[0] };
         refreshSelectedMarkerStyles();
+        hideHoverPreview();
     });
 
     map.on('singleclick', (event) => {
         handleMapClick(event);
+    });
+
+    map.on('pointermove', (event) => {
+        if (event.dragging) {
+            hideHoverPreview();
+            return;
+        }
+
+        let hoveredLocation = null;
+        let hoveredPixel = null;
+
+        map.forEachFeatureAtPixel(event.pixel, (feature) => {
+            const location = getFeatureLocation(feature);
+            if (location) {
+                hoveredLocation = location;
+                hoveredPixel = event.pixel;
+                return true;
+            }
+            return false;
+        });
+
+        if (hoveredLocation) {
+            showHoverPreview(hoveredLocation, hoveredPixel);
+        } else {
+            hideHoverPreview();
+        }
     });
 
     void loadMapMarkers();
@@ -1754,6 +1982,93 @@ function setInfoPanelVisibility(isVisible) {
 
     rightInfoPanelElement.classList.toggle('visible', Boolean(isVisible));
     rightInfoPanelElement.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+}
+
+function getLocationPreviewTags(location) {
+    const rawTags = Array.isArray(location.detailedTags) && location.detailedTags.length > 0
+        ? location.detailedTags
+        : (Array.isArray(location.tags) ? location.tags : []);
+
+    return rawTags
+        .map(tag => String(tag || '').replace(/^activity:/i, '').trim())
+        .filter(Boolean)
+        .slice(0, 4);
+}
+
+function renderHoverPreview(location, summary) {
+    if (!hoverPreviewInnerElement) {
+        return;
+    }
+
+    const previewImageUrl = getLocationPreviewImageUrl(location);
+    const ratingValue = summary && typeof summary.averageRating === 'number' ? summary.averageRating.toFixed(1) : '0.0';
+    const ratingCount = summary && typeof summary.ratingCount === 'number' ? summary.ratingCount : 0;
+    const ratingText = ratingCount > 0
+        ? `${t('overallRating')}: ${ratingValue} / 5 • ${ratingCount} ${t('ratings')}`
+        : `${t('overallRating')}: ${t('ratingNotAvailable')}`;
+    const statusText = getOpenCloseStatusLabel(location.hours);
+    const statusClass = statusText === t('openNow') ? 'open' : 'closed';
+    const tags = getLocationPreviewTags(location);
+
+    hoverPreviewInnerElement.innerHTML = `
+        ${previewImageUrl ? `<img src="${previewImageUrl}" alt="${location.name} preview" class="map-hover-preview-image" />` : ''}
+        <div class="map-hover-preview-body">
+            <div class="map-hover-preview-title">${escapeXml(location.name)}</div>
+            <div class="map-hover-preview-rating">${escapeXml(ratingText)}</div>
+            <div class="map-hover-preview-status ${statusClass}">${escapeXml(statusText || t('closedNow'))}</div>
+            ${tags.length > 0 ? `
+                <div class="map-hover-preview-tags">
+                    ${tags.map(tag => `<span class="map-hover-preview-tag">${escapeXml(tag)}</span>`).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function placeHoverPreview(pixel) {
+    if (!hoverPreviewElement || !pixel || !map) {
+        return;
+    }
+
+    const size = map.getSize();
+    const mapWidth = size ? size[0] : 0;
+    const side = pixel[0] > mapWidth * 0.58 ? 'left' : 'right';
+    hoverPreviewElement.classList.toggle('card-left', side === 'left');
+    hoverPreviewElement.classList.toggle('card-right', side !== 'left');
+    hoverPreviewElement.style.left = `${Math.round(pixel[0])}px`;
+    hoverPreviewElement.style.top = `${Math.round(pixel[1])}px`;
+}
+
+function showHoverPreview(location, pixel) {
+    if (!hoverPreviewElement) {
+        return;
+    }
+
+    activeHoverLocationId = location.id;
+    const summary = ratingSummaryByLocation[location.id] || { ratingCount: 0, averageRating: 0 };
+    renderHoverPreview(location, summary);
+    placeHoverPreview(pixel);
+    hoverPreviewElement.classList.add('visible');
+    hoverPreviewElement.setAttribute('aria-hidden', 'false');
+
+    if (!ratingSummaryByLocation[location.id]) {
+        void loadLocationRatingSummaryFromBackend(location.id).then((loadedSummary) => {
+            if (activeHoverLocationId === location.id && loadedSummary) {
+                renderHoverPreview(location, loadedSummary);
+                placeHoverPreview(pixel);
+            }
+        });
+    }
+}
+
+function hideHoverPreview() {
+    activeHoverLocationId = null;
+    if (!hoverPreviewElement) {
+        return;
+    }
+
+    hoverPreviewElement.classList.remove('visible');
+    hoverPreviewElement.setAttribute('aria-hidden', 'true');
 }
 
 function setMobileOverlayState({ searchOpen = false, filtersOpen = false } = {}) {
@@ -2509,6 +2824,35 @@ function formatHours(hoursObj) {
     return isOpen
         ? `🟢 Open now (VN) • ${rangeText}`
         : `🔴 Closed now (VN) • ${rangeText}`;
+}
+
+function getOpenCloseStatusLabel(hoursObj) {
+    if (!hasConfiguredHours(hoursObj)) return '';
+
+    const { weekday, currentMinutes } = getVietnamNowParts();
+    const dayKey = {
+        monday: 'monday',
+        tuesday: 'tuesday',
+        wednesday: 'wednesday',
+        thursday: 'thursday',
+        friday: 'friday',
+        saturday: 'saturday',
+        sunday: 'sunday'
+    }[weekday];
+
+    if (!dayKey) return '';
+
+    const todayHours = hoursObj[dayKey];
+    if (!todayHours) {
+        return t('closedNow');
+    }
+
+    const openMinutes = parseTimeToMinutes(todayHours.open);
+    const closeMinutes = parseTimeToMinutes(todayHours.close);
+    if (openMinutes === null || closeMinutes === null) return '';
+
+    const isOpen = isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes);
+    return isOpen ? t('openNow') : t('closedNow');
 }
 
 // Supports same-day and overnight ranges (e.g., 8:30 PM-4:30 AM).
