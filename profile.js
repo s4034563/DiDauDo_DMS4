@@ -290,12 +290,7 @@ function renderEmptyState() {
   const compareResult = document.getElementById('compareResult');
   const ratingsList = document.getElementById('ratingsList');
 
-  if (summary) {
-    summary.innerHTML = `
-      <p class="text-slate-400">Sign in to load your profile.</p>
-      <button id="profileEmptyLoginBtn" type="button" class="mt-3 w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-900 hover:bg-cyan-300">Login</button>
-    `;
-  }
+  if (summary) summary.innerHTML = '<p class="text-slate-400">Sign in to load your profile.</p>';
   if (friendsList) friendsList.innerHTML = '';
   if (requestsList) requestsList.innerHTML = '';
   if (favoritesList) favoritesList.innerHTML = '';
@@ -363,7 +358,7 @@ function renderProfile(profile) {
   const incoming = profile.requests?.incoming || [];
   const outgoing = profile.requests?.outgoing || [];
   const favoriteLocations = profile.favoriteLocations || [];
-  const ratings = profile.ratingsWithLocations || profile.ratings || [];
+  const ratings = [];
 
   if (summary) {
     summary.innerHTML = `
@@ -390,7 +385,7 @@ function renderProfile(profile) {
         <div class="mt-4 flex flex-wrap gap-2">
           <span class="badge friend">${friends.length} friends</span>
           <span class="badge pending">${favoriteLocations.length} favorites</span>
-          <span class="badge">${ratings.length} ratings</span>
+          
         </div>
       </div>
     `;
@@ -481,22 +476,7 @@ function renderProfile(profile) {
   }
 
   if (ratingsList) {
-    ratingsList.innerHTML = ratings.length > 0 ? ratings.map(rating => `
-      <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-        <div class="flex items-start justify-between gap-2">
-          <div>
-            <p class="font-semibold text-white">${rating.locationName || locationNameById.get(String(rating.locationId)) || rating.locationId}</p>
-            <p class="text-xs text-slate-400">${rating.locationAddress || ''}</p>
-          </div>
-          <div class="flex flex-col items-end gap-2">
-            <span class="text-xs text-cyan-200">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating || 0)))}</span>
-            <button class="rated-place-open-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${rating.locationId}">Open</button>
-          </div>
-        </div>
-        ${rating.comment ? `<p class="mt-2 text-sm text-slate-300">${rating.comment}</p>` : ''}
-        <p class="mt-2 text-[11px] text-slate-500">${formatTimeAgo(rating.createdAt)}</p>
-      </div>
-    `).join('') : '<p class="text-slate-400">No ratings yet.</p>';
+    ratingsList.innerHTML = '<p class="text-slate-400">Ratings are no longer supported in this view.</p>';
   }
 
   document.querySelectorAll('.friend-view-btn').forEach(button => {
@@ -615,7 +595,6 @@ async function compareFavorites(friendIds) {
 function bindEvents() {
   const loginBtn = document.getElementById('profileLoginBtn');
   const signedOutLoginBtn = document.getElementById('signedOutLoginBtn');
-  const emptyStateLoginBtn = document.getElementById('profileEmptyLoginBtn');
   const logoutBtn = document.getElementById('profileLogoutBtn');
   const loginModalClose = document.getElementById('loginModalClose');
   const loginTabBtn = document.getElementById('loginTabBtn');
@@ -626,7 +605,6 @@ function bindEvents() {
 
   loginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage profiles and friends.'));
   signedOutLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage profiles and friends.'));
-  emptyStateLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage profiles and friends.'));
   logoutBtn?.addEventListener('click', handleLogout);
   loginModalClose?.addEventListener('click', closeLoginModal);
   loginTabBtn?.addEventListener('click', () => switchAuthTab(false));

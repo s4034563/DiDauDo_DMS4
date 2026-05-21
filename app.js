@@ -1044,52 +1044,28 @@ function getRatingSessionId() {
 
 function updateRatingSummaryElements(locationId) {
     const summary = ratingSummaryByLocation[locationId];
-    const summaryElement = document.getElementById(`ratingSummary-${locationId}`);
-    const userRatingElement = document.getElementById(`userRating-${locationId}`);
-    const starsElement = document.getElementById(`ratingStars-${locationId}`);
+    const container = document.getElementById(`ratingsSummary-${locationId}`);
+    if (!container) return;
 
-    if (!summary || !summaryElement || !userRatingElement || !starsElement) {
+    if (!summary || summary.ratingCount <= 0) {
+        container.innerHTML = `<p class="text-slate-500 text-xs">${t('ratingNotAvailable')}</p>`;
         return;
     }
 
-    const averageLabel = summary.ratingCount > 0
-        ? `${summary.averageRating.toFixed(1)} / 5`
-        : t('ratingNotAvailable');
-    summaryElement.textContent = summary.ratingCount > 0
-        ? `${t('ratingAverage')}: ${averageLabel} • ${summary.ratingCount} ${t('ratings')}`
-        : `${t('ratingAverage')}: ${averageLabel}`;
-    userRatingElement.textContent = summary.userRating > 0
-        ? `${summary.userRating} / 5`
-        : t('rating');
+    const avg = summary.averageRating.toFixed(1);
+    const count = summary.ratingCount;
+    const fullStars = Math.round(summary.averageRating);
+    const stars = '⭐'.repeat(fullStars) + '☆'.repeat(Math.max(0, 5 - fullStars));
 
-    const buttons = Array.from(starsElement.querySelectorAll('[data-rating]'));
-    buttons.forEach((button) => {
-        const rating = Number(button.dataset.rating);
-        const selected = rating <= summary.userRating;
-        button.textContent = selected ? '★' : '☆';
-        button.classList.toggle('text-amber-400', selected);
-        button.classList.toggle('text-slate-500', !selected);
-        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
-    });
+    container.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;">${stars}</span>
+            <span style="font-size:13px;color:#cbd5e1;"><strong>${avg}</strong>/5 • <span style="color:#94a3b8;">${count} ${t('ratings')}</span></span>
+        </div>
+    `;
 }
 
-function renderRatingControls(locationId) {
-    const starsElement = document.getElementById(`ratingStars-${locationId}`);
-    if (!starsElement) {
-        return;
-    }
-
-    starsElement.innerHTML = Array.from({ length: 5 }, (_, index) => {
-        const rating = index + 1;
-        return `<button type="button" data-rating="${rating}" class="text-2xl leading-none text-slate-500 transition-transform duration-150 hover:scale-110 hover:text-amber-400 focus:outline-none" aria-label="Rate ${rating} star${rating === 1 ? '' : 's'}">☆</button>`;
-    }).join('');
-
-    starsElement.querySelectorAll('[data-rating]').forEach((button) => {
-        button.addEventListener('click', async () => {
-            await submitLocationRating(locationId, Number(button.dataset.rating));
-        });
-    });
-}
+// Per-user rating controls removed: hover and info panel now show community ratings only.
 
 async function loadLocationRatingSummaryFromBackend(locationId) {
     const sessionId = getRatingSessionId();
@@ -1101,7 +1077,6 @@ async function loadLocationRatingSummaryFromBackend(locationId) {
             averageRating: 0,
             userRating: 0,
         };
-        renderRatingControls(locationId);
         updateRatingSummaryElements(locationId);
         return ratingSummaryByLocation[locationId];
     }
@@ -1120,7 +1095,6 @@ async function loadLocationRatingSummaryFromBackend(locationId) {
             userRating: typeof payload.userRating === 'number' ? payload.userRating : 0,
         };
 
-        renderRatingControls(locationId);
         updateRatingSummaryElements(locationId);
         return ratingSummaryByLocation[locationId];
     } catch (error) {
@@ -1130,70 +1104,8 @@ async function loadLocationRatingSummaryFromBackend(locationId) {
 }
 
 async function submitLocationRating(locationId, rating) {
-    const sessionId = getRatingSessionId();
-    const nextRating = Math.min(5, Math.max(1, Math.round(Number(rating) || 0)));
-
-    if (nextRating < 1) {
-        return;
-    }
-
-    if (!useConvexBackend) {
-        const summary = ratingSummaryByLocation[locationId] || {
-            ratingCount: 0,
-            ratingSum: 0,
-            averageRating: 0,
-            userRating: 0,
-        };
-
-        const existing = summary.userRating || 0;
-        summary.ratingSum += nextRating - existing;
-        summary.ratingCount += existing ? 0 : 1;
-        summary.userRating = nextRating;
-        summary.averageRating = summary.ratingCount > 0 ? summary.ratingSum / summary.ratingCount : 0;
-        ratingSummaryByLocation[locationId] = summary;
-        updateRatingSummaryElements(locationId);
-        return;
-    }
-
-    try {
-        const response = await fetch(convexUrl('/api/ratings'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ locationId, sessionId, rating: nextRating })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Convex ratings endpoint failed with status ${response.status}`);
-        }
-
-        const payload = await response.json();
-        ratingSummaryByLocation[locationId] = {
-            ratingCount: typeof payload.ratingCount === 'number' ? payload.ratingCount : 0,
-            ratingSum: typeof payload.ratingSum === 'number' ? payload.ratingSum : 0,
-            averageRating: typeof payload.averageRating === 'number' ? payload.averageRating : 0,
-            userRating: typeof payload.userRating === 'number' ? payload.userRating : nextRating,
-        };
-
-        updateRatingSummaryElements(locationId);
-    } catch (error) {
-        console.warn('Falling back to local rating update because Convex is unavailable.', error);
-        const summary = ratingSummaryByLocation[locationId] || {
-            ratingCount: 0,
-            ratingSum: 0,
-            averageRating: 0,
-            userRating: 0,
-        };
-
-        const existing = summary.userRating || 0;
-        summary.ratingSum += nextRating - existing;
-        summary.ratingCount += existing ? 0 : 1;
-        summary.userRating = nextRating;
-        summary.averageRating = summary.ratingCount > 0 ? summary.ratingSum / summary.ratingCount : 0;
-        ratingSummaryByLocation[locationId] = summary;
-        updateRatingSummaryElements(locationId);
-    }
+    // Per-user rating submission removed. Community ratings are the single source of truth.
+    console.warn('submitLocationRating called but per-user ratings are disabled.');
 }
 
 // ========================================
@@ -1496,27 +1408,13 @@ function showInfoWindow(location, markerElement) {
     }
 
     const ratingsSection = `
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
+        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
             <div class="space-y-2">
                 <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Community Ratings</p>
                 <div id="ratingsSummary-${location.id}" class="text-sm text-slate-300">
                     <p style="font-size: 13px; color: #cbd5e1;">Loading ratings...</p>
                 </div>
             </div>
-
-            <div class="space-y-2">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
-                <div id="existingRatings-${location.id}" class="text-sm text-slate-300"></div>
-            </div>
-            ${currentUser ? `
-            <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
-            <div class="space-y-2">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
-                <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
-                <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
-                <button onclick="submitUserRatingHandler('${location.id}')" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
-            </div>
-            ` : ``}
         </div>
     `;
 
@@ -1636,41 +1534,8 @@ function showInfoWindow(location, markerElement) {
         }
     }
 
-    // Render star rating picker for logged-in users
-    if (currentUser) {
-        const starContainer = document.getElementById(`userRatingStars-${location.id}`);
-        if (starContainer) {
-            starContainer.innerHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                const star = document.createElement('button');
-                star.className = 'star';
-                star.dataset.rating = i;
-                star.textContent = '⭐';
-                star.style.fontSize = '20px';
-                star.style.border = 'none';
-                star.style.background = 'transparent';
-                star.style.cursor = 'pointer';
-                star.style.opacity = '0.4';
-                star.style.transition = 'opacity 0.2s';
-                star.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.querySelectorAll(`#userRatingStars-${location.id} .star`).forEach((s, idx) => {
-                        s.classList.toggle('active', idx < i);
-                        s.style.opacity = idx < i ? '1' : '0.4';
-                    });
-                });
-                starContainer.appendChild(star);
-            }
-        }
-    }
-
-    if (currentUser) {
-        renderRatingControls(location.id);
-        updateRatingSummaryElements(location.id);
-    }
-
+    // Load community rating summary for this location
     loadLocationRatingSummaryFromBackend(location.id);
-    loadExistingUserRatings(location.id);
 }
 
 function openLocationFromUrlIfPresent() {
@@ -2897,121 +2762,7 @@ function getNextOpening(hoursObj) {
     return null;
 }
 
-// Handle rating submission for logged-in users
-// Handler for rating submission button click
-function submitUserRatingHandler(locationId) {
-    const starContainer = document.getElementById(`userRatingStars-${locationId}`);
-    const activeStars = starContainer?.querySelectorAll('.star.active');
-    const rating = activeStars?.length || 0;
-    const comment = document.getElementById(`userComment-${locationId}`).value;
-    submitUserRating(locationId, rating, comment);
-}
-
-async function submitUserRating(locationId, rating, comment) {
-    if (!requireSignedIn('rating this place')) {
-        return;
-    }
-
-    // Validate rating is between 1-5
-    const ratingNum = Number(rating);
-    if (!ratingNum || ratingNum < 1 || ratingNum > 5) {
-        alert('Please select a star rating (1-5)');
-        return;
-    }
-
-    try {
-        const response = await fetch(convexUrl('/api/user-ratings'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                locationId,
-                userId: currentUser.userId,
-                rating: ratingNum,
-                comment: comment || '',
-            }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-            alert('Rating submitted successfully!');
-            // Refresh ratings display
-            if (activeSelectedLocationId) {
-                showInfoWindow(allLocations.find(loc => loc.id === activeSelectedLocationId));
-            }
-        } else {
-            alert(`Error submitting rating: ${data.error || 'Unknown error'}`);
-            console.error('Error response:', data);
-        }
-    } catch (error) {
-        console.error('Error submitting rating:', error);
-        alert('Failed to submit rating. Please try again.');
-    }
-}
-
-// Load and display existing user ratings
-async function loadExistingUserRatings(locationId) {
-    try {
-        const response = await fetch(convexUrl(`/api/user-ratings?locationId=${encodeURIComponent(locationId)}`));
-        if (!response.ok) {
-            return;
-        }
-
-        const data = await response.json();
-        const existingContainer = document.getElementById(`existingRatings-${locationId}`);
-        const summaryContainer = document.getElementById(`ratingsSummary-${locationId}`);
-        
-        if (!existingContainer || !summaryContainer) return;
-
-        if (!data.ratings || data.ratings.length === 0) {
-            summaryContainer.innerHTML = '<p class="text-slate-500 text-xs">No ratings yet. Be the first to rate!</p>';
-            existingContainer.innerHTML = '';
-            return;
-        }
-
-        // Calculate average rating
-        const totalRating = data.ratings.reduce((sum, r) => sum + r.rating, 0);
-        const avgRating = (totalRating / data.ratings.length).toFixed(1);
-        const ratingCount = data.ratings.length;
-        const fullStars = Math.round(avgRating);
-        const stars = '⭐'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
-
-        // Display summary
-        summaryContainer.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 18px;">${stars}</span>
-                <span style="font-size: 13px; color: #cbd5e1;"><strong>${avgRating}</strong>/5 • <span style="color: #94a3b8;">${ratingCount} ${ratingCount === 1 ? 'rating' : 'ratings'}</span></span>
-            </div>
-        `;
-
-        // Display individual ratings (show first 5)
-        const ratingsHtml = data.ratings.slice(0, 5).map(r => {
-            const ratingStars = '⭐'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-            const userName = r.userName || 'Anonymous';
-            const comment = r.comment ? `<p class="text-xs text-slate-400 mt-1">"${r.comment}"</p>` : '';
-            const timeAgo = getTimeAgo(r.createdAt);
-            return `
-                <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <p style="font-weight: 500; font-size: 13px; color: #e2e8f0;">${ratingStars} ${r.rating}/5</p>
-                            <p style="font-size: 12px; color: #94a3b8;">${userName} • ${timeAgo}</p>
-                        </div>
-                    </div>
-                    ${comment}
-                </div>
-            `;
-        }).join('');
-
-        existingContainer.innerHTML = ratingsHtml;
-
-        // Show "view all" link if there are more ratings
-        if (ratingCount > 5) {
-            existingContainer.innerHTML += `<p style="text-xs; color: #7c3aed; margin-top: 8px; cursor: pointer;" onclick="alert('Showing ${ratingCount} total ratings')">View all ${ratingCount} ratings →</p>`;
-        }
-    } catch (error) {
-        console.error('Error loading ratings:', error);
-    }
-}
+// Per-user reviews and submission removed: user-review endpoints/UI are no longer used.
 
 // Helper function to format time ago
 function getTimeAgo(timestamp) {
