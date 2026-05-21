@@ -10,12 +10,23 @@ let profileUserId = null;
 let activeProfile = null;
 let locationNameById = new Map();
 
+function getProfileAvatarUrl(user) {
+  const seed = String(user?.avatarSeed || user?.name || user?.email || user?._id || 'guest').trim().toLowerCase() || 'guest';
+  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=06b6d4,c084fc,22c55e,f97316,ef4444&textColor=ffffff&radius=50`;
+}
+
+function normalizeUserSession(user) {
+  if (!user) return null;
+  return { ...user, avatarUrl: user.avatarUrl || getProfileAvatarUrl(user) };
+}
+
 function loadUserSession() {
   const stored = localStorage.getItem('didaudo_user_session');
   if (!stored) return;
 
   try {
-    currentUser = JSON.parse(stored);
+    currentUser = normalizeUserSession(JSON.parse(stored));
+    saveUserSession();
   } catch {
     currentUser = null;
   }
@@ -247,8 +258,13 @@ function renderProfile(profile) {
     summary.innerHTML = `
       <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
         <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
-        <h2 class="mt-2 text-2xl font-black text-white">${profile.user?.name || profile.user?.email || 'Profile'}</h2>
-        <p class="mt-1 text-sm text-slate-400">${profile.user?.email || ''}</p>
+        <div class="mt-3 flex items-center gap-3">
+          <img src="${getProfileAvatarUrl(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover shadow-lg" />
+          <div class="min-w-0">
+            <h2 class="text-2xl font-black text-white">${profile.user?.name || profile.user?.email || 'Profile'}</h2>
+            <p class="mt-1 truncate text-sm text-slate-400">${profile.user?.email || ''}</p>
+          </div>
+        </div>
         <div class="mt-4 flex flex-wrap gap-2">
           <span class="badge friend">${friends.length} friends</span>
           <span class="badge pending">${favoriteLocations.length} favorites</span>
@@ -262,9 +278,12 @@ function renderProfile(profile) {
     friendsList.innerHTML = friends.length > 0 ? friends.map(friend => `
       <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
         <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="font-semibold text-white">${friend.name || friend.email}</p>
-            <p class="text-xs text-slate-400">${friend.email}</p>
+          <div class="flex min-w-0 items-center gap-3">
+            <img src="${getProfileAvatarUrl(friend)}" alt="${friend.name || friend.email || 'Friend'} picture" class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+            <div class="min-w-0">
+              <p class="truncate font-semibold text-white">${friend.name || friend.email}</p>
+              <p class="truncate text-xs text-slate-400">${friend.email}</p>
+            </div>
             <p class="mt-1 text-[11px] text-slate-500">ID: ${friend._id}</p>
           </div>
           <div class="flex flex-col gap-2">
@@ -279,8 +298,13 @@ function renderProfile(profile) {
   if (requestsList) {
     const requestsHtml = isOwnProfile ? incoming.map(request => `
       <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
-        <p class="font-semibold text-white">${request.senderEmail}</p>
-        <p class="text-xs text-slate-400">Wants to connect with you</p>
+        <div class="flex items-center gap-3">
+          <img src="${getProfileAvatarUrl({ email: request.senderEmail })}" alt="${request.senderEmail} picture" class="h-9 w-9 rounded-full border border-white/10 object-cover" />
+          <div>
+            <p class="font-semibold text-white">${request.senderEmail}</p>
+            <p class="text-xs text-slate-400">Wants to connect with you</p>
+          </div>
+        </div>
         <div class="mt-3 flex gap-2">
           <button class="request-action-btn rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">Accept</button>
           <button class="request-action-btn rounded-xl bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
@@ -288,8 +312,13 @@ function renderProfile(profile) {
       </div>
     `).join('') : outgoing.map(request => `
       <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
-        <p class="font-semibold text-white">${request.receiverEmail}</p>
-        <p class="text-xs text-slate-400">Pending request</p>
+        <div class="flex items-center gap-3">
+          <img src="${getProfileAvatarUrl({ email: request.receiverEmail })}" alt="${request.receiverEmail} picture" class="h-9 w-9 rounded-full border border-white/10 object-cover" />
+          <div>
+            <p class="font-semibold text-white">${request.receiverEmail}</p>
+            <p class="text-xs text-slate-400">Pending request</p>
+          </div>
+        </div>
       </div>
     `).join('');
 

@@ -1717,6 +1717,22 @@ function handleSearchInputChange(value) {
 let currentUser = null;
 let activeProfileUserId = null;
 
+function getProfileAvatarUrl(user) {
+    const seed = String(user?.avatarSeed || user?.name || user?.email || user?.userId || 'guest').trim().toLowerCase() || 'guest';
+    return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=06b6d4,c084fc,22c55e,f97316,ef4444&textColor=ffffff&radius=50`;
+}
+
+function normalizeUserSession(user) {
+    if (!user) {
+        return null;
+    }
+
+    return {
+        ...user,
+        avatarUrl: user.avatarUrl || getProfileAvatarUrl(user),
+    };
+}
+
 function requireSignedIn(featureLabel) {
     if (currentUser) {
         return true;
@@ -1732,7 +1748,8 @@ function loadUserSession() {
     const stored = localStorage.getItem('didaudo_user_session');
     if (stored) {
         try {
-            currentUser = JSON.parse(stored);
+            currentUser = normalizeUserSession(JSON.parse(stored));
+            saveUserSession();
             updateAuthUI();
         } catch (e) {
             console.error('Failed to load user session:', e);
@@ -1756,6 +1773,8 @@ function updateAuthUI() {
     const profileBtn = document.getElementById('profileBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const userInfoDisplay = document.getElementById('userInfoDisplay');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
     const userEmail = document.getElementById('userEmail');
 
     if (currentUser) {
@@ -1764,6 +1783,11 @@ function updateAuthUI() {
         if (logoutBtn) logoutBtn.style.display = 'block';
         if (userInfoDisplay) {
             userInfoDisplay.style.display = 'block';
+            if (userAvatar) {
+                userAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
+                userAvatar.alt = `${currentUser.name || currentUser.email || 'User'} profile picture`;
+            }
+            if (userName) userName.textContent = currentUser.name || currentUser.email;
             if (userEmail) userEmail.textContent = currentUser.email;
         }
     } else {
@@ -1864,11 +1888,11 @@ async function handleLogin(email, password) {
             return;
         }
 
-        currentUser = {
+        currentUser = normalizeUserSession({
             userId: data.userId,
             email: data.email,
             name: data.name,
-        };
+        });
         saveUserSession();
         updateAuthUI();
         closeLoginModal();
@@ -1915,11 +1939,11 @@ async function handleSignup(email, password, passwordConfirm, name) {
             return;
         }
 
-        currentUser = {
+        currentUser = normalizeUserSession({
             userId: data.userId,
             email: data.email,
             name: data.name,
-        };
+        });
         saveUserSession();
         updateAuthUI();
         closeLoginModal();
