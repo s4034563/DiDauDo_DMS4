@@ -118,8 +118,8 @@ const translations = {
         ratings: 'ratings',
         ratingUpdated: 'Rating saved',
         overallRating: 'Overall rating',
-        openNow: 'Open now',
-        closedNow: 'Closed now',
+        openNow: 'Open',
+        closedNow: 'Closed',
         tags: 'Tags',
         
         search: 'Search Places',
@@ -198,8 +198,8 @@ const translations = {
         ratings: 'lượt đánh giá',
         ratingUpdated: 'Đã lưu đánh giá',
         overallRating: 'Đánh giá chung',
-        openNow: 'Đang mở',
-        closedNow: 'Đang đóng',
+        openNow: 'Mở',
+        closedNow: 'Đóng',
         tags: 'Thẻ',
         
         search: 'Tìm địa điểm',
@@ -2808,7 +2808,7 @@ function formatHours(hoursObj) {
 
     const todayHours = hoursObj[dayKey];
     if (!todayHours) {
-        return '🔴 Closed now (VN) • Closed today';
+        return '🔴 Closed • Closed today';
     }
 
     const openMinutes = parseTimeToMinutes(todayHours.open);
@@ -2821,8 +2821,8 @@ function formatHours(hoursObj) {
     const rangeText = `${openDisplay} - ${closeDisplay}`;
 
     return isOpen
-        ? `🟢 Open now (VN) • ${rangeText}`
-        : `🔴 Closed now (VN) • ${rangeText}`;
+        ? `🟢 Open • ${rangeText}`
+        : `🔴 Closed • ${rangeText}`;
 }
 
 function getOpenCloseStatusLabel(hoursObj) {
