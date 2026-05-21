@@ -22,7 +22,7 @@ export default defineSchema({
     ratingSum: v.number(),
     updatedAt: v.number(),
   }).index("by_locationId", ["locationId"]),
-  // userRatings table removed — per-user reviews/comments were deprecated
+  // userRatings table removed — per-user reviews deprecated.
   userFavorites: defineTable({
     locationId: v.string(),
     userId: v.id("users"),

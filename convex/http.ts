@@ -261,7 +261,7 @@ http.route({
 });
 
 // User ratings endpoints
-// Note: user-specific reviews endpoints removed — system uses community aggregated ratings only.
+// User-rating HTTP endpoints removed: per-user review system deprecated.
 
 // Favorites endpoints
 http.route({

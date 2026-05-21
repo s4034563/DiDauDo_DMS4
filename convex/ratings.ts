@@ -115,7 +115,7 @@ export const submitRating = mutation({
     };
   },
 });
-// User-specific ratings (with comments) removed — use aggregated `ratingSummaries` and `locationRatings` only.
+// Per-user ratings (with comments) removed: community aggregated ratings are the only rating system.
 
 // Favorites
 export const toggleFavorite = mutation({
