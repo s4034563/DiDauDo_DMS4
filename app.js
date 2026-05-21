@@ -1045,6 +1045,7 @@ async function loadMapMarkers() {
     allLocations = remoteLocations;
 
     applyFilters();
+    openLocationFromUrlIfPresent();
 }
 
 let locationRefreshTimer = null;
@@ -1291,6 +1292,22 @@ function showInfoWindow(location, markerElement) {
     updateRatingSummaryElements(location.id);
     loadLocationRatingSummaryFromBackend(location.id);
     loadExistingUserRatings(location.id);
+}
+
+function openLocationFromUrlIfPresent() {
+    const url = new URL(window.location.href);
+    const locationId = url.searchParams.get('locationId');
+    if (!locationId) {
+        return;
+    }
+
+    const location = allLocations.find(entry => entry.id === locationId);
+    if (!location) {
+        return;
+    }
+
+    setInfoPanelVisibility(true);
+    showInfoWindow(location);
 }
 
 function updateLocationsList(locations) {

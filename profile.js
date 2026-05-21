@@ -8,6 +8,7 @@ function convexUrl(path) {
 let currentUser = null;
 let profileUserId = null;
 let activeProfile = null;
+let locationNameById = new Map();
 
 function loadUserSession() {
   const stored = localStorage.getItem('didaudo_user_session');
@@ -210,6 +211,22 @@ async function loadProfile(userId) {
   renderProfile(profile);
 }
 
+async function loadLocationDirectory() {
+  try {
+    const response = await fetch(convexUrl('/api/locations'));
+    const data = await response.json();
+    const locations = Array.isArray(data) ? data : (data.locations || []);
+    locationNameById = new Map(locations.map(location => [String(location.id), location.name || String(location.id)]));
+  } catch {
+    locationNameById = new Map();
+  }
+}
+
+function openLocationOnMap(locationId) {
+  if (!locationId) return;
+  window.location.href = `./index.html?locationId=${encodeURIComponent(locationId)}`;
+}
+
 function renderProfile(profile) {
   const summary = document.getElementById('profileSummary');
   const friendsList = document.getElementById('friendsList');
@@ -317,10 +334,13 @@ function renderProfile(profile) {
       <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <p class="font-semibold text-white">${rating.locationName || rating.locationId}</p>
+            <p class="font-semibold text-white">${rating.locationName || locationNameById.get(String(rating.locationId)) || rating.locationId}</p>
             <p class="text-xs text-slate-400">${rating.locationAddress || ''}</p>
           </div>
-          <span class="text-xs text-cyan-200">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating || 0)))}</span>
+          <div class="flex flex-col items-end gap-2">
+            <span class="text-xs text-cyan-200">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating || 0)))}</span>
+            <button class="rated-place-open-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${rating.locationId}">Open</button>
+          </div>
         </div>
         ${rating.comment ? `<p class="mt-2 text-sm text-slate-300">${rating.comment}</p>` : ''}
         <p class="mt-2 text-[11px] text-slate-500">${formatTimeAgo(rating.createdAt)}</p>
@@ -368,7 +388,13 @@ function renderProfile(profile) {
 
   document.querySelectorAll('.favorite-open-btn').forEach(button => {
     button.addEventListener('click', () => {
-      window.location.href = `./index.html?locationId=${encodeURIComponent(button.dataset.locationId || '')}`;
+      openLocationOnMap(button.dataset.locationId || '');
+    });
+  });
+
+  document.querySelectorAll('.rated-place-open-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      openLocationOnMap(button.dataset.locationId || '');
     });
   });
 
@@ -502,6 +528,7 @@ window.addEventListener('load', async () => {
   loadUserSession();
   updateAuthUI();
   bindEvents();
+  await loadLocationDirectory();
 
   profileUserId = getProfileUserId();
   const initialTarget = profileUserId || currentUser?.userId || '';
