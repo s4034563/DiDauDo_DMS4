@@ -1306,7 +1306,14 @@ function openLocationFromUrlIfPresent() {
         return;
     }
 
-    setInfoPanelVisibility(true);
+    if (map && location.lat != null && location.lng != null) {
+        map.getView().animate({
+            center: ol.proj.fromLonLat([location.lng, location.lat]),
+            zoom: 15,
+            duration: 450,
+        });
+    }
+
     showInfoWindow(location);
 }
 
@@ -1512,6 +1519,15 @@ function closeMobileOverlays() {
     setMobileOverlayState({ searchOpen: false, filtersOpen: false });
 }
 
+function setInfoPanelVisibility(isVisible) {
+    if (!rightInfoPanelElement) {
+        return;
+    }
+
+    rightInfoPanelElement.classList.toggle('visible', Boolean(isVisible));
+    rightInfoPanelElement.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+}
+
 function setMobileOverlayState({ searchOpen = false, filtersOpen = false } = {}) {
     if (!isMobileViewport()) {
         searchOpen = false;
@@ -1534,10 +1550,7 @@ function isMobileViewport() {
 function hidePopup() {
     activePopupLocationId = null;
 
-    if (rightInfoPanelElement) {
-        rightInfoPanelElement.classList.remove('visible');
-        rightInfoPanelElement.setAttribute('aria-hidden', 'true');
-    }
+    setInfoPanelVisibility(false);
 
     setSelectedLocation(null);
     closeMobileOverlays();
