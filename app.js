@@ -317,6 +317,16 @@ function getLocationActivities(location) {
 
 function setSelectedLocation(locationId) {
     activeSelectedLocationId = locationId;
+    refreshSelectedMarkerStyles();
+}
+
+function refreshSelectedMarkerStyles() {
+    if (!vectorLayer) {
+        return;
+    }
+
+    markerStyleCache.clear();
+    vectorLayer.changed();
 }
 
 function getLocalizedVibe(vibe) {
@@ -1024,10 +1034,7 @@ function initMap() {
     map.on('moveend', () => {
         const center = ol.proj.toLonLat(map.getView().getCenter());
         currentMapCenter = { lat: center[1], lng: center[0] };
-        if (vectorLayer) {
-            markerStyleCache.clear();
-            vectorLayer.changed();
-        }
+        refreshSelectedMarkerStyles();
     });
 
     map.on('singleclick', (event) => {
