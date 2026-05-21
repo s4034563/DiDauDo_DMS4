@@ -23,6 +23,8 @@ let currentMapCenter = { lat: 10.729229862661654, lng: 106.69573512876413 }; // 
 const ratingSummaryByLocation = {}; // Track aggregate ratings per location
 let ratingSessionId = null;
 let currentLanguage = 'en';
+let currentTheme = 'light';
+let sidebarCollapsed = false;
 const appConfig = window.VIBEMAP_CONFIG || {};
 const locationFeatureMap = new Map(); // Map locationId to ol.Feature for diff updates
 const markerStyleCache = new Map();
@@ -38,12 +40,167 @@ function normalizeConvexBaseUrl(url) {
 const convexBaseUrl = normalizeConvexBaseUrl(appConfig.convexBaseUrl || '');
 const useConvexBackend = Boolean(appConfig.useConvex && convexBaseUrl);
 
+const uiPreferenceKeys = {
+    language: 'didaudo_language',
+    theme: 'didaudo_theme',
+    sidebarCollapsed: 'didaudo_sidebar_collapsed'
+};
+
+function readStoredPreference(key, fallbackValue) {
+    try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallbackValue : value;
+    } catch (error) {
+        return fallbackValue;
+    }
+}
+
+function writeStoredPreference(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (error) {
+        // Ignore storage failures in private mode or restricted environments.
+    }
+}
+
+function getBasemapSource(theme) {
+    const isDarkTheme = theme === 'dark';
+    return new ol.source.XYZ({
+        url: isDarkTheme
+            ? 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
+            : 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+        attributions: '© OpenStreetMap contributors, © CARTO'
+    });
+}
+
+function syncSidebarToggleButton() {
+    const toggleButton = document.getElementById('sidebarToggleBtn');
+    if (!toggleButton) {
+        return;
+    }
+
+    const labelKey = sidebarCollapsed ? 'expandSidebar' : 'collapseSidebar';
+    toggleButton.textContent = sidebarCollapsed ? '›' : '‹';
+    toggleButton.title = t(labelKey);
+    toggleButton.setAttribute('aria-label', t(labelKey));
+}
+
+function applySidebarCollapsedState(collapsed, options = {}) {
+    sidebarCollapsed = Boolean(collapsed);
+    document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+    syncSidebarToggleButton();
+
+    if (options.persist !== false) {
+        writeStoredPreference(uiPreferenceKeys.sidebarCollapsed, sidebarCollapsed ? '1' : '0');
+    }
+}
+
+function syncThemeControls() {
+    const themeButton = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeToggleIcon');
+    const themeLabel = document.getElementById('themeToggleLabel');
+
+    if (themeButton) {
+        themeButton.setAttribute('aria-label', t(currentTheme === 'dark' ? 'lightMode' : 'darkMode'));
+        themeButton.title = t(currentTheme === 'dark' ? 'lightMode' : 'darkMode');
+    }
+
+    if (themeIcon) {
+        themeIcon.textContent = currentTheme === 'dark' ? '☀' : '☾';
+    }
+
+    if (themeLabel) {
+        themeLabel.textContent = t(currentTheme === 'dark' ? 'lightMode' : 'darkMode');
+    }
+
+    document.querySelectorAll('[data-theme-toggle-state]').forEach((element) => {
+        element.classList.toggle('active', element.getAttribute('data-theme-toggle-state') === currentTheme);
+    });
+}
+
+function applyTheme(theme, options = {}) {
+    currentTheme = theme === 'dark' ? 'dark' : 'light';
+    document.body.classList.toggle('theme-dark', currentTheme === 'dark');
+    document.body.classList.toggle('theme-light', currentTheme !== 'dark');
+
+    if (baseTileLayer) {
+        baseTileLayer.setSource(getBasemapSource(currentTheme));
+    }
+
+    syncThemeControls();
+
+    if (options.persist !== false) {
+        writeStoredPreference(uiPreferenceKeys.theme, currentTheme);
+    }
+}
+
+function syncLanguageButtons() {
+    document.querySelectorAll('[data-language-button]').forEach((button) => {
+        const buttonLanguage = button.getAttribute('data-language');
+        button.classList.toggle('active', buttonLanguage === currentLanguage);
+        button.setAttribute('aria-pressed', buttonLanguage === currentLanguage ? 'true' : 'false');
+    });
+}
+
+function applyLanguagePreference(language, options = {}) {
+    currentLanguage = language === 'vi' ? 'vi' : 'en';
+    syncLanguageButtons();
+    applyLanguageToStaticText();
+    syncThemeControls();
+    syncSidebarToggleButton();
+    updateAuthUI();
+
+    if (options.persist !== false) {
+        writeStoredPreference(uiPreferenceKeys.language, currentLanguage);
+    }
+}
+
+function initializeUiPreferences() {
+    currentLanguage = readStoredPreference(uiPreferenceKeys.language, 'en') === 'vi' ? 'vi' : 'en';
+    currentTheme = readStoredPreference(uiPreferenceKeys.theme, 'light') === 'dark' ? 'dark' : 'light';
+    sidebarCollapsed = readStoredPreference(uiPreferenceKeys.sidebarCollapsed, '0') === '1';
+
+    document.body.classList.toggle('theme-dark', currentTheme === 'dark');
+    document.body.classList.toggle('theme-light', currentTheme !== 'dark');
+    document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+}
+
+function openProfileDestination() {
+    if (!currentUser) {
+        openLoginModal(t('signInPrompt'));
+        switchAuthTab(false);
+        return;
+    }
+
+    window.location.href = './profile.html';
+}
+
+function setSidebarActiveNav(activeButtonId) {
+    document.querySelectorAll('.sidebar-nav-button').forEach((button) => {
+        button.classList.toggle('active', button.id === activeButtonId);
+    });
+}
+
 function convexUrl(path) {
     return `${convexBaseUrl}${path}`;
 }
 
 const translations = {
     en: {
+        profile: 'Profile',
+        map: 'Map',
+        friends: 'Friends',
+        guest: 'Guest',
+        signIn: 'Sign in',
+        signInPrompt: 'Sign in to access your profile.',
+        openProfile: 'Open profile',
+        logout: 'Logout',
+        language: 'Language',
+        theme: 'Theme',
+        lightMode: 'Light mode',
+        darkMode: 'Dark mode',
+        collapseSidebar: 'Collapse sidebar',
+        expandSidebar: 'Expand sidebar',
         subtitle: 'Discover interesting locations near you',
         proximity: 'Proximity',
         activityCategory: 'Activity Category',
@@ -108,6 +265,20 @@ const translations = {
         openGoogleMaps: 'Open in Google Maps'
     },
     vi: {
+        profile: 'Hồ sơ',
+        map: 'Bản đồ',
+        friends: 'Bạn bè',
+        guest: 'Khách',
+        signIn: 'Đăng nhập',
+        signInPrompt: 'Đăng nhập để xem hồ sơ của bạn.',
+        openProfile: 'Mở hồ sơ',
+        logout: 'Đăng xuất',
+        language: 'Ngôn ngữ',
+        theme: 'Giao diện',
+        lightMode: 'Chế độ sáng',
+        darkMode: 'Chế độ tối',
+        collapseSidebar: 'Thu gọn thanh bên',
+        expandSidebar: 'Mở rộng thanh bên',
         subtitle: 'Khám phá các địa điểm thú vị xung quanh bạn',
         proximity: 'Khoảng cách',
         activityCategory: 'Danh mục hoạt động',
@@ -357,6 +528,10 @@ function applyLanguageToStaticText() {
 
 function applyLanguage() {
     applyLanguageToStaticText();
+    syncLanguageButtons();
+    syncThemeControls();
+    syncSidebarToggleButton();
+    updateAuthUI();
 
     document.getElementById('proximityValue').textContent = `${filterState.proximity} km`;
     updateLocationsList(getFilteredLocations());
@@ -981,11 +1156,8 @@ function updateVectorFeatures(locations) {
 }
 
 function initMap() {
-    const rasterLayer = new ol.layer.Tile({
-        source: new ol.source.XYZ({
-            url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-            attributions: '© OpenStreetMap contributors, © CARTO'
-        })
+    baseTileLayer = new ol.layer.Tile({
+        source: getBasemapSource(currentTheme)
     });
 
     // Initialize vector source for location markers
@@ -1017,7 +1189,7 @@ function initMap() {
 
     map = new ol.Map({
         target: 'map',
-        layers: [rasterLayer, vectorLayer, userLocationLayer],
+        layers: [baseTileLayer, vectorLayer, userLocationLayer],
         view: new ol.View({
             center: ol.proj.fromLonLat([currentMapCenter.lng, currentMapCenter.lat]),
             zoom: 13,
@@ -1775,22 +1947,30 @@ function updateAuthUI() {
     const userInfoDisplay = document.getElementById('userInfoDisplay');
     const userAvatar = document.getElementById('userAvatar');
     const userName = document.getElementById('userName');
+    const userStatus = document.getElementById('userStatus');
 
     if (currentUser) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
         if (userInfoDisplay) {
-            userInfoDisplay.style.display = 'block';
             if (userAvatar) {
                 userAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
                 userAvatar.alt = `${currentUser.name || currentUser.email || 'User'} profile picture`;
             }
             if (userName) userName.textContent = currentUser.name || currentUser.email;
+            if (userStatus) userStatus.textContent = t('openProfile');
         }
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
-        if (userInfoDisplay) userInfoDisplay.style.display = 'none';
+        if (userInfoDisplay) {
+            if (userAvatar) {
+                userAvatar.src = getProfileAvatarUrl({ name: t('guest') });
+                userAvatar.alt = `${t('guest')} profile picture`;
+            }
+            if (userName) userName.textContent = t('guest');
+            if (userStatus) userStatus.textContent = t('signIn');
+        }
     }
 }
 
@@ -2566,15 +2746,14 @@ window.addEventListener('load', () => {
         return;
     }
 
+    initializeUiPreferences();
+
     // Load user session
     loadUserSession();
 
-    const languageSelect = document.getElementById('languageSelect');
-    currentLanguage = languageSelect.value;
-    languageSelect.addEventListener('change', (event) => {
-        currentLanguage = event.target.value;
-        applyLanguage();
-    });
+    syncLanguageButtons();
+    syncThemeControls();
+    syncSidebarToggleButton();
 
     // Setup auth modal and buttons
     const loginBtn = document.getElementById('loginBtn');
@@ -2586,29 +2765,59 @@ window.addEventListener('load', () => {
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     const userInfoDisplay = document.getElementById('userInfoDisplay');
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const mapNavBtn = document.getElementById('mapNavBtn');
+    const friendsNavBtn = document.getElementById('friendsNavBtn');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
 
     if (loginBtn) loginBtn.addEventListener('click', () => openLoginModal());
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
     if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
 
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            applySidebarCollapsedState(!sidebarCollapsed);
+        });
+    }
+
     if (userInfoDisplay) {
         userInfoDisplay.addEventListener('click', () => {
-            if (currentUser) {
-                openProfileModal();
-            }
+            openProfileDestination();
         });
         userInfoDisplay.addEventListener('keydown', (event) => {
-            if (!currentUser) {
-                return;
-            }
-
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                openProfileModal();
+                openProfileDestination();
             }
         });
     }
+
+    if (mapNavBtn) {
+        mapNavBtn.addEventListener('click', () => {
+            setSidebarActiveNav('mapNavBtn');
+            hidePopup();
+        });
+    }
+
+    if (friendsNavBtn) {
+        friendsNavBtn.addEventListener('click', () => {
+            setSidebarActiveNav('friendsNavBtn');
+            openProfileDestination();
+        });
+    }
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+    }
+
+    document.querySelectorAll('[data-language-button]').forEach((button) => {
+        button.addEventListener('click', () => {
+            applyLanguagePreference(button.getAttribute('data-language'));
+        });
+    });
 
     if (loginTabBtn) loginTabBtn.addEventListener('click', () => switchAuthTab(false));
     if (signupTabBtn) signupTabBtn.addEventListener('click', () => switchAuthTab(true));
