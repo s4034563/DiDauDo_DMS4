@@ -290,7 +290,12 @@ function renderEmptyState() {
   const compareResult = document.getElementById('compareResult');
   const ratingsList = document.getElementById('ratingsList');
 
-  if (summary) summary.innerHTML = '<p class="text-slate-400">Sign in to load your profile.</p>';
+  if (summary) {
+    summary.innerHTML = `
+      <p class="text-slate-400">Sign in to load your profile.</p>
+      <button id="profileEmptyLoginBtn" type="button" class="mt-3 w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-900 hover:bg-cyan-300">Login</button>
+    `;
+  }
   if (friendsList) friendsList.innerHTML = '';
   if (requestsList) requestsList.innerHTML = '';
   if (favoritesList) favoritesList.innerHTML = '';
@@ -610,6 +615,7 @@ async function compareFavorites(friendIds) {
 function bindEvents() {
   const loginBtn = document.getElementById('profileLoginBtn');
   const signedOutLoginBtn = document.getElementById('signedOutLoginBtn');
+  const emptyStateLoginBtn = document.getElementById('profileEmptyLoginBtn');
   const logoutBtn = document.getElementById('profileLogoutBtn');
   const loginModalClose = document.getElementById('loginModalClose');
   const loginTabBtn = document.getElementById('loginTabBtn');
@@ -620,6 +626,7 @@ function bindEvents() {
 
   loginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage profiles and friends.'));
   signedOutLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage profiles and friends.'));
+  emptyStateLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage profiles and friends.'));
   logoutBtn?.addEventListener('click', handleLogout);
   loginModalClose?.addEventListener('click', closeLoginModal);
   loginTabBtn?.addEventListener('click', () => switchAuthTab(false));
