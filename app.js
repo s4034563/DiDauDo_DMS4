@@ -1360,7 +1360,10 @@ function showInfoWindow(location, markerElement) {
                 const icon = favoriteBtn.querySelector('.material-symbols-rounded');
                 favoriteBtn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
                 favoriteBtn.classList.toggle('favorited', isFavorite);
-                if (icon) icon.textContent = isFavorite ? 'favorite' : 'favorite_border';
+                if (icon) {
+                    icon.textContent = isFavorite ? 'favorite' : 'favorite_border';
+                    icon.classList.toggle('ui-icon-filled', isFavorite);
+                }
             });
             favoriteBtn.addEventListener('click', async () => {
                 await toggleFavorite(location.id);
@@ -1369,7 +1372,10 @@ function showInfoWindow(location, markerElement) {
                 const icon = favoriteBtn.querySelector('.material-symbols-rounded');
                 favoriteBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
                 favoriteBtn.classList.toggle('favorited', isFav);
-                if (icon) icon.textContent = isFav ? 'favorite' : 'favorite_border';
+                if (icon) {
+                    icon.textContent = isFav ? 'favorite' : 'favorite_border';
+                    icon.classList.toggle('ui-icon-filled', isFav);
+                }
             });
         } else {
             favoriteBtn.addEventListener('click', () => {
