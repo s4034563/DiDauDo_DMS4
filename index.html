@@ -1053,7 +1053,6 @@
         .desktop-nav-collapsed .desktop-nav-footer-text,
         .desktop-nav-collapsed .desktop-nav-label,
         .desktop-nav-collapsed .desktop-nav-status,
-        .desktop-nav-collapsed .desktop-nav-lang-wrap,
         .desktop-nav-collapsed .desktop-nav-auth-group,
         .desktop-nav-collapsed .desktop-nav-kicker,
         .desktop-nav-collapsed .desktop-nav-title,
@@ -1135,6 +1134,12 @@
             gap: 8px;
         }
 
+        .desktop-nav-preferences-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         .desktop-nav-label,
         .desktop-nav-footer-text {
             font-size: 11px;
@@ -1176,14 +1181,29 @@
             font-weight: 600;
         }
 
+        .desktop-nav-language-toggle {
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+
         .desktop-nav-auth-btn.login {
             border-color: rgba(192, 132, 252, 0.35);
             color: #c084fc;
         }
 
         .desktop-nav-auth-btn.logout {
-            border-color: rgba(248, 113, 113, 0.3);
-            color: #fca5a5;
+            border-color: rgba(248, 113, 113, 0.55);
+            color: #f87171;
+            background: rgba(127, 29, 29, 0.22);
+        }
+
+        .desktop-nav-auth-btn.logout::before {
+            color: #f87171;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-preferences-wrap .desktop-nav-label {
+            display: none;
         }
 
         .desktop-nav-collapsed .desktop-nav-theme-row,
@@ -1205,6 +1225,51 @@
         .desktop-nav-collapsed .desktop-nav-theme-btn,
         .desktop-nav-collapsed .desktop-nav-auth-btn {
             padding-inline: 0;
+        }
+
+        /* Keep auth group visible in collapsed state and ensure language toggle shows */
+        .desktop-nav-collapsed .desktop-nav-auth-group {
+            display: flex !important;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .desktop-nav-collapsed #desktopLanguageToggleBtn {
+            display: inline-flex !important;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Stronger red styling for logout in both collapsed and expanded states */
+        .desktop-nav-auth-btn.logout,
+        .desktop-nav-collapsed .desktop-nav-auth-btn.logout {
+            color: #f87171 !important;
+            border-color: rgba(248, 113, 113, 0.6) !important;
+            background: rgba(127, 29, 29, 0.12) !important;
+        }
+
+        .desktop-nav-auth-btn.logout::before,
+        .desktop-nav-collapsed .desktop-nav-auth-btn.logout::before {
+            color: #f87171 !important;
+        }
+
+        /* Ensure logout remains highlighted in light theme */
+        body.theme-light .desktop-nav-auth-btn.logout,
+        body.theme-light .desktop-nav-collapsed .desktop-nav-auth-btn.logout {
+            color: #b91c1c !important;
+            border-color: rgba(220, 38, 38, 0.6) !important;
+            background: rgba(220, 38, 38, 0.06) !important;
+        }
+
+        body.theme-light .desktop-nav-auth-btn.logout::before,
+        body.theme-light .desktop-nav-collapsed .desktop-nav-auth-btn.logout::before {
+            color: #b91c1c !important;
+        }
+
+        /* Simple native tooltip styling fallback for compact icons */
+        .desktop-nav-rail button[title] {
+            cursor: pointer;
         }
 
         @media (max-width: 768px) {
@@ -1243,12 +1308,11 @@
 
                 <div class="desktop-nav-bottom">
                     <div class="desktop-nav-divider"></div>
-                    <div class="desktop-nav-lang-wrap">
-                        <div class="desktop-nav-label" data-i18n="language">Language</div>
-                        <select id="desktopLanguageSelect" class="language-select desktop-nav-lang" aria-label="Language selector">
-                            <option value="en">English</option>
-                            <option value="vi">Tiếng Việt</option>
-                        </select>
+                    <div class="desktop-nav-preferences-wrap">
+                        <div class="desktop-nav-label" data-i18n="preferences">Preferences</div>
+                        <button id="desktopLanguageToggleBtn" type="button" class="desktop-nav-auth-btn desktop-nav-language-toggle desktop-nav-lang" data-icon="translate" aria-label="Toggle language">
+                            <span id="desktopLanguageToggleText">EN</span>
+                        </button>
                     </div>
                     <div class="desktop-nav-theme-row">
                         <button id="themeToggleBtn" type="button" class="desktop-nav-theme-btn desktop-nav-auth-btn" aria-label="Toggle theme" data-icon="dark_mode">
@@ -1257,10 +1321,10 @@
                         </button>
                     </div>
                     <div class="desktop-nav-divider"></div>
-                    <div class="desktop-nav-footer-text">Account</div>
+                    <div class="desktop-nav-footer-text" data-i18n="account">Account</div>
                     <div class="desktop-nav-auth-group">
-                        <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login" data-icon="login"><span class="desktop-nav-text-only">Login</span></button>
-                        <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout" data-icon="logout"><span class="desktop-nav-text-only">Logout</span></button>
+                        <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login" data-icon="login"><span class="desktop-nav-text-only" data-i18n="login">Login</span></button>
+                        <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout" data-icon="logout"><span class="desktop-nav-text-only" data-i18n="logout">Logout</span></button>
                     </div>
                 </div>
             </div>

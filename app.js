@@ -30,6 +30,7 @@ const locationFeatureMap = new Map(); // Map locationId to ol.Feature for diff u
 const markerStyleCache = new Map();
 const themeStorageKey = 'didaudo_theme';
 const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
+const languageStorageKey = 'didaudo_language';
 
 function normalizeConvexBaseUrl(url) {
     if (!url || typeof url !== 'string') {
@@ -52,7 +53,10 @@ const translations = {
         profile: 'Profile',
         map: 'Map',
         friends: 'Friends',
-        language: 'Language',
+        preferences: 'Preferences',
+        account: 'Account',
+        login: 'Login',
+        logout: 'Logout',
         theme: 'Theme',
         darkMode: 'Dark mode',
         lightMode: 'Light mode',
@@ -125,7 +129,10 @@ const translations = {
         profile: 'Hồ sơ',
         map: 'Bản đồ',
         friends: 'Bạn bè',
-        language: 'Ngôn ngữ',
+        preferences: 'Tùy chọn',
+        account: 'Tài khoản',
+        login: 'Đăng nhập',
+        logout: 'Đăng xuất',
         theme: 'Giao diện',
         darkMode: 'Chế độ tối',
         lightMode: 'Chế độ sáng',
@@ -383,7 +390,11 @@ function applyLanguage() {
     document.getElementById('proximityValue').textContent = `${filterState.proximity} km`;
     updateLocationsList(getFilteredLocations());
     updateAuthUI();
+    updateLanguageToggleLabel();
     updateThemeToggleLabel();
+
+    // Update nav tooltips to match language
+    try { setupNavTooltips(); } catch (e) { /* ignore */ }
 
     if (activePopupLocationId) {
         const activeLocation = allLocations.find(location => location.id === activePopupLocationId);
@@ -425,6 +436,49 @@ function updateThemeToggleLabel() {
     }
 }
 
+function getStoredLanguage() {
+    const storedLanguage = localStorage.getItem(languageStorageKey);
+    return storedLanguage === 'vi' ? 'vi' : 'en';
+}
+
+function updateLanguageToggleLabel() {
+    const languageToggleText = document.getElementById('desktopLanguageToggleText');
+
+    if (languageToggleText) {
+        languageToggleText.textContent = currentLanguage === 'vi' ? 'VN' : 'EN';
+    }
+}
+
+function setupNavTooltips() {
+    const mapBtn = document.getElementById('mapNavBtn');
+    const friendsBtn = document.getElementById('friendsNavBtn');
+    const langBtn = document.getElementById('desktopLanguageToggleBtn');
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const loginBtn = document.getElementById('desktopLoginBtn');
+    const logoutBtn = document.getElementById('desktopLogoutBtn');
+    const profileBtn = document.getElementById('desktopProfileButton');
+    const navToggle = document.getElementById('desktopNavToggle');
+
+    if (mapBtn) mapBtn.title = t('map');
+    if (friendsBtn) friendsBtn.title = t('friends');
+    if (langBtn) langBtn.title = t('preferences');
+    if (themeBtn) themeBtn.title = t('theme');
+    if (loginBtn) loginBtn.title = t('login');
+    if (logoutBtn) logoutBtn.title = t('logout');
+    if (profileBtn) profileBtn.title = t('profile');
+    if (navToggle) navToggle.title = document.body.classList.contains('desktop-nav-collapsed') ? 'Expand navigation' : 'Collapse navigation';
+}
+
+function applyLanguageChoice(language) {
+    currentLanguage = language === 'vi' ? 'vi' : 'en';
+    localStorage.setItem(languageStorageKey, currentLanguage);
+    applyLanguage();
+}
+
+function toggleLanguage() {
+    applyLanguageChoice(currentLanguage === 'vi' ? 'en' : 'vi');
+}
+
 function applyTheme(theme) {
     currentTheme = theme === 'light' ? 'light' : 'dark';
     document.body.classList.toggle('theme-light', currentTheme === 'light');
@@ -452,6 +506,9 @@ function applyDesktopNavState(collapsed) {
     }
 
     localStorage.setItem(desktopNavStorageKey, String(desktopNavCollapsed));
+
+    // Refresh tooltips after state change
+    try { setupNavTooltips(); } catch (e) { /* ignore */ }
 }
 
 function toggleDesktopNav() {
@@ -1867,7 +1924,10 @@ function updateAuthUI() {
 
     if (currentUser) {
         if (loginBtn) loginBtn.style.display = 'none';
-        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (logoutBtn) {
+            logoutBtn.style.display = 'inline-flex';
+            logoutBtn.classList.add('logout-active');
+        }
         if (profileButton) {
             profileButton.title = currentUser.name || currentUser.email || t('profile');
             profileButton.setAttribute('aria-label', `${t('profile')}: ${currentUser.name || currentUser.email || t('profile')}`);
@@ -1883,8 +1943,11 @@ function updateAuthUI() {
             userStatus.textContent = currentUser.email || t('profile');
         }
     } else {
-        if (loginBtn) loginBtn.style.display = 'block';
-        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'inline-flex';
+        if (logoutBtn) {
+            logoutBtn.style.display = 'none';
+            logoutBtn.classList.remove('logout-active');
+        }
         if (profileButton) {
             profileButton.title = t('signInContinue');
             profileButton.setAttribute('aria-label', t('signInContinue'));
@@ -1900,6 +1963,8 @@ function updateAuthUI() {
             userStatus.textContent = t('signInContinue');
         }
     }
+    // Refresh tooltip texts (language may have changed)
+    try { setupNavTooltips(); } catch (e) { /* ignore */ }
 }
 
 // Open login modal
@@ -2679,25 +2744,20 @@ window.addEventListener('load', () => {
 
     applyTheme(getStoredTheme());
     applyDesktopNavState(getStoredDesktopNavState());
-
-    const languageSelect = document.getElementById('desktopLanguageSelect');
-    currentLanguage = languageSelect ? languageSelect.value : 'en';
-    if (languageSelect) {
-        languageSelect.addEventListener('change', (event) => {
-            currentLanguage = event.target.value;
-            applyLanguage();
-        });
-    }
+    currentLanguage = getStoredLanguage();
+    applyLanguageChoice(currentLanguage);
 
     const navToggle = document.getElementById('desktopNavToggle');
     const profileButton = document.getElementById('desktopProfileButton');
     const mapNavBtn = document.getElementById('mapNavBtn');
     const friendsNavBtn = document.getElementById('friendsNavBtn');
+    const languageToggleBtn = document.getElementById('desktopLanguageToggleBtn');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const loginBtn = document.getElementById('desktopLoginBtn');
     const logoutBtn = document.getElementById('desktopLogoutBtn');
 
     if (navToggle) navToggle.addEventListener('click', toggleDesktopNav);
+    if (languageToggleBtn) languageToggleBtn.addEventListener('click', toggleLanguage);
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
     if (mapNavBtn) {
         mapNavBtn.addEventListener('click', () => {
