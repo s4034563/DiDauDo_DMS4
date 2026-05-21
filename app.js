@@ -23,11 +23,13 @@ let currentMapCenter = { lat: 10.729229862661654, lng: 106.69573512876413 }; // 
 const ratingSummaryByLocation = {}; // Track aggregate ratings per location
 let ratingSessionId = null;
 let currentLanguage = 'en';
-let currentTheme = 'light';
-let sidebarCollapsed = false;
+let currentTheme = 'dark';
+let desktopNavCollapsed = false;
 const appConfig = window.VIBEMAP_CONFIG || {};
 const locationFeatureMap = new Map(); // Map locationId to ol.Feature for diff updates
 const markerStyleCache = new Map();
+const themeStorageKey = 'didaudo_theme';
+const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
 
 function normalizeConvexBaseUrl(url) {
     if (!url || typeof url !== 'string') {
@@ -40,168 +42,22 @@ function normalizeConvexBaseUrl(url) {
 const convexBaseUrl = normalizeConvexBaseUrl(appConfig.convexBaseUrl || '');
 const useConvexBackend = Boolean(appConfig.useConvex && convexBaseUrl);
 
-const uiPreferenceKeys = {
-    language: 'didaudo_language',
-    theme: 'didaudo_theme',
-    sidebarCollapsed: 'didaudo_sidebar_collapsed'
-};
-
-function readStoredPreference(key, fallbackValue) {
-    try {
-        const value = localStorage.getItem(key);
-        return value === null ? fallbackValue : value;
-    } catch (error) {
-        return fallbackValue;
-    }
-}
-
-function writeStoredPreference(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (error) {
-        // Ignore storage failures in private mode or restricted environments.
-    }
-}
-
-function getBasemapSource(theme) {
-    const isDarkTheme = theme === 'dark';
-    return new ol.source.XYZ({
-        url: isDarkTheme
-            ? 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
-            : 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-        attributions: '© OpenStreetMap contributors, © CARTO'
-    });
-}
-
-function syncSidebarToggleButton() {
-    const toggleButton = document.getElementById('sidebarToggleBtn');
-    if (!toggleButton) {
-        return;
-    }
-
-    const labelKey = sidebarCollapsed ? 'expandSidebar' : 'collapseSidebar';
-    toggleButton.textContent = sidebarCollapsed ? '›' : '‹';
-    toggleButton.title = t(labelKey);
-    toggleButton.setAttribute('aria-label', t(labelKey));
-}
-
-function applySidebarCollapsedState(collapsed, options = {}) {
-    sidebarCollapsed = Boolean(collapsed);
-    document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
-    syncSidebarToggleButton();
-
-    if (options.persist !== false) {
-        writeStoredPreference(uiPreferenceKeys.sidebarCollapsed, sidebarCollapsed ? '1' : '0');
-    }
-}
-
-function syncThemeControls() {
-    const themeButton = document.getElementById('themeToggleBtn');
-    const themeIcon = document.getElementById('themeToggleIcon');
-    const themeLabel = document.getElementById('themeToggleLabel');
-
-    if (themeButton) {
-        themeButton.setAttribute('aria-label', t(currentTheme === 'dark' ? 'lightMode' : 'darkMode'));
-        themeButton.title = t(currentTheme === 'dark' ? 'lightMode' : 'darkMode');
-    }
-
-    if (themeIcon) {
-        themeIcon.textContent = currentTheme === 'dark' ? '☀' : '☾';
-    }
-
-    if (themeLabel) {
-        themeLabel.textContent = t(currentTheme === 'dark' ? 'lightMode' : 'darkMode');
-    }
-
-    document.querySelectorAll('[data-theme-toggle-state]').forEach((element) => {
-        element.classList.toggle('active', element.getAttribute('data-theme-toggle-state') === currentTheme);
-    });
-}
-
-function applyTheme(theme, options = {}) {
-    currentTheme = theme === 'dark' ? 'dark' : 'light';
-    document.body.classList.toggle('theme-dark', currentTheme === 'dark');
-    document.body.classList.toggle('theme-light', currentTheme !== 'dark');
-
-    if (baseTileLayer) {
-        baseTileLayer.setSource(getBasemapSource(currentTheme));
-    }
-
-    syncThemeControls();
-
-    if (options.persist !== false) {
-        writeStoredPreference(uiPreferenceKeys.theme, currentTheme);
-    }
-}
-
-function syncLanguageButtons() {
-    document.querySelectorAll('[data-language-button]').forEach((button) => {
-        const buttonLanguage = button.getAttribute('data-language');
-        button.classList.toggle('active', buttonLanguage === currentLanguage);
-        button.setAttribute('aria-pressed', buttonLanguage === currentLanguage ? 'true' : 'false');
-    });
-}
-
-function applyLanguagePreference(language, options = {}) {
-    currentLanguage = language === 'vi' ? 'vi' : 'en';
-    syncLanguageButtons();
-    applyLanguageToStaticText();
-    syncThemeControls();
-    syncSidebarToggleButton();
-    updateAuthUI();
-
-    if (options.persist !== false) {
-        writeStoredPreference(uiPreferenceKeys.language, currentLanguage);
-    }
-}
-
-function initializeUiPreferences() {
-    currentLanguage = readStoredPreference(uiPreferenceKeys.language, 'en') === 'vi' ? 'vi' : 'en';
-    currentTheme = readStoredPreference(uiPreferenceKeys.theme, 'light') === 'dark' ? 'dark' : 'light';
-    sidebarCollapsed = readStoredPreference(uiPreferenceKeys.sidebarCollapsed, '0') === '1';
-
-    document.body.classList.toggle('theme-dark', currentTheme === 'dark');
-    document.body.classList.toggle('theme-light', currentTheme !== 'dark');
-    document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
-}
-
-function openProfileDestination() {
-    if (!currentUser) {
-        openLoginModal(t('signInPrompt'));
-        switchAuthTab(false);
-        return;
-    }
-
-    window.location.href = './profile.html';
-}
-
-function setSidebarActiveNav(activeButtonId) {
-    document.querySelectorAll('.sidebar-nav-button').forEach((button) => {
-        button.classList.toggle('active', button.id === activeButtonId);
-    });
-}
-
 function convexUrl(path) {
     return `${convexBaseUrl}${path}`;
 }
 
 const translations = {
     en: {
+        subtitle: 'Discover interesting locations near you',
         profile: 'Profile',
         map: 'Map',
         friends: 'Friends',
-        guest: 'Guest',
-        signIn: 'Sign in',
-        signInPrompt: 'Sign in to access your profile.',
-        openProfile: 'Open profile',
-        logout: 'Logout',
         language: 'Language',
         theme: 'Theme',
-        lightMode: 'Light mode',
         darkMode: 'Dark mode',
-        collapseSidebar: 'Collapse sidebar',
-        expandSidebar: 'Expand sidebar',
-        subtitle: 'Discover interesting locations near you',
+        lightMode: 'Light mode',
+        signInContinue: 'Sign in to continue',
+        guest: 'Guest',
         proximity: 'Proximity',
         activityCategory: 'Activity Category',
         sportsRecreation: '🏀 Sports & Recreation',
@@ -265,21 +121,16 @@ const translations = {
         openGoogleMaps: 'Open in Google Maps'
     },
     vi: {
+        subtitle: 'Khám phá các địa điểm thú vị xung quanh bạn',
         profile: 'Hồ sơ',
         map: 'Bản đồ',
         friends: 'Bạn bè',
-        guest: 'Khách',
-        signIn: 'Đăng nhập',
-        signInPrompt: 'Đăng nhập để xem hồ sơ của bạn.',
-        openProfile: 'Mở hồ sơ',
-        logout: 'Đăng xuất',
         language: 'Ngôn ngữ',
         theme: 'Giao diện',
-        lightMode: 'Chế độ sáng',
         darkMode: 'Chế độ tối',
-        collapseSidebar: 'Thu gọn thanh bên',
-        expandSidebar: 'Mở rộng thanh bên',
-        subtitle: 'Khám phá các địa điểm thú vị xung quanh bạn',
+        lightMode: 'Chế độ sáng',
+        signInContinue: 'Đăng nhập để tiếp tục',
+        guest: 'Khách',
         proximity: 'Khoảng cách',
         activityCategory: 'Danh mục hoạt động',
         sportsRecreation: '🏀 Thể thao & Giải trí',
@@ -528,13 +379,11 @@ function applyLanguageToStaticText() {
 
 function applyLanguage() {
     applyLanguageToStaticText();
-    syncLanguageButtons();
-    syncThemeControls();
-    syncSidebarToggleButton();
-    updateAuthUI();
 
     document.getElementById('proximityValue').textContent = `${filterState.proximity} km`;
     updateLocationsList(getFilteredLocations());
+    updateAuthUI();
+    updateThemeToggleLabel();
 
     if (activePopupLocationId) {
         const activeLocation = allLocations.find(location => location.id === activePopupLocationId);
@@ -584,6 +433,70 @@ function getFilteredLocations() {
     }
 
     // Activity type filter logic:
+
+        function getStoredTheme() {
+            const storedTheme = localStorage.getItem(themeStorageKey);
+            return storedTheme === 'light' ? 'light' : 'dark';
+        }
+
+        function updateThemeToggleLabel() {
+            const themeToggleText = document.getElementById('themeToggleText');
+            const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+            if (themeToggleText) {
+                themeToggleText.textContent = currentTheme === 'light' ? t('darkMode') : t('lightMode');
+            }
+
+            if (themeToggleIcon) {
+                themeToggleIcon.textContent = currentTheme === 'light' ? '☀️' : '🌙';
+            }
+        }
+
+        function applyTheme(theme) {
+            currentTheme = theme === 'light' ? 'light' : 'dark';
+            document.body.classList.toggle('theme-light', currentTheme === 'light');
+            document.documentElement.dataset.theme = currentTheme;
+            localStorage.setItem(themeStorageKey, currentTheme);
+            updateThemeToggleLabel();
+        }
+
+        function toggleTheme() {
+            applyTheme(currentTheme === 'light' ? 'dark' : 'light');
+        }
+
+        function getStoredDesktopNavState() {
+            return localStorage.getItem(desktopNavStorageKey) === 'true';
+        }
+
+        function applyDesktopNavState(collapsed) {
+            desktopNavCollapsed = Boolean(collapsed);
+            document.body.classList.toggle('desktop-nav-collapsed', desktopNavCollapsed);
+
+            const navToggle = document.getElementById('desktopNavToggle');
+            if (navToggle) {
+                navToggle.textContent = desktopNavCollapsed ? '›' : '‹';
+                navToggle.setAttribute('aria-label', desktopNavCollapsed ? 'Expand navigation' : 'Collapse navigation');
+            }
+
+            localStorage.setItem(desktopNavStorageKey, String(desktopNavCollapsed));
+        }
+
+        function toggleDesktopNav() {
+            applyDesktopNavState(!desktopNavCollapsed);
+        }
+
+        function setDesktopNavActive(section) {
+            const mapNavBtn = document.getElementById('mapNavBtn');
+            const friendsNavBtn = document.getElementById('friendsNavBtn');
+
+            if (mapNavBtn) {
+                mapNavBtn.classList.toggle('active', section === 'map');
+            }
+
+            if (friendsNavBtn) {
+                friendsNavBtn.classList.toggle('active', section === 'friends');
+            }
+        }
     // Each checked category contributes either its selected sub-categories,
     // or all of its sub-categories when none are selected.
     const selectedActivities = [];
@@ -1156,8 +1069,11 @@ function updateVectorFeatures(locations) {
 }
 
 function initMap() {
-    baseTileLayer = new ol.layer.Tile({
-        source: getBasemapSource(currentTheme)
+    const rasterLayer = new ol.layer.Tile({
+        source: new ol.source.XYZ({
+            url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+            attributions: '© OpenStreetMap contributors, © CARTO'
+        })
     });
 
     // Initialize vector source for location markers
@@ -1189,7 +1105,7 @@ function initMap() {
 
     map = new ol.Map({
         target: 'map',
-        layers: [baseTileLayer, vectorLayer, userLocationLayer],
+        layers: [rasterLayer, vectorLayer, userLocationLayer],
         view: new ol.View({
             center: ol.proj.fromLonLat([currentMapCenter.lng, currentMapCenter.lat]),
             zoom: 13,
@@ -1942,34 +1858,46 @@ function saveUserSession() {
 
 // Update UI based on auth state
 function updateAuthUI() {
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userInfoDisplay = document.getElementById('userInfoDisplay');
-    const userAvatar = document.getElementById('userAvatar');
-    const userName = document.getElementById('userName');
-    const userStatus = document.getElementById('userStatus');
+    const loginBtn = document.getElementById('desktopLoginBtn');
+    const logoutBtn = document.getElementById('desktopLogoutBtn');
+    const profileButton = document.getElementById('desktopProfileButton');
+    const userAvatar = document.getElementById('desktopUserAvatar');
+    const userName = document.getElementById('desktopUserName');
+    const userStatus = document.getElementById('desktopUserStatus');
 
     if (currentUser) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
-        if (userInfoDisplay) {
-            if (userAvatar) {
-                userAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
-                userAvatar.alt = `${currentUser.name || currentUser.email || 'User'} profile picture`;
-            }
-            if (userName) userName.textContent = currentUser.name || currentUser.email;
-            if (userStatus) userStatus.textContent = t('openProfile');
+        if (profileButton) {
+            profileButton.title = currentUser.name || currentUser.email || t('profile');
+            profileButton.setAttribute('aria-label', `${t('profile')}: ${currentUser.name || currentUser.email || t('profile')}`);
+        }
+        if (userAvatar) {
+            userAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
+            userAvatar.alt = `${currentUser.name || currentUser.email || 'User'} profile picture`;
+        }
+        if (userName) {
+            userName.textContent = currentUser.name || currentUser.email || t('guest');
+        }
+        if (userStatus) {
+            userStatus.textContent = currentUser.email || t('profile');
         }
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
-        if (userInfoDisplay) {
-            if (userAvatar) {
-                userAvatar.src = getProfileAvatarUrl({ name: t('guest') });
-                userAvatar.alt = `${t('guest')} profile picture`;
-            }
-            if (userName) userName.textContent = t('guest');
-            if (userStatus) userStatus.textContent = t('signIn');
+        if (profileButton) {
+            profileButton.title = t('signInContinue');
+            profileButton.setAttribute('aria-label', t('signInContinue'));
+        }
+        if (userAvatar) {
+            userAvatar.src = getProfileAvatarUrl({ name: t('guest'), email: 'guest' });
+            userAvatar.alt = `${t('guest')} profile picture`;
+        }
+        if (userName) {
+            userName.textContent = t('guest');
+        }
+        if (userStatus) {
+            userStatus.textContent = t('signInContinue');
         }
     }
 }
@@ -2746,78 +2674,69 @@ window.addEventListener('load', () => {
         return;
     }
 
-    initializeUiPreferences();
-
     // Load user session
     loadUserSession();
 
-    syncLanguageButtons();
-    syncThemeControls();
-    syncSidebarToggleButton();
+    applyTheme(getStoredTheme());
+    applyDesktopNavState(getStoredDesktopNavState());
+
+    const languageSelect = document.getElementById('desktopLanguageSelect');
+    currentLanguage = languageSelect ? languageSelect.value : 'en';
+    if (languageSelect) {
+        languageSelect.addEventListener('change', (event) => {
+            currentLanguage = event.target.value;
+            applyLanguage();
+        });
+    }
+
+    const navToggle = document.getElementById('desktopNavToggle');
+    const profileButton = document.getElementById('desktopProfileButton');
+    const mapNavBtn = document.getElementById('mapNavBtn');
+    const friendsNavBtn = document.getElementById('friendsNavBtn');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const loginBtn = document.getElementById('desktopLoginBtn');
+    const logoutBtn = document.getElementById('desktopLogoutBtn');
+
+    if (navToggle) navToggle.addEventListener('click', toggleDesktopNav);
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+    if (mapNavBtn) {
+        mapNavBtn.addEventListener('click', () => {
+            setDesktopNavActive('map');
+            hidePopup();
+        });
+    }
+    if (friendsNavBtn) {
+        friendsNavBtn.addEventListener('click', () => {
+            setDesktopNavActive('friends');
+            if (!currentUser) {
+                openLoginModal('Sign in to view your friends.');
+                return;
+            }
+            window.location.href = './profile.html';
+        });
+    }
+    if (profileButton) {
+        profileButton.addEventListener('click', () => {
+            if (currentUser) {
+                openProfileModal();
+                return;
+            }
+            openLoginModal('Sign in to view your profile.');
+        });
+    }
+    if (loginBtn) loginBtn.addEventListener('click', () => openLoginModal());
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    setDesktopNavActive('map');
 
     // Setup auth modal and buttons
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
     const loginModalClose = document.getElementById('loginModalClose');
     const profileModalClose = document.getElementById('profileModalClose');
     const loginTabBtn = document.getElementById('loginTabBtn');
     const signupTabBtn = document.getElementById('signupTabBtn');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
-    const userInfoDisplay = document.getElementById('userInfoDisplay');
-    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-    const mapNavBtn = document.getElementById('mapNavBtn');
-    const friendsNavBtn = document.getElementById('friendsNavBtn');
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-
-    if (loginBtn) loginBtn.addEventListener('click', () => openLoginModal());
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
     if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
-
-    if (sidebarToggleBtn) {
-        sidebarToggleBtn.addEventListener('click', () => {
-            applySidebarCollapsedState(!sidebarCollapsed);
-        });
-    }
-
-    if (userInfoDisplay) {
-        userInfoDisplay.addEventListener('click', () => {
-            openProfileDestination();
-        });
-        userInfoDisplay.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                openProfileDestination();
-            }
-        });
-    }
-
-    if (mapNavBtn) {
-        mapNavBtn.addEventListener('click', () => {
-            setSidebarActiveNav('mapNavBtn');
-            hidePopup();
-        });
-    }
-
-    if (friendsNavBtn) {
-        friendsNavBtn.addEventListener('click', () => {
-            setSidebarActiveNav('friendsNavBtn');
-            openProfileDestination();
-        });
-    }
-
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-        });
-    }
-
-    document.querySelectorAll('[data-language-button]').forEach((button) => {
-        button.addEventListener('click', () => {
-            applyLanguagePreference(button.getAttribute('data-language'));
-        });
-    });
 
     if (loginTabBtn) loginTabBtn.addEventListener('click', () => switchAuthTab(false));
     if (signupTabBtn) signupTabBtn.addEventListener('click', () => switchAuthTab(true));
@@ -2857,7 +2776,7 @@ window.addEventListener('load', () => {
         });
     }
 
-    applyLanguageToStaticText();
+    applyLanguage();
 
     initMap();
 

@@ -36,287 +36,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        :root {
-            --sidebar-expanded-width: 332px;
-            --sidebar-collapsed-width: 88px;
-        }
-
         body {
             background: #0f172a;
             color: #e2e8f0;
-        }
-
-        body.theme-light {
-            background: #eef2f7;
-            color: #0f172a;
         }
 
         .glassmorphic {
             background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(192, 132, 252, 0.2);
-        }
-
-        body.theme-light .glassmorphic {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(15, 23, 42, 0.08);
-        }
-
-        .app-sidebar {
-            width: var(--sidebar-expanded-width);
-            min-width: var(--sidebar-expanded-width);
-            max-width: var(--sidebar-expanded-width);
-            position: relative;
-            overflow: hidden;
-            transition: width 0.28s ease, min-width 0.28s ease, max-width 0.28s ease;
-        }
-
-        body.sidebar-collapsed .app-sidebar {
-            width: var(--sidebar-collapsed-width);
-            min-width: var(--sidebar-collapsed-width);
-            max-width: var(--sidebar-collapsed-width);
-        }
-
-        .sidebar-shell {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            height: 100%;
-            padding: 18px 14px 14px;
-        }
-
-        .sidebar-toggle {
-            position: absolute;
-            top: 18px;
-            right: -12px;
-            width: 28px;
-            height: 28px;
-            border-radius: 999px;
-            border: 1px solid rgba(192, 132, 252, 0.28);
-            background: rgba(15, 23, 42, 0.96);
-            color: #e2e8f0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 26px rgba(2, 6, 23, 0.28);
-            z-index: 3;
-        }
-
-        body.theme-light .sidebar-toggle {
-            background: rgba(255, 255, 255, 0.96);
-            color: #0f172a;
-        }
-
-        .sidebar-profile {
-            width: 100%;
-            border-radius: 20px;
-            border: 1px solid rgba(148, 163, 184, 0.15);
-            background: rgba(15, 23, 42, 0.46);
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-align: left;
-            color: inherit;
-        }
-
-        body.theme-light .sidebar-profile {
-            background: rgba(255, 255, 255, 0.92);
-            border-color: rgba(15, 23, 42, 0.08);
-        }
-
-        .sidebar-profile-avatar {
-            width: 52px;
-            height: 52px;
-            flex: none;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            object-fit: cover;
-            background: rgba(15, 23, 42, 0.2);
-        }
-
-        .sidebar-profile-copy {
-            min-width: 0;
-        }
-
-        .sidebar-kicker {
-            font-size: 10px;
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-            color: #94a3b8;
-        }
-
-        body.theme-light .sidebar-kicker {
-            color: #64748b;
-        }
-
-        .sidebar-profile-name {
-            margin-top: 2px;
-            font-size: 15px;
-            font-weight: 700;
-            color: #f8fafc;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        body.theme-light .sidebar-profile-name {
-            color: #0f172a;
-        }
-
-        .sidebar-profile-status {
-            font-size: 12px;
-            color: #cbd5e1;
-        }
-
-        body.theme-light .sidebar-profile-status {
-            color: #475569;
-        }
-
-        .sidebar-main-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .sidebar-nav-button {
-            width: 100%;
-            border-radius: 16px;
-            border: 1px solid transparent;
-            background: rgba(15, 23, 42, 0.34);
-            color: #e2e8f0;
-            padding: 12px 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-align: left;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-        }
-
-        body.theme-light .sidebar-nav-button {
-            background: rgba(15, 23, 42, 0.05);
-            color: #0f172a;
-        }
-
-        .sidebar-nav-button:hover,
-        .sidebar-nav-button.active {
-            border-color: rgba(192, 132, 252, 0.35);
-            background: rgba(192, 132, 252, 0.18);
-            transform: translateY(-1px);
-        }
-
-        .sidebar-nav-icon {
-            width: 22px;
-            flex: none;
-            text-align: center;
-            font-size: 18px;
-        }
-
-        .sidebar-nav-text {
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .sidebar-content {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            gap: 22px;
-            min-height: 0;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .sidebar-section-heading {
-            margin-bottom: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: #94a3b8;
-        }
-
-        body.theme-light .sidebar-section-heading {
-            color: #64748b;
-        }
-
-        .sidebar-footer {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-top: 4px;
-        }
-
-        .sidebar-settings-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .sidebar-pill-group {
-            display: flex;
-            gap: 6px;
-            flex: 1;
-        }
-
-        .sidebar-pill {
-            min-height: 42px;
-            flex: 1;
-            border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            background: rgba(15, 23, 42, 0.42);
-            color: #e2e8f0;
-            padding: 10px 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            transition: all 0.2s ease;
-        }
-
-        body.theme-light .sidebar-pill {
-            background: rgba(15, 23, 42, 0.05);
-            color: #0f172a;
-        }
-
-        .sidebar-pill:hover,
-        .sidebar-pill.active {
-            border-color: rgba(192, 132, 252, 0.38);
-            background: linear-gradient(135deg, rgba(192, 132, 252, 0.22), rgba(6, 182, 212, 0.14));
-        }
-
-        .sidebar-pill-icon {
-            font-size: 14px;
-        }
-
-        .sidebar-auth-button {
-            width: 100%;
-            justify-content: center;
-        }
-
-        body.sidebar-collapsed .sidebar-shell {
-            padding-left: 10px;
-            padding-right: 10px;
-        }
-
-        body.sidebar-collapsed .sidebar-profile,
-        body.sidebar-collapsed .sidebar-nav-button,
-        body.sidebar-collapsed .sidebar-pill,
-        body.sidebar-collapsed .sidebar-auth-button {
-            justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
-        }
-
-        body.sidebar-collapsed .sidebar-profile-copy,
-        body.sidebar-collapsed .sidebar-nav-text,
-        body.sidebar-collapsed .sidebar-section,
-        body.sidebar-collapsed .sidebar-footer-label,
-        body.sidebar-collapsed .sidebar-auth-label,
-        body.sidebar-collapsed .sidebar-pill span:not(.sidebar-pill-icon) {
-            display: none;
         }
 
         
@@ -1059,47 +787,415 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
         }
+
+        body.theme-light {
+            background: #edf2f7;
+            color: #0f172a;
+        }
+
+        body.theme-light .glassmorphic,
+        body.theme-light .app-sidebar,
+        body.theme-light .right-info-panel,
+        body.theme-light .mobile-search-tray {
+            background: rgba(255, 255, 255, 0.88);
+            border-color: rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+        }
+
+        body.theme-light .desktop-nav-rail {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.94));
+            border-color: rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+        }
+
+        body.theme-light .desktop-nav-item,
+        body.theme-light .desktop-nav-profile,
+        body.theme-light .desktop-nav-toggle,
+        body.theme-light .desktop-nav-compact-label,
+        body.theme-light .desktop-nav-footer-label,
+        body.theme-light .desktop-nav-status,
+        body.theme-light .desktop-nav-auth-btn {
+            color: #0f172a;
+        }
+
+        body.theme-light .desktop-nav-item,
+        body.theme-light .desktop-nav-profile,
+        body.theme-light .desktop-nav-toggle,
+        body.theme-light .desktop-nav-lang,
+        body.theme-light .desktop-nav-auth-btn,
+        body.theme-light .language-select {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.theme-light .desktop-nav-item:hover,
+        body.theme-light .desktop-nav-profile:hover,
+        body.theme-light .desktop-nav-toggle:hover,
+        body.theme-light .desktop-nav-auth-btn:hover {
+            background: rgba(15, 23, 42, 0.06);
+        }
+
+        .desktop-nav-rail {
+            width: 250px;
+            min-width: 250px;
+            max-width: 250px;
+            transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease, transform 0.25s ease;
+            background: rgba(15, 23, 42, 0.92);
+            border-right: 1px solid rgba(192, 132, 252, 0.18);
+            backdrop-filter: blur(14px);
+            z-index: 20;
+        }
+
+        body.desktop-nav-collapsed .desktop-nav-rail {
+            width: 92px;
+            min-width: 92px;
+            max-width: 92px;
+        }
+
+        .desktop-nav-shell {
+            height: 100%;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .desktop-nav-top,
+        .desktop-nav-middle,
+        .desktop-nav-bottom {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .desktop-nav-top {
+            flex: 0 0 auto;
+        }
+
+        .desktop-nav-middle {
+            flex: 1 1 auto;
+        }
+
+        .desktop-nav-bottom {
+            flex: 0 0 auto;
+            margin-top: auto;
+        }
+
+        .desktop-nav-toggle {
+            align-self: flex-end;
+            width: 34px;
+            height: 34px;
+            border-radius: 9999px;
+            border: 1px solid rgba(192, 132, 252, 0.28);
+            background: rgba(15, 23, 42, 0.75);
+            color: #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .desktop-nav-toggle:hover {
+            background: rgba(192, 132, 252, 0.22);
+            transform: translateY(-1px);
+        }
+
+        .desktop-nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 18px;
+            border: 1px solid rgba(192, 132, 252, 0.16);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+            text-align: left;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .desktop-nav-profile:hover {
+            background: rgba(192, 132, 252, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .desktop-nav-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 9999px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            flex: 0 0 auto;
+        }
+
+        .desktop-nav-copy {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .desktop-nav-kicker {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(226, 232, 240, 0.58);
+            margin-bottom: 2px;
+        }
+
+        .desktop-nav-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f8fafc;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .desktop-nav-subtitle {
+            font-size: 12px;
+            color: rgba(226, 232, 240, 0.7);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-copy,
+        .desktop-nav-collapsed .desktop-nav-footer-text,
+        .desktop-nav-collapsed .desktop-nav-label,
+        .desktop-nav-collapsed .desktop-nav-status,
+        .desktop-nav-collapsed .desktop-nav-lang-wrap,
+        .desktop-nav-collapsed .desktop-nav-auth-group,
+        .desktop-nav-collapsed .desktop-nav-kicker,
+        .desktop-nav-collapsed .desktop-nav-title,
+        .desktop-nav-collapsed .desktop-nav-subtitle {
+            display: none;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-profile {
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-avatar {
+            width: 52px;
+            height: 52px;
+        }
+
+        .desktop-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 48px;
+            padding: 10px 12px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #e2e8f0;
+            text-align: left;
+            transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .desktop-nav-item:hover,
+        .desktop-nav-item.active {
+            background: rgba(192, 132, 252, 0.12);
+            border-color: rgba(192, 132, 252, 0.22);
+        }
+
+        .desktop-nav-item-icon {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex: 0 0 auto;
+        }
+
+        .desktop-nav-item-label {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .desktop-nav-section-title {
+            margin: 8px 2px 0;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(226, 232, 240, 0.52);
+        }
+
+        .desktop-nav-divider {
+            height: 1px;
+            background: rgba(148, 163, 184, 0.16);
+            margin: 2px 0;
+        }
+
+        .desktop-nav-lang-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .desktop-nav-label,
+        .desktop-nav-footer-text {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(226, 232, 240, 0.58);
+        }
+
+        .desktop-nav-lang,
+        .desktop-nav-auth-btn {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+        }
+
+        .desktop-nav-lang {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .desktop-nav-theme-row,
+        .desktop-nav-auth-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .desktop-nav-theme-row button,
+        .desktop-nav-auth-group button {
+            flex: 1 1 auto;
+        }
+
+        .desktop-nav-theme-btn,
+        .desktop-nav-auth-btn {
+            min-height: 42px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .desktop-nav-auth-btn.login {
+            border-color: rgba(192, 132, 252, 0.35);
+            color: #c084fc;
+        }
+
+        .desktop-nav-auth-btn.logout {
+            border-color: rgba(248, 113, 113, 0.3);
+            color: #fca5a5;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-theme-row,
+        .desktop-nav-collapsed .desktop-nav-auth-group {
+            flex-direction: column;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-lang,
+        .desktop-nav-collapsed .desktop-nav-theme-btn,
+        .desktop-nav-collapsed .desktop-nav-auth-btn {
+            justify-content: center;
+            text-align: center;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-text-only {
+            display: none;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-theme-btn,
+        .desktop-nav-collapsed .desktop-nav-auth-btn {
+            padding-inline: 0;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-nav-rail {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="overflow-hidden">
     <div class="flex h-screen w-screen">
-        <!-- Sidebar -->
-        <aside id="desktopSidebar" class="app-sidebar glassmorphic flex flex-col z-10">
-            <div class="sidebar-shell sidebar-scroll">
-                <button id="sidebarToggleBtn" type="button" class="sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">‹</button>
-
-                <button id="userInfoDisplay" type="button" class="sidebar-profile">
-                    <img id="userAvatar" src="" alt="Profile picture" class="sidebar-profile-avatar" />
-                    <div class="sidebar-profile-copy">
-                        <p class="sidebar-kicker" data-i18n="profile">Profile</p>
-                        <p id="userName" class="sidebar-profile-name">Guest</p>
-                        <p id="userStatus" class="sidebar-profile-status" data-i18n="signIn">Sign in</p>
-                    </div>
-                </button>
-
-                <div class="sidebar-main-nav">
-                    <button id="mapNavBtn" type="button" class="sidebar-nav-button active" aria-label="Map">
-                        <span class="sidebar-nav-icon">🗺️</span>
-                        <span class="sidebar-nav-text" data-i18n="map">Map</span>
-                    </button>
-                    <button id="friendsNavBtn" type="button" class="sidebar-nav-button" aria-label="Friends">
-                        <span class="sidebar-nav-icon">👥</span>
-                        <span class="sidebar-nav-text" data-i18n="friends">Friends</span>
+        <!-- Desktop Nav -->
+        <aside class="desktop-nav-rail hidden md:flex flex-col">
+            <div class="desktop-nav-shell">
+                <div class="desktop-nav-top">
+                    <button id="desktopNavToggle" type="button" class="desktop-nav-toggle" aria-label="Collapse navigation">‹</button>
+                    <button id="desktopProfileButton" type="button" class="desktop-nav-profile" aria-label="Open profile">
+                        <img id="desktopUserAvatar" src="" alt="Profile picture" class="desktop-nav-avatar" />
+                        <div class="desktop-nav-copy">
+                            <div class="desktop-nav-kicker" data-i18n="profile">Profile</div>
+                            <div id="desktopUserName" class="desktop-nav-title">Guest</div>
+                            <div id="desktopUserStatus" class="desktop-nav-subtitle">Sign in to continue</div>
+                        </div>
                     </button>
                 </div>
 
-                <!-- Filters Container -->
-                <div class="sidebar-content">
+                <div class="desktop-nav-middle">
+                    <div class="desktop-nav-section-title">Main</div>
+                    <button id="mapNavBtn" type="button" class="desktop-nav-item active" aria-label="Map">
+                        <span class="desktop-nav-item-icon">🗺️</span>
+                        <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
+                    </button>
+                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends">
+                        <span class="desktop-nav-item-icon">👥</span>
+                        <span class="desktop-nav-item-label desktop-nav-label" data-i18n="friends">Friends</span>
+                    </button>
+                </div>
+
+                <div class="desktop-nav-bottom">
+                    <div class="desktop-nav-divider"></div>
+                    <div class="desktop-nav-lang-wrap">
+                        <div class="desktop-nav-label" data-i18n="language">Language</div>
+                        <select id="desktopLanguageSelect" class="language-select desktop-nav-lang" aria-label="Language selector">
+                            <option value="en">English</option>
+                            <option value="vi">Tiếng Việt</option>
+                        </select>
+                    </div>
+                    <div class="desktop-nav-theme-row">
+                        <button id="themeToggleBtn" type="button" class="desktop-nav-theme-btn desktop-nav-auth-btn" aria-label="Toggle theme">
+                            <span class="desktop-nav-label" data-i18n="theme">Theme</span>
+                            <span id="themeToggleIcon">🌙</span>
+                            <span id="themeToggleText" class="desktop-nav-text-only">Dark mode</span>
+                        </button>
+                    </div>
+                    <div class="desktop-nav-divider"></div>
+                    <div class="desktop-nav-footer-text">Account</div>
+                    <div class="desktop-nav-auth-group">
+                        <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login"><span>🔐</span><span class="desktop-nav-text-only">Login</span></button>
+                        <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout"><span>🚪</span><span class="desktop-nav-text-only">Logout</span></button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sidebar -->
+        <div class="app-sidebar w-96 glassmorphic flex flex-col z-10">
+            <!-- Header -->
+            <div class="p-6 border-b border-neon-purple border-opacity-20">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🗺️</span>
+                        <h1 class="text-2xl font-bold neon-text">ĐiĐâuĐó</h1>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400" data-i18n="subtitle">Discover interesting locations near you</p>
+            </div>
+
+            <!-- Filters Container -->
+            <div class="sidebar-scroll flex-1 p-6 space-y-6">
                 
                 <!-- Search Filter -->
-                <div class="sidebar-section">
-                    <p class="sidebar-section-heading" data-i18n="map">Map</p>
+                <div>
                     <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="search">Search Places</label>
                     <input type="text" id="searchInput" class="search-input w-full" placeholder="Type a location name..." data-i18n-placeholder="searchPlaceholder">
                 </div>
                 
                 <!-- Proximity Filter -->
-                <div id="proximitySection" class="sidebar-section">
+                <div id="proximitySection">
                     <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="proximity">Proximity</label>
                     <div class="flex items-center gap-4">
                         <input type="range" id="proximitySlider" class="range-slider flex-1" min="1" max="50" value="5">
@@ -1108,7 +1204,7 @@
                 </div>
 
                 <!-- Activity Categories Filter -->
-                <div class="sidebar-section">
+                <div>
                     <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="activityCategory">Activity Category</label>
                     <div class="space-y-3">
                         <!-- Sports & Recreation -->
@@ -1341,7 +1437,7 @@
                 </div>
 
                 <!-- The Vibe Filter -->
-                <div class="sidebar-section">
+                <div>
                     <label class="block text-sm font-semibold mb-3 neon-text" data-i18n="theVibe">The Vibe</label>
                     <div class="flex flex-wrap">
                         <div class="chip" data-vibe="Cozy" data-i18n="vibeCozy">🛋️ Cozy</div>
@@ -1355,7 +1451,7 @@
                 </div>
 
                 <!-- Curator's Choice Filter -->
-                <div class="sidebar-section">
+                <div>
                     <label class="flex items-center gap-3 cursor-pointer">
                         <input type="checkbox" id="curatorChoiceCheckbox" class="w-4 h-4 rounded">
                         <span class="text-sm font-semibold neon-text">✨ Curator's Picks</span>
@@ -1364,37 +1460,22 @@
 
                 <!-- Social Momentum Filter removed -->
 
-                <div id="activeFilters" class="sidebar-section text-xs text-gray-400">
+                <!-- Active Filters Display -->
                 <div id="activeFilters" class="text-xs text-gray-400">
                     <p><span data-i18n="filters">Filters</span>: <span id="filterCount">0</span> <span data-i18n="active">active</span></p>
                 </div>
 
-                <button id="useLocationBtn" class="button-primary text-sm sidebar-section" style="width: 100%; margin-bottom: 12px;" data-i18n="useMyLocation">📍 Use My Location</button>
+                <!-- Use My Location Button -->
                 <button id="useLocationBtn" class="button-primary text-sm" style="width: 100%; margin-bottom: 12px;" data-i18n="useMyLocation">📍 Use My Location</button>
 
-                <div class="sidebar-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                <!-- Refresh & Clear Filters Buttons -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
                     <button id="refreshLocationsBtn" class="button-primary text-sm" style="width: 100%;" title="Refresh locations from server">🔄 Refresh</button>
                     <button id="clearFilters" class="button-primary text-sm" data-i18n="clearFilters">Clear All Filters</button>
                 </div>
 
-                <div class="sidebar-footer">
-                    <div class="sidebar-settings-row">
-                        <div class="sidebar-pill-group" aria-label="Language selector">
-                            <button id="languageEnBtn" type="button" class="sidebar-pill" data-language-button data-language="en"><span class="sidebar-pill-icon">EN</span><span class="sidebar-footer-label">English</span></button>
-                            <button id="languageViBtn" type="button" class="sidebar-pill" data-language-button data-language="vi"><span class="sidebar-pill-icon">VI</span><span class="sidebar-footer-label">Tiếng Việt</span></button>
-                        </div>
-                        <button id="themeToggleBtn" type="button" class="sidebar-pill" aria-label="Toggle theme">
-                            <span id="themeToggleIcon" class="sidebar-pill-icon">☾</span>
-                            <span id="themeToggleLabel" class="sidebar-footer-label" data-i18n="lightMode">Light mode</span>
-                        </button>
-                    </div>
-
-                    <button id="loginBtn" class="button-primary text-sm sidebar-auth-button"><span class="sidebar-pill-icon">🔐</span><span class="sidebar-auth-label" data-i18n="signIn">Login</span></button>
-                    <button id="logoutBtn" class="button-primary text-sm sidebar-auth-button"><span class="sidebar-pill-icon">🚪</span><span class="sidebar-auth-label" data-i18n="logout">Logout</span></button>
-                </div>
             </div>
-        </aside>
+
         </div>
 
         <!-- Map Container -->
