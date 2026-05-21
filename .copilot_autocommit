@@ -1,0 +1,8 @@
+# Copilot auto-commit settings
+# This file indicates the assistant will commit & push changes automatically when modifying the repo.
+# Do not edit unless you want to disable/modify behavior.
+# Fields:
+# enabled: true|false
+# commit_template: template for commit messages; use {summary} or {files}
+enabled=true
+commit_template=Automated update by Copilot: {summary}
