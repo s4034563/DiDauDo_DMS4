@@ -85,12 +85,9 @@
         [data-icon] {
             display: inline-flex;
             align-items: center;
+            justify-content: flex-start;
             gap: 0.55rem;
-        }
-
-        /* increase icon/text gap for better spacing */
-        [data-icon] {
-            gap: 0.8rem;
+            line-height: 1.1;
         }
 
         [data-icon]::before {
@@ -103,9 +100,9 @@
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
-            margin-right: 8px;
             vertical-align: middle;
             height: 1.2em;
+            transform: translateY(1px);
         }
 
         [data-icon].icon-only {
@@ -1281,9 +1278,23 @@
         }
 
         /* Favorite heart styling */
+        .favorite-btn {
+            border: none;
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .favorite-btn .material-symbols-rounded {
             transition: transform 0.12s ease, color 0.14s ease;
             color: inherit;
+        }
+
+        .favorite-btn.favorited {
+            color: #ef4444;
         }
 
         .favorite-btn.favorited .material-symbols-rounded {

@@ -1294,8 +1294,8 @@ function showInfoWindow(location, markerElement) {
     `;
 
     const favoriteButtonHtml = currentUser
-        ? `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn rounded-full border border-white/10 bg-transparent p-2 text-slate-200 transition" aria-pressed="false" title="Save to favorites" aria-label="Save to favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`
-        : `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn rounded-full border border-white/10 bg-transparent p-2 text-slate-500" title="Sign in to save favorites" aria-label="Sign in to save favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`;
+        ? `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn" aria-pressed="false" title="Save to favorites" aria-label="Save to favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`
+        : `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn text-slate-500" title="Sign in to save favorites" aria-label="Sign in to save favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`;
 
     rightInfoPanelContentElement.innerHTML = `
         <div class="space-y-3">
@@ -1340,7 +1340,7 @@ function showInfoWindow(location, markerElement) {
 
             
 
-            ${currentUser ? ratingsSection : ''}
+            ${ratingsSection}
 
             ${(getLocationActionUrl(location) || getGoogleMapsUrl(location)) ? `
             <div class="flex gap-2 pt-1">
@@ -1434,9 +1434,10 @@ function showInfoWindow(location, markerElement) {
     if (currentUser) {
         renderRatingControls(location.id);
         updateRatingSummaryElements(location.id);
-        loadLocationRatingSummaryFromBackend(location.id);
-        loadExistingUserRatings(location.id);
     }
+
+    loadLocationRatingSummaryFromBackend(location.id);
+    loadExistingUserRatings(location.id);
 }
 
 function openLocationFromUrlIfPresent() {
