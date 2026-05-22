@@ -230,6 +230,19 @@ function mapServerLocationToAppLocation(location) {
         return null;
     }).filter(Boolean);
 
+    // Preserve explicit visible vibe tags (like 'Quiet') by mapping known tag texts
+    const visibleVibes = visibleTags.map(tag => {
+        const t = String(tag || '').toLowerCase().trim();
+        if (t.includes('cozy')) return 'Cozy';
+        if (t.includes('industrial')) return 'Industrial';
+        if (t.includes('party') || t.includes('night')) return 'Loud/Party';
+        if (t.includes('minimal')) return 'Minimalist';
+        if (t.includes('hidden') || t.includes('gem')) return 'Hidden Gem';
+        if (t.includes('photo') || t.includes('instagram')) return 'Instagrammable';
+        if (t === 'quiet' || t.includes('quiet')) return 'Quiet';
+        return null;
+    }).filter(Boolean);
+
     const types = Array.isArray(location.types) && location.types.length > 0
         ? location.types.map(value => String(value).trim()).filter(Boolean)
         : [location.type || 'Cafes'];
@@ -251,7 +264,7 @@ function mapServerLocationToAppLocation(location) {
         googleMapsUrl: location.googleMapsUrl || '',
         videoURL: location.externalUrl || location.videoURL || '',
         address: location.address || '',
-        vibes: assignAIVibes(caption, seedVibes),
+        vibes: assignAIVibes(caption, [...seedVibes, ...visibleVibes]),
         detailedTags: location.detailedTags || [],
         hours: location.hours || undefined,
         curatorChoice: Boolean(location.curatorChoice)
