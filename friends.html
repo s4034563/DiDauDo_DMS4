@@ -120,9 +120,45 @@
         body.theme-light .desktop-nav-toggle,
         body.theme-light .desktop-nav-lang,
         body.theme-light .desktop-nav-auth-btn,
-        body.theme-light .language-select {
+        body.theme-light .language-select,
+        body.theme-light .desktop-nav-label,
+        body.theme-light .desktop-nav-item-label,
+        body.theme-light .desktop-nav-kicker,
+        body.theme-light .desktop-nav-title,
+        body.theme-light .desktop-nav-subtitle {
             background: rgba(255, 255, 255, 0.85);
             border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.theme-light .desktop-nav-label,
+        body.theme-light .desktop-nav-item-label,
+        body.theme-light .desktop-nav-kicker,
+        body.theme-light .desktop-nav-title,
+        body.theme-light .desktop-nav-subtitle,
+        body.theme-light .desktop-nav-copy,
+        body.theme-light .desktop-nav-profile,
+        body.theme-light .desktop-nav-item,
+        body.theme-light .desktop-nav-toggle,
+        body.theme-light .desktop-nav-auth-btn,
+        body.theme-light .desktop-nav-lang,
+        body.theme-light .desktop-nav-theme-btn {
+            color: #0f172a !important;
+        }
+
+        body.theme-light .desktop-nav-rail [data-icon]::before,
+        body.theme-light .desktop-nav-rail .material-symbols-rounded {
+            color: #334155;
+        }
+
+        body.theme-light .desktop-nav-item:hover [data-icon]::before,
+        body.theme-light .desktop-nav-profile:hover [data-icon]::before,
+        body.theme-light .desktop-nav-toggle:hover [data-icon]::before,
+        body.theme-light .desktop-nav-auth-btn:hover [data-icon]::before,
+        body.theme-light .desktop-nav-item:hover .material-symbols-rounded,
+        body.theme-light .desktop-nav-profile:hover .material-symbols-rounded,
+        body.theme-light .desktop-nav-toggle:hover .material-symbols-rounded,
+        body.theme-light .desktop-nav-auth-btn:hover .material-symbols-rounded {
+            color: #0f172a;
         }
 
         body.theme-light .desktop-nav-item:hover,
@@ -130,6 +166,12 @@
         body.theme-light .desktop-nav-toggle:hover,
         body.theme-light .desktop-nav-auth-btn:hover {
             background: rgba(15, 23, 42, 0.06);
+        }
+
+        body.theme-light .desktop-nav-lang:hover,
+        body.theme-light .desktop-nav-theme-btn:hover,
+        body.theme-light .desktop-nav-auth-btn:hover {
+            color: #020617;
         }
 
         .desktop-nav-rail {
