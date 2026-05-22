@@ -115,7 +115,98 @@ export const submitRating = mutation({
     };
   },
 });
-// Per-user ratings (with comments) removed: community aggregated ratings are the only rating system.
+
+// New: User-based ratings with comments
+export const submitUserRating = mutation({
+  args: {
+    locationId: v.string(),
+    userId: v.id("users"),
+    rating: v.number(),
+    comment: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const rating = normalizeRating(args.rating);
+
+    // Check if user already rated this location
+    const existing = await ctx.db
+      .query("userRatings")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        rating,
+        comment: args.comment,
+        updatedAt: now,
+      });
+      return { ok: true, operation: "updated" };
+    } else {
+      await ctx.db.insert("userRatings", {
+        locationId: args.locationId,
+        userId: args.userId,
+        rating,
+        comment: args.comment,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { ok: true, operation: "created" };
+    }
+  },
+});
+
+export const getUserRatings = query({
+  args: { locationId: v.string() },
+  handler: async (ctx, args) => {
+    const ratings = await ctx.db
+      .query("userRatings")
+      .withIndex("by_location", (q) => q.eq("locationId", args.locationId))
+      .collect();
+
+    // Enrich with user names and sort by newest first
+    const enriched = await Promise.all(ratings.map(async (rating) => {
+      const user = await ctx.db.get(rating.userId);
+      return {
+        ...rating,
+        userName: user?.name || 'Anonymous',
+      };
+    }));
+
+    return enriched.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const getUserRatingForLocation = query({
+  args: { locationId: v.string(), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("userRatings")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+  },
+});
+
+export const deleteUserRating = mutation({
+  args: { locationId: v.string(), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("userRatings")
+      .withIndex("by_location_user", (q) =>
+        q.eq("locationId", args.locationId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      return { ok: true, deleted: true };
+    }
+    return { ok: true, deleted: false };
+  },
+});
 
 // Favorites
 export const toggleFavorite = mutation({

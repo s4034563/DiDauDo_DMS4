@@ -147,8 +147,14 @@ export const getUserProfile = query({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    const [favoriteLocations, friends, requests] = await Promise.all([
+    const ratings = await ctx.db
+      .query("userRatings")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const [favoriteLocations, ratingsLocations, friends, requests] = await Promise.all([
       getLocationsByIds(ctx, favorites.map((row) => row.locationId)),
+      getLocationsByIds(ctx, ratings.map((row) => row.locationId)),
       getFriendIds(ctx, String(args.userId)).then(async (friendIds) => {
         const users = await Promise.all(friendIds.map((friendId) => ctx.db.get(friendId as any)));
         return users.filter(Boolean).map((user: any) => ({
@@ -173,6 +179,15 @@ export const getUserProfile = query({
       })()),
     ]);
 
+    const ratingsWithLocations = ratings.map((rating) => {
+      const location = ratingsLocations.find((row: any) => row.id === rating.locationId);
+      return {
+        ...rating,
+        locationName: location?.name || rating.locationId,
+        locationAddress: location?.address || '',
+      };
+    });
+
     return {
       user: {
         _id: user._id,
@@ -182,6 +197,9 @@ export const getUserProfile = query({
       },
       favorites,
       favoriteLocations,
+      ratings,
+      ratingsLocations,
+      ratingsWithLocations,
       friends,
       requests,
     };
