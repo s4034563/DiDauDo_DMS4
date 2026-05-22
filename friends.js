@@ -235,6 +235,12 @@ async function loadFriendsData() {
   renderFriendsData(profile);
 }
 
+function openLocationOnMap(locationId) {
+  const nextLocationId = String(locationId || '').trim();
+  if (!nextLocationId) return;
+  window.location.href = `./index.html?locationId=${encodeURIComponent(nextLocationId)}`;
+}
+
 async function preloadFriendProfiles(friends) {
   await Promise.allSettled((friends || []).map(async (friend) => {
     const friendId = String(friend?._id || '').trim();
@@ -438,24 +444,29 @@ async function compareFavorites(friendIds) {
     }, null);
 
     const sharedLocations = (activeFavorites || []).filter(location => sharedIds?.has(String(location.id)));
-    const perFriend = friendProfiles.map(entry => ({
-      friendId: entry.friendId,
-      sharedLocationIds: (entry.profile.favoriteLocations || [])
-        .map(location => String(location.id))
-        .filter(id => activeIds.has(id)),
-    }));
-
-    const names = sharedLocations.map(location => location.name);
-    const perFriendSummary = perFriend.map(row => `${row.friendId}: ${row.sharedLocationIds.length}`);
+    const sharedLocationsHtml = sharedLocations.length > 0 ? sharedLocations.map(location => `
+      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-semibold text-white">${location.name}</p>
+            <p class="text-xs text-slate-400">${location.address || ''}</p>
+          </div>
+          <button class="compare-location-open-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${location.id}">Open</button>
+        </div>
+      </div>
+    `).join('') : '<p class="text-slate-400">No shared favorites found.</p>';
     result.innerHTML = `
       <div class="space-y-3">
         <div>
           <p class="text-xs uppercase tracking-[0.18em] text-slate-500">Shared by all selected</p>
-          <p class="mt-1 text-slate-200">${names.length > 0 ? names.join(', ') : 'No shared favorites found.'}</p>
+          <div class="mt-2 space-y-2">${sharedLocationsHtml}</div>
         </div>
-        ${perFriendSummary.length > 0 ? `<div><p class="text-xs uppercase tracking-[0.18em] text-slate-500">Per friend</p><p class="mt-1 text-slate-300">${perFriendSummary.join('<br>')}</p></div>` : ''}
       </div>
     `;
+
+    document.querySelectorAll('.compare-location-open-btn').forEach(button => {
+      button.addEventListener('click', () => openLocationOnMap(button.dataset.locationId));
+    });
   } catch (error) {
     console.error('compareFavorites failed', error);
     result.textContent = String(error?.message || error?.stack || error || 'Comparison failed');
