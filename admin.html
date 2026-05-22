@@ -459,23 +459,23 @@
 
     const DEFAULT_CENTER = [106.69573512876413, 10.729229862661654];
     const ACTIVITY_OPTIONS = [
-      'Sports',
-      'Fitness',
-      'Music',
-      'Nightlife',
-      'Art',
-      'Photography',
-      'Shopping',
-      'Markets',
-      'Dining',
-      'Cafes',
-      'Hiking',
-      'Parks',
-      'Events',
-      'Festivals',
-      'Gaming',
-      'Arcades',
-      'Workspace'
+      { value: 'Sports', label: 'Sports' },
+      { value: 'Fitness', label: 'Fitness' },
+      { value: 'Music', label: 'Music' },
+      { value: 'Nightlife', label: 'Nightlife' },
+      { value: 'Art', label: 'Art' },
+      { value: 'Photography', label: 'Museum' },
+      { value: 'Shopping', label: 'Shopping' },
+      { value: 'Markets', label: 'Markets' },
+      { value: 'Dining', label: 'Dining' },
+      { value: 'Cafes', label: 'Cafes' },
+      { value: 'Hiking', label: 'Hiking' },
+      { value: 'Parks', label: 'Parks' },
+      { value: 'Events', label: '🎫 Events' },
+      { value: 'Festivals', label: '🎆 Festivals' },
+      { value: 'Gaming', label: 'Gaming' },
+      { value: 'Arcades', label: '🕹️ Arcades' },
+      { value: 'Workspace', label: 'Workspace' }
     ];
     const VIBE_TAG_OPTIONS = [
       'Cozy',
@@ -621,12 +621,14 @@
     function renderTagPicker(container, options, initialTags = []) {
       if (!container) return;
 
-      container.innerHTML = options.map(tag => {
-        const normalized = normalizeTag(tag);
+      container.innerHTML = options.map(option => {
+        const tagValue = typeof option === 'object' && option !== null ? option.value : option;
+        const tagLabel = typeof option === 'object' && option !== null && option.label ? option.label : tagValue;
+        const normalized = normalizeTag(tagValue);
         const active = (Array.isArray(initialTags) ? initialTags : []).some(value => normalizeTag(value) === normalized);
         return `
-          <button type="button" data-tag="${tag}" class="tag-chip rounded-full px-3 py-2 text-xs font-semibold ${active ? 'active' : ''}" aria-pressed="${active ? 'true' : 'false'}">
-            ${tag}
+          <button type="button" data-tag="${tagValue}" class="tag-chip rounded-full px-3 py-2 text-xs font-semibold ${active ? 'active' : ''}" aria-pressed="${active ? 'true' : 'false'}">
+            ${tagLabel}
           </button>
         `;
       }).join('');
