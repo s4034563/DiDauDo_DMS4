@@ -339,12 +339,14 @@ function renderFriendsData(profile) {
           `;
 
           // wire close and open actions
-          closeBtn?.onclick = () => {
-            if (modal) {
-              modal.classList.add('hidden');
-              modal.classList.remove('flex');
-            }
-          };
+          if (closeBtn) {
+            closeBtn.onclick = () => {
+              if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+              }
+            };
+          }
 
           if (modal) {
             modal.classList.remove('hidden');
