@@ -22,13 +22,22 @@
 
         .material-symbols-rounded {
             font-family: 'Material Symbols Rounded';
+            font-weight: normal;
+            font-style: normal;
             font-size: 20px;
             line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            vertical-align: middle;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
             -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            -moz-osx-font-smoothing: grayscale;
             font-feature-settings: 'liga';
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
         [data-icon] {
@@ -253,7 +262,7 @@
                     <div class="desktop-nav-preferences-wrap">
                         <div class="desktop-nav-label" data-i18n="preferences">Preferences</div>
                         <button id="desktopLanguageToggleBtn" type="button" class="desktop-nav-auth-btn desktop-nav-language-toggle desktop-nav-lang" data-icon="translate" aria-label="Toggle language">
-                            <span id="desktopLanguageToggleText">EN</span>
+                            <span id="desktopLanguageToggleText" class="desktop-nav-text-only">EN</span>
                         </button>
                     </div>
                     <div class="desktop-nav-theme-row">
