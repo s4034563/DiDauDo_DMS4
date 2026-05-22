@@ -76,14 +76,38 @@
             font-size: 1.35em;
         }
 
+        body.theme-light .desktop-nav-rail {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.94));
+            border-color: rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+        }
+
+        body.theme-light .desktop-nav-item,
+        body.theme-light .desktop-nav-profile,
+        body.theme-light .desktop-nav-toggle,
+        body.theme-light .desktop-nav-lang,
+        body.theme-light .desktop-nav-auth-btn,
+        body.theme-light .language-select {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.theme-light .desktop-nav-item:hover,
+        body.theme-light .desktop-nav-profile:hover,
+        body.theme-light .desktop-nav-toggle:hover,
+        body.theme-light .desktop-nav-auth-btn:hover {
+            background: rgba(15, 23, 42, 0.06);
+        }
+
         .desktop-nav-rail {
             width: 250px;
             min-width: 250px;
             max-width: 250px;
-            transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease;
+            transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease, transform 0.25s ease;
             background: rgba(15, 23, 42, 0.92);
             border-right: 1px solid rgba(192, 132, 252, 0.18);
             backdrop-filter: blur(14px);
+            z-index: 20;
         }
 
         body.desktop-nav-collapsed .desktop-nav-rail {
@@ -108,7 +132,18 @@
             gap: 10px;
         }
 
-        .desktop-nav-bottom { margin-top: auto; }
+        .desktop-nav-top {
+            flex: 0 0 auto;
+        }
+
+        .desktop-nav-middle {
+            flex: 1 1 auto;
+        }
+
+        .desktop-nav-bottom {
+            flex: 0 0 auto;
+            margin-top: auto;
+        }
 
         .desktop-nav-toggle {
             align-self: flex-end;
@@ -118,30 +153,35 @@
             border: 1px solid rgba(192, 132, 252, 0.28);
             background: rgba(15, 23, 42, 0.75);
             color: #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: transform 0.2s ease, background 0.2s ease;
         }
 
-        .desktop-nav-profile,
-        .desktop-nav-item,
-        .desktop-nav-auth-btn {
+        .desktop-nav-toggle:hover {
+            background: rgba(192, 132, 252, 0.22);
+            transform: translateY(-1px);
+        }
+
+        .desktop-nav-profile {
             display: flex;
             align-items: center;
             gap: 12px;
             width: 100%;
-            min-height: 48px;
-            padding: 10px 12px;
-            border-radius: 16px;
+            padding: 12px;
+            border-radius: 18px;
             border: 1px solid rgba(192, 132, 252, 0.16);
             background: rgba(15, 23, 42, 0.6);
             color: #e2e8f0;
             text-align: left;
-            transition: background 0.2s ease;
+            transition: background 0.2s ease, transform 0.2s ease;
         }
 
-        .desktop-nav-item.active,
-        .desktop-nav-item:hover,
-        .desktop-nav-profile:hover,
-        .desktop-nav-auth-btn:hover {
+        .desktop-nav-profile:hover {
             background: rgba(192, 132, 252, 0.12);
+            transform: translateY(-1px);
         }
 
         .desktop-nav-avatar {
@@ -153,43 +193,258 @@
             flex: 0 0 auto;
         }
 
-        .desktop-nav-copy { min-width: 0; }
-        .desktop-nav-kicker,
-        .desktop-nav-section-title,
-        .desktop-nav-footer-text {
+        .desktop-nav-copy {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .desktop-nav-kicker {
             font-size: 10px;
             letter-spacing: 0.18em;
             text-transform: uppercase;
             color: rgba(226, 232, 240, 0.58);
+            margin-bottom: 2px;
         }
 
-        .desktop-nav-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
-        .desktop-nav-subtitle { font-size: 12px; color: rgba(226, 232, 240, 0.7); }
-        .desktop-nav-divider { height: 1px; background: rgba(148, 163, 184, 0.16); }
+        .desktop-nav-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f8fafc;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .desktop-nav-subtitle {
+            font-size: 12px;
+            color: rgba(226, 232, 240, 0.7);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
 
         .desktop-nav-collapsed .desktop-nav-copy,
-        .desktop-nav-collapsed .desktop-nav-item-label,
         .desktop-nav-collapsed .desktop-nav-footer-text,
-        .desktop-nav-collapsed .desktop-nav-section-title,
-        .desktop-nav-collapsed .desktop-nav-text-only { display: none; }
+        .desktop-nav-collapsed .desktop-nav-label,
+        .desktop-nav-collapsed .desktop-nav-status,
+        .desktop-nav-collapsed .desktop-nav-auth-group,
+        .desktop-nav-collapsed .desktop-nav-kicker,
+        .desktop-nav-collapsed .desktop-nav-title,
+        .desktop-nav-collapsed .desktop-nav-subtitle {
+            display: none;
+        }
 
         .desktop-nav-collapsed .desktop-nav-profile {
             justify-content: center;
             width: 56px;
             height: 56px;
+            min-height: 56px;
+            margin-inline: auto;
             padding: 0;
             border-radius: 50%;
-            margin: 0 auto;
             overflow: hidden;
         }
 
         .desktop-nav-collapsed .desktop-nav-avatar {
             width: 100%;
             height: 100%;
+            border-radius: 50%;
         }
 
-        .desktop-nav-auth-btn.login { border-color: rgba(34, 197, 94, 0.35); }
-        .desktop-nav-auth-btn.logout { border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; }
+        .desktop-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 48px;
+            padding: 10px 12px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #e2e8f0;
+            text-align: left;
+            transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .desktop-nav-item:hover,
+        .desktop-nav-item.active {
+            background: rgba(192, 132, 252, 0.12);
+            border-color: rgba(192, 132, 252, 0.22);
+        }
+
+        .desktop-nav-item-icon {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex: 0 0 auto;
+        }
+
+        .desktop-nav-item-label {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .desktop-nav-section-title {
+            margin: 8px 2px 0;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(226, 232, 240, 0.52);
+        }
+
+        .desktop-nav-divider {
+            height: 1px;
+            background: rgba(148, 163, 184, 0.16);
+            margin: 2px 0;
+        }
+
+        .desktop-nav-lang-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .desktop-nav-preferences-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .desktop-nav-label,
+        .desktop-nav-footer-text {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(226, 232, 240, 0.58);
+        }
+
+        .desktop-nav-lang,
+        .desktop-nav-auth-btn {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+        }
+
+        .desktop-nav-lang {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .desktop-nav-theme-row,
+        .desktop-nav-auth-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .desktop-nav-theme-row button,
+        .desktop-nav-auth-group button {
+            flex: 1 1 auto;
+        }
+
+        .desktop-nav-theme-btn,
+        .desktop-nav-auth-btn {
+            min-height: 42px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .desktop-nav-language-toggle {
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+
+        .desktop-nav-auth-btn.login {
+            border-color: rgba(192, 132, 252, 0.35);
+            color: #c084fc;
+        }
+
+        .desktop-nav-auth-btn.logout {
+            border-color: rgba(248, 113, 113, 0.55);
+            color: #f87171;
+            background: rgba(127, 29, 29, 0.22);
+        }
+
+        .desktop-nav-auth-btn.logout::before {
+            color: #f87171;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-preferences-wrap .desktop-nav-label {
+            display: none;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-theme-row,
+        .desktop-nav-collapsed .desktop-nav-auth-group {
+            flex-direction: column;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-lang,
+        .desktop-nav-collapsed .desktop-nav-theme-btn,
+        .desktop-nav-collapsed .desktop-nav-auth-btn {
+            justify-content: center;
+            text-align: center;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-text-only {
+            display: none;
+        }
+
+        .desktop-nav-collapsed .desktop-nav-theme-btn,
+        .desktop-nav-collapsed .desktop-nav-auth-btn {
+            padding-inline: 0;
+        }
+
+        /* Keep auth group visible in collapsed state and ensure language toggle shows */
+        .desktop-nav-collapsed .desktop-nav-auth-group {
+            display: flex !important;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .desktop-nav-collapsed #desktopLanguageToggleBtn {
+            display: inline-flex !important;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Stronger red styling for logout in both collapsed and expanded states */
+        .desktop-nav-auth-btn.logout,
+        .desktop-nav-collapsed .desktop-nav-auth-btn.logout {
+            color: #f87171 !important;
+            border-color: rgba(248, 113, 113, 0.6) !important;
+            background: rgba(127, 29, 29, 0.12) !important;
+        }
+
+        .desktop-nav-auth-btn.logout::before,
+        .desktop-nav-collapsed .desktop-nav-auth-btn.logout::before {
+            color: #f87171 !important;
+        }
+
+        /* Ensure logout remains highlighted in light theme */
+        body.theme-light .desktop-nav-auth-btn.logout,
+        body.theme-light .desktop-nav-collapsed .desktop-nav-auth-btn.logout {
+            color: #b91c1c !important;
+            border-color: rgba(220, 38, 38, 0.6) !important;
+            background: rgba(220, 38, 38, 0.06) !important;
+        }
+
+        body.theme-light .desktop-nav-auth-btn.logout::before,
+        body.theme-light .desktop-nav-collapsed .desktop-nav-auth-btn.logout::before {
+            color: #b91c1c !important;
+        }
+
+        /* Simple native tooltip styling fallback for compact icons */
+        .desktop-nav-rail button[title] {
+            cursor: pointer;
+        }
 
         .content-wrap {
             flex: 1;
@@ -252,7 +507,7 @@
                     <button id="mapNavBtn" type="button" class="desktop-nav-item" aria-label="Map" data-icon="map">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
                     </button>
-                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends" data-icon="group">
+                    <button id="friendsNavBtn" type="button" class="desktop-nav-item active" aria-label="Friends" data-icon="group">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="friends">Friends</span>
                     </button>
                 </div>
