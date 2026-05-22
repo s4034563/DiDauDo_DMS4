@@ -7,6 +7,8 @@ function convexUrl(path) {
 
 let currentUser = null;
 let activeProfile = null;
+let friendProfileCache = new Map();
+let friendProfileCacheLoad = Promise.resolve();
 
 const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
 
@@ -228,7 +230,26 @@ async function loadFriendsData() {
   }
 
   activeProfile = profile;
+  friendProfileCache = new Map();
+  friendProfileCacheLoad = preloadFriendProfiles(profile.friends || []);
   renderFriendsData(profile);
+}
+
+async function preloadFriendProfiles(friends) {
+  await Promise.allSettled((friends || []).map(async (friend) => {
+    const friendId = String(friend?._id || '').trim();
+    if (!friendId || friendProfileCache.has(friendId)) {
+      return;
+    }
+
+    const response = await fetch(convexUrl(`/api/profile?userId=${encodeURIComponent(friendId)}`));
+    const data = await response.json();
+    if (!response.ok || !data || data.error) {
+      throw new Error(data?.error || `Could not load profile for ${friendId}`);
+    }
+
+    friendProfileCache.set(friendId, data);
+  }));
 }
 
 function renderFriendsData(profile) {
@@ -394,28 +415,50 @@ async function compareFavorites(friendIds) {
   if (!result || !currentUser) return;
 
   try {
-    const params = new URLSearchParams();
-    params.set('userId', currentUser.userId);
-    friendIds.forEach(friendId => params.append('friendId', friendId));
-    const response = await fetch(convexUrl(`/api/favorites/compare?${params.toString()}`));
-    const data = await response.json();
-    if (!response.ok || data.error) {
-      throw new Error(data.error || 'Comparison failed');
-    }
+    result.textContent = 'Comparing favorites...';
+    await friendProfileCacheLoad;
 
-    const names = (data.sharedLocations || []).map(location => location.name);
-    const perFriend = (data.perFriend || []).map(row => `${row.friendId}: ${row.sharedLocationIds.length}`);
+    const activeFavorites = Array.isArray(activeProfile?.favoriteLocations) ? activeProfile.favoriteLocations : [];
+    const activeIds = new Set(activeFavorites.map(location => String(location.id)));
+
+    const friendProfiles = friendIds.map((friendId) => {
+      const profile = friendProfileCache.get(friendId);
+      if (!profile) {
+        throw new Error('Friend profiles are still loading. Try again in a moment.');
+      }
+      return { friendId, profile };
+    });
+
+    const sharedIds = friendProfiles.reduce((shared, entry) => {
+      const favoriteIds = new Set((entry.profile.favoriteLocations || []).map(location => String(location.id)));
+      if (shared === null) {
+        return new Set([...activeIds].filter(id => favoriteIds.has(id)));
+      }
+      return new Set([...shared].filter(id => favoriteIds.has(id)));
+    }, null);
+
+    const sharedLocations = (activeFavorites || []).filter(location => sharedIds?.has(String(location.id)));
+    const perFriend = friendProfiles.map(entry => ({
+      friendId: entry.friendId,
+      sharedLocationIds: (entry.profile.favoriteLocations || [])
+        .map(location => String(location.id))
+        .filter(id => activeIds.has(id)),
+    }));
+
+    const names = sharedLocations.map(location => location.name);
+    const perFriendSummary = perFriend.map(row => `${row.friendId}: ${row.sharedLocationIds.length}`);
     result.innerHTML = `
       <div class="space-y-3">
         <div>
           <p class="text-xs uppercase tracking-[0.18em] text-slate-500">Shared by all selected</p>
           <p class="mt-1 text-slate-200">${names.length > 0 ? names.join(', ') : 'No shared favorites found.'}</p>
         </div>
-        ${perFriend.length > 0 ? `<div><p class="text-xs uppercase tracking-[0.18em] text-slate-500">Per friend</p><p class="mt-1 text-slate-300">${perFriend.join('<br>')}</p></div>` : ''}
+        ${perFriendSummary.length > 0 ? `<div><p class="text-xs uppercase tracking-[0.18em] text-slate-500">Per friend</p><p class="mt-1 text-slate-300">${perFriendSummary.join('<br>')}</p></div>` : ''}
       </div>
     `;
   } catch (error) {
-    result.textContent = String(error?.message || 'Comparison failed');
+    console.error('compareFavorites failed', error);
+    result.textContent = String(error?.message || error?.stack || error || 'Comparison failed');
   }
 }
 
