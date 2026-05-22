@@ -339,11 +339,17 @@ function renderFriendsData(profile) {
           `;
 
           // wire close and open actions
-          closeBtn?.addEventListener('click', () => {
-            if (modal) modal.classList.add('hidden');
-          });
+          closeBtn?.onclick = () => {
+            if (modal) {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+            }
+          };
 
-          modal?.classList.remove('hidden');
+          if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+          }
 
           document.querySelectorAll('.open-friend-location-btn').forEach(btn => {
             btn.addEventListener('click', () => {
