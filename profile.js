@@ -69,7 +69,7 @@ function updateAuthUI() {
   const userStatus = document.getElementById('desktopUserStatus');
 
   if (currentUser) {
-    if (loginBtn) loginBtn.style.display = 'inline-flex';
+    if (loginBtn) loginBtn.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = 'inline-flex';
     if (notice) notice.classList.add('hidden');
     if (shell) shell.classList.remove('opacity-40', 'pointer-events-none');
