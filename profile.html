@@ -203,7 +203,7 @@
                     <button id="desktopProfileButton" type="button" class="desktop-nav-profile" aria-label="Open profile">
                         <img id="desktopUserAvatar" src="" alt="Profile picture" class="desktop-nav-avatar" />
                         <div class="desktop-nav-copy">
-                            <div class="desktop-nav-kicker">Profile</div>
+                            <div class="desktop-nav-kicker" data-i18n="profile">Profile</div>
                             <div id="desktopUserName" class="desktop-nav-title">Guest</div>
                             <div id="desktopUserStatus" class="desktop-nav-subtitle">Sign in to continue</div>
                         </div>
@@ -212,31 +212,34 @@
 
                 <div class="desktop-nav-middle">
                     <div class="desktop-nav-section-title">Main</div>
-                    <button id="mapNavBtn" type="button" class="desktop-nav-item" aria-label="Map">
-                        <span class="material-symbols-rounded">map</span>
-                        <span class="desktop-nav-item-label">Map</span>
+                    <button id="mapNavBtn" type="button" class="desktop-nav-item" aria-label="Map" data-icon="map">
+                        <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
                     </button>
-                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends">
-                        <span class="material-symbols-rounded">group</span>
-                        <span class="desktop-nav-item-label">Friends</span>
-                    </button>
-                    <button type="button" class="desktop-nav-item active" aria-label="Profile">
-                        <span class="material-symbols-rounded">person</span>
-                        <span class="desktop-nav-item-label">Profile</span>
+                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends" data-icon="group">
+                        <span class="desktop-nav-item-label desktop-nav-label" data-i18n="friends">Friends</span>
                     </button>
                 </div>
 
                 <div class="desktop-nav-bottom">
                     <div class="desktop-nav-divider"></div>
-                    <div class="desktop-nav-footer-text">Account</div>
-                    <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login">
-                        <span class="material-symbols-rounded">login</span>
-                        <span class="desktop-nav-text-only">Login</span>
-                    </button>
-                    <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout">
-                        <span class="material-symbols-rounded">logout</span>
-                        <span class="desktop-nav-text-only">Logout</span>
-                    </button>
+                    <div class="desktop-nav-preferences-wrap">
+                        <div class="desktop-nav-label" data-i18n="preferences">Preferences</div>
+                        <button id="desktopLanguageToggleBtn" type="button" class="desktop-nav-auth-btn desktop-nav-language-toggle desktop-nav-lang" data-icon="translate" aria-label="Toggle language">
+                            <span id="desktopLanguageToggleText">EN</span>
+                        </button>
+                    </div>
+                    <div class="desktop-nav-theme-row">
+                        <button id="themeToggleBtn" type="button" class="desktop-nav-theme-btn desktop-nav-auth-btn" aria-label="Toggle theme" data-icon="dark_mode">
+                            <span class="desktop-nav-label" data-i18n="theme">Theme</span>
+                            <span id="themeToggleText" class="desktop-nav-text-only">Dark mode</span>
+                        </button>
+                    </div>
+                    <div class="desktop-nav-divider"></div>
+                    <div class="desktop-nav-footer-text" data-i18n="account">Account</div>
+                    <div class="desktop-nav-auth-group">
+                        <button id="desktopLoginBtn" type="button" class="desktop-nav-auth-btn login" data-icon="login"><span class="desktop-nav-text-only" data-i18n="login">Login</span></button>
+                        <button id="desktopLogoutBtn" type="button" class="desktop-nav-auth-btn logout" data-icon="logout"><span class="desktop-nav-text-only" data-i18n="logout">Logout</span></button>
+                    </div>
                 </div>
             </div>
         </aside>

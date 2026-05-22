@@ -15,6 +15,24 @@ function getProfileAvatarUrl(user) {
   return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=06b6d4,c084fc,22c55e,f97316,ef4444&textColor=ffffff&radius=50`;
 }
 
+// Theme & language helpers (keeps behavior similar to main page)
+const languageStorageKey = 'didaudo_language';
+const themeStorageKey = 'didaudo_theme';
+
+function applyLanguageFromStorage() {
+  const lang = localStorage.getItem(languageStorageKey) || 'en';
+  const el = document.getElementById('desktopLanguageToggleText');
+  if (el) el.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
+}
+
+function applyThemeFromStorage() {
+  const theme = localStorage.getItem(themeStorageKey) || 'dark';
+  if (theme === 'light') document.body.classList.add('theme-light');
+  else document.body.classList.remove('theme-light');
+  const el = document.getElementById('themeToggleText');
+  if (el) el.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+}
+
 function normalizeUserSession(user) {
   if (!user) return null;
   return { ...user, avatarUrl: user.avatarUrl || getProfileAvatarUrl(user) };
@@ -272,8 +290,72 @@ function renderFriendsData(profile) {
   }
 
   document.querySelectorAll('.friend-view-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      window.location.href = `./profile.html?userId=${encodeURIComponent(button.dataset.userId || '')}`;
+    button.addEventListener('click', async () => {
+      const userId = String(button.dataset.userId || '').trim();
+      if (!userId) return;
+      try {
+        const response = await fetch(convexUrl(`/api/profile?userId=${encodeURIComponent(userId)}`));
+        const profile = await response.json();
+        if (!response.ok || !profile || profile.error) {
+          throw new Error(profile?.error || 'Could not load profile');
+        }
+
+        const modal = document.getElementById('friendProfileModal');
+        const content = document.getElementById('friendProfileContent');
+        const closeBtn = document.getElementById('friendProfileClose');
+        if (content && profile) {
+          content.innerHTML = `
+            <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
+              <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
+              <div class="mt-3 flex items-center gap-3">
+                <img src="${getProfileAvatarUrl(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover" />
+                <div class="min-w-0">
+                  <h2 class="text-2xl font-black text-white">${profile.user?.name || profile.user?.email || 'Profile'}</h2>
+                  <p class="mt-1 truncate text-sm text-slate-400">${profile.user?.email || ''}</p>
+                </div>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
+                <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${(profile.friends||[]).length} friends</span>
+                <span class="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${(profile.favoriteLocations||[]).length} favorites</span>
+                <span class="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${(profile.ratingsWithLocations||[]).length} ratings</span>
+              </div>
+            </div>
+            <div class="mt-4">
+              <h3 class="text-lg font-bold text-white">Favorites</h3>
+              <div class="mt-3 space-y-2">
+                ${(profile.favoriteLocations||[]).map(loc => `
+                  <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="font-semibold text-white">${loc.name}</p>
+                        <p class="text-xs text-slate-400">${loc.address||''}</p>
+                      </div>
+                      <button class="open-friend-location-btn rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${loc.id}">Open</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+
+          // wire close and open actions
+          closeBtn?.addEventListener('click', () => {
+            if (modal) modal.classList.add('hidden');
+          });
+
+          modal?.classList.remove('hidden');
+
+          document.querySelectorAll('.open-friend-location-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const locId = btn.dataset.locationId;
+              if (!locId) return;
+              window.location.href = `./index.html?locationId=${encodeURIComponent(locId)}`;
+            });
+          });
+        }
+      } catch (error) {
+        alert(String(error?.message || 'Could not load friend profile'));
+      }
     });
   });
 
@@ -366,6 +448,24 @@ function bindEvents() {
   });
   desktopNavToggle?.addEventListener('click', toggleDesktopNav);
 
+  const desktopLanguageToggleBtn = document.getElementById('desktopLanguageToggleBtn');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  desktopLanguageToggleBtn?.addEventListener('click', () => {
+    const key = 'didaudo_language';
+    const current = localStorage.getItem(key) || 'en';
+    const next = current === 'en' ? 'vi' : 'en';
+    localStorage.setItem(key, next);
+    applyLanguageFromStorage();
+  });
+
+  themeToggleBtn?.addEventListener('click', () => {
+    const key = 'didaudo_theme';
+    const current = localStorage.getItem(key) || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(key, next);
+    applyThemeFromStorage();
+  });
+
   sendFriendRequestBtn?.addEventListener('click', async () => {
     const input = document.getElementById('friendEmailInput');
     const status = document.getElementById('friendRequestStatus');
@@ -454,6 +554,8 @@ window.addEventListener('load', async () => {
   updateAuthUI();
   bindEvents();
   applyDesktopNavState(getStoredDesktopNavState());
+  applyLanguageFromStorage();
+  applyThemeFromStorage();
 
   if (!currentUser) {
     renderSignedOutState();

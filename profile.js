@@ -195,6 +195,24 @@ function getProfileUserId() {
   return url.searchParams.get('userId') || '';
 }
 
+// Theme & language helpers (keeps behavior similar to main page)
+const languageStorageKey = 'didaudo_language';
+const themeStorageKey = 'didaudo_theme';
+
+function applyLanguageFromStorage() {
+  const lang = localStorage.getItem(languageStorageKey) || 'en';
+  const el = document.getElementById('desktopLanguageToggleText');
+  if (el) el.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
+}
+
+function applyThemeFromStorage() {
+  const theme = localStorage.getItem(themeStorageKey) || 'dark';
+  if (theme === 'light') document.body.classList.add('theme-light');
+  else document.body.classList.remove('theme-light');
+  const el = document.getElementById('themeToggleText');
+  if (el) el.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+}
+
 function setProfileUserId(nextUserId) {
   const url = new URL(window.location.href);
   if (nextUserId) {
@@ -368,6 +386,24 @@ function bindEvents() {
   });
   desktopNavToggle?.addEventListener('click', toggleDesktopNav);
 
+  const desktopLanguageToggleBtn = document.getElementById('desktopLanguageToggleBtn');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  desktopLanguageToggleBtn?.addEventListener('click', () => {
+    const key = 'didaudo_language';
+    const current = localStorage.getItem(key) || 'en';
+    const next = current === 'en' ? 'vi' : 'en';
+    localStorage.setItem(key, next);
+    applyLanguageFromStorage();
+  });
+
+  themeToggleBtn?.addEventListener('click', () => {
+    const key = 'didaudo_theme';
+    const current = localStorage.getItem(key) || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(key, next);
+    applyThemeFromStorage();
+  });
+
   profileLookupBtn?.addEventListener('click', () => {
     const input = document.getElementById('profileLookupInput');
     const value = String(input?.value || '').trim();
@@ -421,6 +457,8 @@ window.addEventListener('load', async () => {
   updateAuthUI();
   bindEvents();
   applyDesktopNavState(getStoredDesktopNavState());
+  applyLanguageFromStorage();
+  applyThemeFromStorage();
   await loadLocationDirectory();
 
   profileUserId = getProfileUserId();
