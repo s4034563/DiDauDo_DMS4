@@ -1,0 +1,473 @@
+const appConfig = window.VIBEMAP_CONFIG || {};
+const convexBaseUrl = String(appConfig.convexBaseUrl || '').replace(/\/$/, '');
+
+function convexUrl(path) {
+  return `${convexBaseUrl}${path}`;
+}
+
+let currentUser = null;
+let activeProfile = null;
+
+const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
+
+function getProfileAvatarUrl(user) {
+  const seed = String(user?.avatarSeed || user?.name || user?.email || user?._id || 'guest').trim().toLowerCase() || 'guest';
+  return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=06b6d4,c084fc,22c55e,f97316,ef4444&textColor=ffffff&radius=50`;
+}
+
+function normalizeUserSession(user) {
+  if (!user) return null;
+  return { ...user, avatarUrl: user.avatarUrl || getProfileAvatarUrl(user) };
+}
+
+function loadUserSession() {
+  const stored = localStorage.getItem('didaudo_user_session');
+  if (!stored) return;
+  try {
+    currentUser = normalizeUserSession(JSON.parse(stored));
+    saveUserSession();
+  } catch {
+    currentUser = null;
+  }
+}
+
+function saveUserSession() {
+  if (currentUser) {
+    localStorage.setItem('didaudo_user_session', JSON.stringify(currentUser));
+  } else {
+    localStorage.removeItem('didaudo_user_session');
+  }
+}
+
+function getStoredDesktopNavState() {
+  return localStorage.getItem(desktopNavStorageKey) === 'true';
+}
+
+function applyDesktopNavState(collapsed) {
+  document.body.classList.toggle('desktop-nav-collapsed', Boolean(collapsed));
+  const navToggle = document.getElementById('desktopNavToggle');
+  if (navToggle) {
+    navToggle.textContent = collapsed ? '›' : '‹';
+    navToggle.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+  }
+  localStorage.setItem(desktopNavStorageKey, String(Boolean(collapsed)));
+}
+
+function toggleDesktopNav() {
+  applyDesktopNavState(!document.body.classList.contains('desktop-nav-collapsed'));
+}
+
+function openLoginModal(promptText = '') {
+  const modal = document.getElementById('loginModal');
+  const prompt = document.getElementById('loginPrompt');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  if (prompt) {
+    const hasPrompt = Boolean(String(promptText || '').trim());
+    prompt.textContent = hasPrompt ? promptText : '';
+    prompt.classList.toggle('hidden', !hasPrompt);
+  }
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('loginModal');
+  const prompt = document.getElementById('loginPrompt');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  if (prompt) {
+    prompt.textContent = '';
+    prompt.classList.add('hidden');
+  }
+}
+
+function switchAuthTab(isSignup) {
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const loginTabBtn = document.getElementById('loginTabBtn');
+  const signupTabBtn = document.getElementById('signupTabBtn');
+
+  if (loginForm) loginForm.classList.toggle('hidden', isSignup);
+  if (signupForm) signupForm.classList.toggle('hidden', !isSignup);
+  if (loginTabBtn) {
+    loginTabBtn.classList.toggle('bg-cyan-400', !isSignup);
+    loginTabBtn.classList.toggle('text-slate-900', !isSignup);
+    loginTabBtn.classList.toggle('text-slate-400', isSignup);
+  }
+  if (signupTabBtn) {
+    signupTabBtn.classList.toggle('bg-cyan-400', isSignup);
+    signupTabBtn.classList.toggle('text-slate-900', isSignup);
+    signupTabBtn.classList.toggle('text-slate-400', !isSignup);
+  }
+}
+
+async function handleLogin(email, password) {
+  const loginError = document.getElementById('loginError');
+  if (loginError) loginError.classList.add('hidden');
+
+  const response = await fetch(convexUrl('/api/auth/login'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || 'Login failed');
+  }
+
+  currentUser = normalizeUserSession({ userId: data.userId, email: data.email, name: data.name });
+  saveUserSession();
+  updateAuthUI();
+  closeLoginModal();
+}
+
+async function handleSignup(email, password, passwordConfirm, name) {
+  const signupError = document.getElementById('signupError');
+  if (signupError) signupError.classList.add('hidden');
+
+  if (password !== passwordConfirm) {
+    throw new Error('Passwords do not match');
+  }
+
+  const response = await fetch(convexUrl('/api/auth/signup'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, name }),
+  });
+
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || 'Signup failed');
+  }
+
+  currentUser = normalizeUserSession({ userId: data.userId, email: data.email, name: data.name });
+  saveUserSession();
+  updateAuthUI();
+  closeLoginModal();
+  switchAuthTab(false);
+}
+
+function updateAuthUI() {
+  const loginBtn = document.getElementById('desktopLoginBtn');
+  const logoutBtn = document.getElementById('desktopLogoutBtn');
+  const notice = document.getElementById('signedOutNotice');
+  const shell = document.getElementById('friendsShell');
+  const userAvatar = document.getElementById('desktopUserAvatar');
+  const userName = document.getElementById('desktopUserName');
+  const userStatus = document.getElementById('desktopUserStatus');
+
+  if (currentUser) {
+    if (loginBtn) loginBtn.style.display = 'inline-flex';
+    if (logoutBtn) logoutBtn.style.display = 'inline-flex';
+    if (notice) notice.classList.add('hidden');
+    if (shell) shell.classList.remove('opacity-40', 'pointer-events-none');
+    if (userAvatar) userAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
+    if (userName) userName.textContent = currentUser.name || currentUser.email || 'Guest';
+    if (userStatus) userStatus.textContent = currentUser.email || 'Signed in';
+  } else {
+    if (loginBtn) loginBtn.style.display = 'inline-flex';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (notice) notice.classList.remove('hidden');
+    if (shell) shell.classList.add('opacity-40', 'pointer-events-none');
+    if (userAvatar) userAvatar.src = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
+    if (userName) userName.textContent = 'Guest';
+    if (userStatus) userStatus.textContent = 'Sign in to continue';
+  }
+}
+
+function handleLogout() {
+  currentUser = null;
+  saveUserSession();
+  updateAuthUI();
+  renderSignedOutState();
+}
+
+function renderSignedOutState() {
+  const friendsList = document.getElementById('friendsList');
+  const requestsList = document.getElementById('requestsList');
+  const compareFriendPicker = document.getElementById('compareFriendPicker');
+  const compareResult = document.getElementById('compareResult');
+  const friendRequestStatus = document.getElementById('friendRequestStatus');
+
+  if (friendsList) friendsList.innerHTML = '';
+  if (requestsList) requestsList.innerHTML = '';
+  if (compareFriendPicker) compareFriendPicker.innerHTML = '';
+  if (compareResult) compareResult.innerHTML = '';
+  if (friendRequestStatus) friendRequestStatus.textContent = '';
+}
+
+async function loadFriendsData() {
+  if (!currentUser) return;
+
+  const response = await fetch(convexUrl(`/api/profile?userId=${encodeURIComponent(currentUser.userId)}`));
+  const profile = await response.json();
+  if (!response.ok || !profile || profile.error) {
+    throw new Error(profile?.error || 'Could not load friends data');
+  }
+
+  activeProfile = profile;
+  renderFriendsData(profile);
+}
+
+function renderFriendsData(profile) {
+  const friends = profile.friends || [];
+  const incoming = profile.requests?.incoming || [];
+  const outgoing = profile.requests?.outgoing || [];
+
+  const friendsList = document.getElementById('friendsList');
+  const requestsList = document.getElementById('requestsList');
+  const compareFriendPicker = document.getElementById('compareFriendPicker');
+
+  if (friendsList) {
+    friendsList.innerHTML = friends.length > 0 ? friends.map(friend => `
+      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
+            <img src="${getProfileAvatarUrl(friend)}" alt="${friend.name || friend.email || 'Friend'} picture" class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+            <div class="min-w-0">
+              <p class="truncate font-semibold text-white">${friend.name || friend.email}</p>
+              <p class="truncate text-xs text-slate-400">${friend.email}</p>
+              <p class="mt-1 text-[11px] text-slate-500">ID: ${friend._id}</p>
+            </div>
+          </div>
+          <button class="friend-view-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-user-id="${friend._id}">View profile</button>
+        </div>
+      </div>
+    `).join('') : '<p class="text-slate-400">No friends yet.</p>';
+  }
+
+  if (requestsList) {
+    const incomingHtml = incoming.map(request => `
+      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+        <p class="font-semibold text-white">${request.senderEmail}</p>
+        <p class="text-xs text-slate-400">Incoming request</p>
+        <div class="mt-3 flex gap-2">
+          <button class="request-action-btn rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">Accept</button>
+          <button class="request-action-btn rounded-xl bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
+        </div>
+      </div>
+    `).join('');
+
+    const outgoingHtml = outgoing.map(request => `
+      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+        <p class="font-semibold text-white">${request.receiverEmail}</p>
+        <p class="text-xs text-slate-400">Outgoing request</p>
+      </div>
+    `).join('');
+
+    requestsList.innerHTML = (incomingHtml + outgoingHtml) || '<p class="text-slate-400">No pending requests.</p>';
+  }
+
+  if (compareFriendPicker) {
+    compareFriendPicker.innerHTML = friends.length > 0 ? friends.slice(0, 12).map(friend => `
+      <label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+        <input type="checkbox" class="compare-friend-checkbox h-4 w-4" value="${friend._id}" />
+        <span>${friend.name || friend.email}</span>
+      </label>
+    `).join('') : '<p class="text-slate-400">Add friends to compare favorites.</p>';
+  }
+
+  document.querySelectorAll('.friend-view-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      window.location.href = `./profile.html?userId=${encodeURIComponent(button.dataset.userId || '')}`;
+    });
+  });
+
+  document.querySelectorAll('.request-action-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+      if (!currentUser) return;
+      const response = await fetch(convexUrl('/api/friends/respond'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: button.dataset.requestId,
+          userId: currentUser.userId,
+          action: button.dataset.action,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        alert(data.error || 'Could not update friend request');
+        return;
+      }
+      await loadFriendsData();
+    });
+  });
+}
+
+async function compareFavorites(friendIds) {
+  const result = document.getElementById('compareResult');
+  if (!result || !currentUser) return;
+
+  try {
+    const params = new URLSearchParams();
+    params.set('userId', currentUser.userId);
+    friendIds.forEach(friendId => params.append('friendId', friendId));
+    const response = await fetch(convexUrl(`/api/favorites/compare?${params.toString()}`));
+    const data = await response.json();
+    if (!response.ok || data.error) {
+      throw new Error(data.error || 'Comparison failed');
+    }
+
+    const names = (data.sharedLocations || []).map(location => location.name);
+    const perFriend = (data.perFriend || []).map(row => `${row.friendId}: ${row.sharedLocationIds.length}`);
+    result.innerHTML = `
+      <div class="space-y-3">
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-slate-500">Shared by all selected</p>
+          <p class="mt-1 text-slate-200">${names.length > 0 ? names.join(', ') : 'No shared favorites found.'}</p>
+        </div>
+        ${perFriend.length > 0 ? `<div><p class="text-xs uppercase tracking-[0.18em] text-slate-500">Per friend</p><p class="mt-1 text-slate-300">${perFriend.join('<br>')}</p></div>` : ''}
+      </div>
+    `;
+  } catch (error) {
+    result.textContent = String(error?.message || 'Comparison failed');
+  }
+}
+
+function bindEvents() {
+  const desktopLoginBtn = document.getElementById('desktopLoginBtn');
+  const signedOutLoginBtn = document.getElementById('signedOutLoginBtn');
+  const desktopLogoutBtn = document.getElementById('desktopLogoutBtn');
+  const loginModalClose = document.getElementById('loginModalClose');
+  const loginTabBtn = document.getElementById('loginTabBtn');
+  const signupTabBtn = document.getElementById('signupTabBtn');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const mapNavBtn = document.getElementById('mapNavBtn');
+  const profileNavBtn = document.getElementById('profileNavBtn');
+  const desktopProfileButton = document.getElementById('desktopProfileButton');
+  const desktopNavToggle = document.getElementById('desktopNavToggle');
+  const sendFriendRequestBtn = document.getElementById('sendFriendRequestBtn');
+  const compareFavoritesBtn = document.getElementById('compareFavoritesBtn');
+
+  desktopLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage your friends.'));
+  signedOutLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage your friends.'));
+  desktopLogoutBtn?.addEventListener('click', handleLogout);
+  loginModalClose?.addEventListener('click', closeLoginModal);
+  loginTabBtn?.addEventListener('click', () => switchAuthTab(false));
+  signupTabBtn?.addEventListener('click', () => switchAuthTab(true));
+  desktopProfileButton?.addEventListener('click', () => {
+    if (!currentUser) {
+      openLoginModal('Sign in to view your profile.');
+      return;
+    }
+    window.location.href = './profile.html';
+  });
+  mapNavBtn?.addEventListener('click', () => {
+    window.location.href = './index.html';
+  });
+  profileNavBtn?.addEventListener('click', () => {
+    window.location.href = './profile.html';
+  });
+  desktopNavToggle?.addEventListener('click', toggleDesktopNav);
+
+  sendFriendRequestBtn?.addEventListener('click', async () => {
+    const input = document.getElementById('friendEmailInput');
+    const status = document.getElementById('friendRequestStatus');
+    const receiverEmail = String(input?.value || '').trim();
+    if (!receiverEmail || !currentUser) {
+      if (status) status.textContent = 'Enter an email address.';
+      return;
+    }
+    try {
+      const response = await fetch(convexUrl('/api/friends/request'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderId: currentUser.userId, receiverEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Friend request failed');
+      if (status) status.textContent = 'Friend request sent.';
+      if (input) input.value = '';
+      await loadFriendsData();
+    } catch (error) {
+      if (status) status.textContent = String(error?.message || 'Friend request failed');
+    }
+  });
+
+  compareFavoritesBtn?.addEventListener('click', async () => {
+    if (!currentUser) {
+      openLoginModal('Sign in to compare favorites.');
+      return;
+    }
+
+    const selected = Array.from(document.querySelectorAll('.compare-friend-checkbox:checked'))
+      .map(input => input.value)
+      .slice(0, 3);
+
+    if (selected.length === 0) {
+      const compareResult = document.getElementById('compareResult');
+      if (compareResult) compareResult.textContent = 'Pick at least one friend.';
+      return;
+    }
+
+    await compareFavorites(selected);
+  });
+
+  loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    try {
+      await handleLogin(email, password);
+      await loadFriendsData();
+    } catch (error) {
+      const loginError = document.getElementById('loginError');
+      if (loginError) {
+        loginError.textContent = String(error?.message || 'Login failed');
+        loginError.classList.remove('hidden');
+      }
+    }
+  });
+
+  signupForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = document.getElementById('signupEmail').value;
+    const name = document.getElementById('signupName').value;
+    const password = document.getElementById('signupPassword').value;
+    const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+    try {
+      await handleSignup(email, password, passwordConfirm, name);
+      await loadFriendsData();
+    } catch (error) {
+      const signupError = document.getElementById('signupError');
+      if (signupError) {
+        signupError.textContent = String(error?.message || 'Signup failed');
+        signupError.classList.remove('hidden');
+      }
+    }
+  });
+
+  const loginModal = document.getElementById('loginModal');
+  loginModal?.addEventListener('click', (event) => {
+    if (event.target === loginModal) closeLoginModal();
+  });
+}
+
+window.addEventListener('load', async () => {
+  loadUserSession();
+  updateAuthUI();
+  bindEvents();
+  applyDesktopNavState(getStoredDesktopNavState());
+
+  if (!currentUser) {
+    renderSignedOutState();
+    openLoginModal('You need to be signed in to use friends and compare locations.');
+    switchAuthTab(false);
+    return;
+  }
+
+  try {
+    await loadFriendsData();
+  } catch (error) {
+    const status = document.getElementById('friendRequestStatus');
+    if (status) {
+      status.textContent = String(error?.message || 'Could not load friends data');
+    }
+  }
+});

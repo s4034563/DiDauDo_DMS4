@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ĐiĐâuĐó - Profile</title>
+    <title>DiDauDo - Friends</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,14 +22,11 @@
 
         .material-symbols-rounded {
             font-family: 'Material Symbols Rounded';
-            font-weight: normal;
-            font-style: normal;
             font-size: 20px;
             line-height: 1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            white-space: nowrap;
             -webkit-font-smoothing: antialiased;
             font-feature-settings: 'liga';
         }
@@ -66,9 +63,7 @@
             gap: 10px;
         }
 
-        .desktop-nav-bottom {
-            margin-top: auto;
-        }
+        .desktop-nav-bottom { margin-top: auto; }
 
         .desktop-nav-toggle {
             align-self: flex-end;
@@ -125,16 +120,13 @@
 
         .desktop-nav-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
         .desktop-nav-subtitle { font-size: 12px; color: rgba(226, 232, 240, 0.7); }
-
         .desktop-nav-divider { height: 1px; background: rgba(148, 163, 184, 0.16); }
 
         .desktop-nav-collapsed .desktop-nav-copy,
         .desktop-nav-collapsed .desktop-nav-item-label,
         .desktop-nav-collapsed .desktop-nav-footer-text,
         .desktop-nav-collapsed .desktop-nav-section-title,
-        .desktop-nav-collapsed .desktop-nav-text-only {
-            display: none;
-        }
+        .desktop-nav-collapsed .desktop-nav-text-only { display: none; }
 
         .desktop-nav-collapsed .desktop-nav-profile {
             justify-content: center;
@@ -216,11 +208,11 @@
                         <span class="material-symbols-rounded">map</span>
                         <span class="desktop-nav-item-label">Map</span>
                     </button>
-                    <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends">
+                    <button type="button" class="desktop-nav-item active" aria-label="Friends">
                         <span class="material-symbols-rounded">group</span>
                         <span class="desktop-nav-item-label">Friends</span>
                     </button>
-                    <button type="button" class="desktop-nav-item active" aria-label="Profile">
+                    <button id="profileNavBtn" type="button" class="desktop-nav-item" aria-label="Profile">
                         <span class="material-symbols-rounded">person</span>
                         <span class="desktop-nav-item-label">Profile</span>
                     </button>
@@ -244,48 +236,51 @@
         <main class="content-wrap">
             <div id="signedOutNotice" class="panel mb-6 rounded-2xl p-5">
                 <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Sign in required</p>
-                <h2 class="mt-2 text-2xl font-bold text-white">Use your profile and favorites</h2>
-                <p class="mt-2 max-w-2xl text-sm text-slate-300">You need to sign in to manage profile data and favorite locations.</p>
+                <h2 class="mt-2 text-2xl font-bold text-white">Manage friends and compare favorites</h2>
+                <p class="mt-2 max-w-2xl text-sm text-slate-300">You need to sign in to send requests, respond to invitations, and compare favorite locations.</p>
                 <div class="mt-4">
                     <button id="signedOutLoginBtn" class="primary-btn rounded-xl px-4 py-3 text-sm">Sign in</button>
                 </div>
             </div>
 
-            <div id="profileShell" class="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <div id="friendsShell" class="space-y-6">
                 <section class="panel rounded-3xl p-5">
-                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Account</p>
-                    <div id="profileSummary" class="mt-3 space-y-2">
-                        <p class="text-slate-400">Loading profile...</p>
+                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Add Friend</p>
+                    <div class="mt-3 flex gap-2">
+                        <input id="friendEmailInput" type="email" class="field flex-1" placeholder="friend@email.com" />
+                        <button id="sendFriendRequestBtn" class="primary-btn rounded-xl px-3 py-2 text-sm">Send</button>
+                    </div>
+                    <div id="friendRequestStatus" class="mt-2 text-xs text-slate-400"></div>
+                </section>
+
+                <section class="grid gap-6 xl:grid-cols-2">
+                    <div class="panel rounded-3xl p-5">
+                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Friends</p>
+                        <h3 class="mt-1 text-lg font-bold text-white">Connections</h3>
+                        <div id="friendsList" class="mt-4 space-y-3"></div>
                     </div>
 
-                    <div class="mt-5 rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">View profile</p>
-                        <div class="mt-3 flex gap-2">
-                            <input id="profileLookupInput" class="field flex-1" placeholder="friend user id" />
-                            <button id="profileLookupBtn" class="primary-btn rounded-xl px-3 py-2 text-sm">Open</button>
-                        </div>
+                    <div class="panel rounded-3xl p-5">
+                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Requests</p>
+                        <h3 class="mt-1 text-lg font-bold text-white">Incoming and outgoing</h3>
+                        <div id="requestsList" class="mt-4 space-y-3"></div>
                     </div>
                 </section>
 
-                <section class="space-y-6">
-                    <div class="panel rounded-3xl p-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Favorites</p>
-                                <h3 class="mt-1 text-lg font-bold text-white">Favorite locations</h3>
-                            </div>
+                <section class="panel rounded-3xl p-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Compare locations</p>
+                            <h3 class="mt-1 text-lg font-bold text-white">Shared favorite places</h3>
                         </div>
-                        <div id="favoritesList" class="mt-4 space-y-3"></div>
+                        <button id="compareFavoritesBtn" class="rounded-xl border border-violet-400/35 bg-violet-900/20 px-3 py-2 text-sm font-semibold text-violet-100">Compare selected</button>
                     </div>
-
-                    <div class="panel rounded-3xl p-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Ratings</p>
-                                <h3 class="mt-1 text-lg font-bold text-white">Your rated places</h3>
-                            </div>
+                    <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+                        <div id="compareFriendPicker" class="space-y-2"></div>
+                        <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                            <p class="text-sm font-semibold text-slate-200">Compare result</p>
+                            <div id="compareResult" class="mt-3 text-sm text-slate-300"></div>
                         </div>
-                        <div id="ratingsList" class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3"></div>
                     </div>
                 </section>
             </div>
@@ -342,8 +337,8 @@
             </form>
         </div>
     </div>
-
-    <script src="./config.js"></script>
-    <script src="./profile.js"></script>
-</body>
-</html>
++
++    <script src="./config.js"></script>
++    <script src="./friends.js"></script>
++</body>
++</html>
