@@ -1,3 +1,4 @@
+// Community reviews are loaded via `/api/user-ratings` and displayed directly.
 // ========================================
 // GLOBAL STATE & INITIALIZATION
 // ========================================
@@ -23,7 +24,6 @@ let activePopupLocationId = null;
 let activeSelectedLocationId = null;
 let allLocations = [];
 let currentMapCenter = { lat: 10.729229862661654, lng: 106.69573512876413 }; // Default: Ho Chi Minh City area
-const ratingSummaryByLocation = {}; // Track aggregate ratings per location
 let ratingSessionId = null;
 let currentLanguage = 'en';
 let currentTheme = 'dark';
@@ -1042,71 +1042,13 @@ function getRatingSessionId() {
     return ratingSessionId;
 }
 
-function updateRatingSummaryElements(locationId) {
-    const summary = ratingSummaryByLocation[locationId];
-    const container = document.getElementById(`ratingsSummary-${locationId}`);
-    if (!container) return;
-
-    if (!summary || summary.ratingCount <= 0) {
-        container.innerHTML = `<p class="text-slate-500 text-xs">${t('ratingNotAvailable')}</p>`;
-        return;
-    }
-
-    const avg = summary.averageRating.toFixed(1);
-    const count = summary.ratingCount;
-    const fullStars = Math.round(summary.averageRating);
-    const stars = '⭐'.repeat(fullStars) + '☆'.repeat(Math.max(0, 5 - fullStars));
-
-    container.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:18px;">${stars}</span>
-            <span style="font-size:13px;color:#cbd5e1;"><strong>${avg}</strong>/5 • <span style="color:#94a3b8;">${count} ${t('ratings')}</span></span>
-        </div>
-    `;
-}
+// Removed aggregate rating helpers; community reviews are shown via `loadExistingUserRatings`.
 
 // Per-user rating controls removed: hover and info panel now show community ratings only.
 
-async function loadLocationRatingSummaryFromBackend(locationId) {
-    const sessionId = getRatingSessionId();
+// Aggregate/session-based ratings removed. Use community reviews endpoint instead.
 
-    if (!useConvexBackend) {
-        ratingSummaryByLocation[locationId] = ratingSummaryByLocation[locationId] || {
-            ratingCount: 0,
-            ratingSum: 0,
-            averageRating: 0,
-            userRating: 0,
-        };
-        updateRatingSummaryElements(locationId);
-        return ratingSummaryByLocation[locationId];
-    }
-
-    try {
-        const response = await fetch(convexUrl(`/api/ratings?locationId=${encodeURIComponent(locationId)}&sessionId=${encodeURIComponent(sessionId)}`));
-        if (!response.ok) {
-            return;
-        }
-
-        const payload = await response.json();
-        ratingSummaryByLocation[locationId] = {
-            ratingCount: typeof payload.ratingCount === 'number' ? payload.ratingCount : 0,
-            ratingSum: typeof payload.ratingSum === 'number' ? payload.ratingSum : 0,
-            averageRating: typeof payload.averageRating === 'number' ? payload.averageRating : 0,
-            userRating: typeof payload.userRating === 'number' ? payload.userRating : 0,
-        };
-
-        updateRatingSummaryElements(locationId);
-        return ratingSummaryByLocation[locationId];
-    } catch (error) {
-        console.warn('Could not load rating summary from Convex backend.', error);
-        return ratingSummaryByLocation[locationId] || null;
-    }
-}
-
-async function submitLocationRating(locationId, rating) {
-    // Per-user rating submission removed. Community ratings are the single source of truth.
-    console.warn('submitLocationRating called but per-user ratings are disabled.');
-}
+// submitLocationRating removed — community reviews use `/api/user-ratings` (see below).
 
 // ========================================
 // OPENLAYERS INITIALIZATION & MARKERS
@@ -1349,12 +1291,7 @@ function showInfoWindow(location, markerElement) {
     setSelectedLocation(location.id);
     closeMobileOverlays();
 
-    ratingSummaryByLocation[location.id] = ratingSummaryByLocation[location.id] || {
-        ratingCount: 0,
-        ratingSum: 0,
-        averageRating: 0,
-        userRating: 0,
-    };
+    // Prepare info window for location
 
     const hoursDisplay = location.hours ? formatHours(location.hours) : '';
     // Build detailed weekly hours HTML and interactive summary
@@ -1408,13 +1345,27 @@ function showInfoWindow(location, markerElement) {
     }
 
     const ratingsSection = `
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
             <div class="space-y-2">
                 <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Community Ratings</p>
                 <div id="ratingsSummary-${location.id}" class="text-sm text-slate-300">
                     <p style="font-size: 13px; color: #cbd5e1;">Loading ratings...</p>
                 </div>
             </div>
+
+            <div class="space-y-2">
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
+                <div id="existingRatings-${location.id}" class="text-sm text-slate-300"></div>
+            </div>
+            ${currentUser ? `
+            <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
+            <div class="space-y-2">
+                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
+                <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
+                <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
+                <button onclick="submitUserRatingHandler('${location.id}')" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
+            </div>
+            ` : ``}
         </div>
     `;
 
@@ -1534,8 +1485,36 @@ function showInfoWindow(location, markerElement) {
         }
     }
 
-    // Load community rating summary for this location
-    loadLocationRatingSummaryFromBackend(location.id);
+    // Render star rating picker for logged-in users and load community reviews
+    if (currentUser) {
+        const starContainer = document.getElementById(`userRatingStars-${location.id}`);
+        if (starContainer) {
+            starContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('button');
+                star.className = 'star';
+                star.dataset.rating = i;
+                star.textContent = '⭐';
+                star.style.fontSize = '20px';
+                star.style.border = 'none';
+                star.style.background = 'transparent';
+                star.style.cursor = 'pointer';
+                star.style.opacity = '0.4';
+                star.style.transition = 'opacity 0.2s';
+                star.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll(`#userRatingStars-${location.id} .star`).forEach((s, idx) => {
+                        s.classList.toggle('active', idx < i);
+                        s.style.opacity = idx < i ? '1' : '0.4';
+                    });
+                });
+                starContainer.appendChild(star);
+            }
+        }
+    }
+
+    // Load community reviews and summary
+    void loadExistingUserRatings(location.id);
 }
 
 function openLocationFromUrlIfPresent() {
@@ -1909,20 +1888,19 @@ function showHoverPreview(location, pixel) {
     }
 
     activeHoverLocationId = location.id;
-    const summary = ratingSummaryByLocation[location.id] || { ratingCount: 0, averageRating: 0 };
-    renderHoverPreview(location, summary);
+    // Initial placeholder render
+    renderHoverPreview(location, { ratingCount: 0, averageRating: 0 });
     placeHoverPreview(pixel);
     hoverPreviewElement.classList.add('visible');
     hoverPreviewElement.setAttribute('aria-hidden', 'false');
 
-    if (!ratingSummaryByLocation[location.id]) {
-        void loadLocationRatingSummaryFromBackend(location.id).then((loadedSummary) => {
-            if (activeHoverLocationId === location.id && loadedSummary) {
-                renderHoverPreview(location, loadedSummary);
-                placeHoverPreview(pixel);
-            }
-        });
-    }
+    // Load community review summary and update preview when available
+    void loadExistingUserRatings(location.id).then((loadedSummary) => {
+        if (activeHoverLocationId === location.id && loadedSummary) {
+            renderHoverPreview(location, loadedSummary);
+            placeHoverPreview(pixel);
+        }
+    }).catch(() => {});
 }
 
 function hideHoverPreview() {
@@ -2777,6 +2755,123 @@ function getTimeAgo(timestamp) {
     if (hours > 0) return `${hours}h ago`;
     if (minutes > 0) return `${minutes}m ago`;
     return 'just now';
+}
+
+// Submit handler for logged-in users (community reviews)
+function submitUserRatingHandler(locationId) {
+    const starContainer = document.getElementById(`userRatingStars-${locationId}`);
+    const activeStars = starContainer?.querySelectorAll('.star.active');
+    const rating = activeStars?.length || 0;
+    const commentEl = document.getElementById(`userComment-${locationId}`);
+    const comment = commentEl ? String(commentEl.value || '').trim() : '';
+    void submitUserRating(locationId, rating, comment);
+}
+
+async function submitUserRating(locationId, rating, comment) {
+    if (!requireSignedIn('rating this place')) {
+        return;
+    }
+
+    const ratingNum = Number(rating);
+    if (!ratingNum || ratingNum < 1 || ratingNum > 5) {
+        alert('Please select a star rating (1-5)');
+        return;
+    }
+
+    try {
+        const response = await fetch(convexUrl('/api/user-ratings'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locationId, rating: ratingNum, comment: comment || '' })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert('Rating submitted successfully!');
+            // Refresh ratings display
+            await loadExistingUserRatings(locationId);
+            if (activeSelectedLocationId === locationId) {
+                showInfoWindow(allLocations.find(loc => loc.id === locationId));
+            }
+        } else {
+            alert(`Error submitting rating: ${data.error || 'Unknown error'}`);
+            console.error('Error response:', data);
+        }
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        alert('Failed to submit rating. Please try again.');
+    }
+}
+
+// Load community reviews and populate ratings summary + recent reviews. Returns { ratingCount, averageRating }
+async function loadExistingUserRatings(locationId) {
+    try {
+        const response = await fetch(convexUrl(`/api/user-ratings?locationId=${encodeURIComponent(locationId)}`));
+        if (!response.ok) {
+            return { ratingCount: 0, averageRating: 0 };
+        }
+
+        const data = await response.json();
+        const existingContainer = document.getElementById(`existingRatings-${locationId}`);
+        const summaryContainer = document.getElementById(`ratingsSummary-${locationId}`);
+
+        if (summaryContainer) {
+            if (!data.ratings || data.ratings.length === 0) {
+                summaryContainer.innerHTML = '<p class="text-slate-500 text-xs">No ratings yet. Be the first to rate!</p>';
+            } else {
+                const totalRating = data.ratings.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+                const avgRating = (totalRating / data.ratings.length).toFixed(1);
+                const ratingCount = data.ratings.length;
+                const fullStars = Math.round(avgRating);
+                const stars = '⭐'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+                summaryContainer.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">${stars}</span>
+                        <span style="font-size:13px;color:#cbd5e1;"><strong>${avgRating}</strong>/5 • <span style="color:#94a3b8;">${ratingCount} ${ratingCount === 1 ? 'rating' : 'ratings'}</span></span>
+                    </div>
+                `;
+            }
+        }
+
+        if (existingContainer) {
+            if (!data.ratings || data.ratings.length === 0) {
+                existingContainer.innerHTML = '';
+            } else {
+                const ratingsHtml = data.ratings.slice(0, 5).map(r => {
+                    const ratingStars = '⭐'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number(r.rating) || 0)));
+                    const userName = r.userName || 'Anonymous';
+                    const comment = r.comment ? `<p class="text-xs text-slate-400 mt-1">"${escapeXml(r.comment)}"</p>` : '';
+                    const timeAgo = getTimeAgo(r.createdAt);
+                    return `
+                        <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <p style="font-weight: 500; font-size: 13px; color: #e2e8f0;">${ratingStars} ${Number(r.rating) || 0}/5</p>
+                                    <p style="font-size: 12px; color: #94a3b8;">${escapeXml(userName)} • ${timeAgo}</p>
+                                </div>
+                            </div>
+                            ${comment}
+                        </div>
+                    `;
+                }).join('');
+
+                existingContainer.innerHTML = ratingsHtml;
+                if (data.ratings.length > 5) {
+                    existingContainer.innerHTML += `<p style="text-xs; color: #7c3aed; margin-top: 8px; cursor: pointer;" onclick="alert('Showing ${data.ratings.length} total ratings')">View all ${data.ratings.length} ratings →</p>`;
+                }
+            }
+        }
+
+        return {
+            ratingCount: Array.isArray(data.ratings) ? data.ratings.length : 0,
+            averageRating: Array.isArray(data.ratings) && data.ratings.length > 0
+                ? data.ratings.reduce((s, r) => s + (Number(r.rating) || 0), 0) / data.ratings.length
+                : 0
+        };
+    } catch (error) {
+        console.error('Error loading ratings:', error);
+        return { ratingCount: 0, averageRating: 0 };
+    }
 }
 
 // Handle favorite toggle
