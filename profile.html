@@ -1048,7 +1048,7 @@
                 </div>
 
                 <div class="desktop-nav-middle">
-                    <div class="desktop-nav-section-title">Main</div>
+                    <div class="desktop-nav-section-title" data-i18n="main">Main</div>
                         <button id="mapNavBtn" type="button" class="desktop-nav-item" aria-label="Map" data-icon="map">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
                     </button>
@@ -1083,19 +1083,19 @@
 
         <main class="content-wrap">
             <div id="signedOutNotice" class="panel mb-6 rounded-2xl p-5">
-                <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Sign in required</p>
-                <h2 class="mt-2 text-2xl font-bold text-white">Use your profile and favorites</h2>
-                <p class="mt-2 max-w-2xl text-sm text-slate-300">You need to sign in to manage profile data and favorite locations.</p>
+                <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90" data-i18n="signInRequired">Sign in required</p>
+                <h2 class="mt-2 text-2xl font-bold text-white" data-i18n="profileSignInMessage">Use your profile and favorites</h2>
+                <p class="mt-2 max-w-2xl text-sm text-slate-300" data-i18n="profileSignInMessage">You need to sign in to manage profile data and favorite locations.</p>
                 <div class="mt-4">
-                    <button id="signedOutLoginBtn" class="primary-btn rounded-xl px-4 py-3 text-sm">Sign in</button>
+                    <button id="signedOutLoginBtn" class="primary-btn rounded-xl px-4 py-3 text-sm" data-i18n="signInButton">Sign in</button>
                 </div>
             </div>
 
             <div id="profileShell" class="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
                 <section class="panel rounded-3xl p-5">
-                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Account</p>
+                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90" data-i18n="account">Account</p>
                     <div id="profileSummary" class="mt-3 space-y-2">
-                        <p class="text-slate-400">Loading profile...</p>
+                        <p class="text-slate-400" data-i18n="loadingProfile">Loading profile...</p>
                     </div>
                 </section>
 
@@ -1103,8 +1103,8 @@
                     <div class="panel rounded-3xl p-5">
                         <div class="flex items-center justify-between gap-3">
                             <div>
-                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Favorites</p>
-                                <h3 class="mt-1 text-lg font-bold text-white">Favorite locations</h3>
+                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400" data-i18n="favorites">Favorites</p>
+                                <h3 class="mt-1 text-lg font-bold text-white" data-i18n="favoritesTitle">Favorite locations</h3>
                             </div>
                         </div>
                         <div id="favoritesList" class="mt-4 space-y-3"></div>
@@ -1113,8 +1113,8 @@
                     <div class="panel rounded-3xl p-5">
                         <div class="flex items-center justify-between gap-3">
                             <div>
-                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Ratings</p>
-                                <h3 class="mt-1 text-lg font-bold text-white">Your rated places</h3>
+                                <p class="text-xs uppercase tracking-[0.24em] text-slate-400" data-i18n="ratings">Ratings</p>
+                                <h3 class="mt-1 text-lg font-bold text-white" data-i18n="ratingsTitle">Your rated places</h3>
                             </div>
                         </div>
                         <div id="ratingsList" class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3"></div>
@@ -1144,7 +1144,7 @@
             </div>
 
             <div class="mobile-nav-middle">
-                <div class="mobile-nav-section-title">Main</div>
+                <div class="mobile-nav-section-title" data-i18n="main">Main</div>
                     <button id="mobileMapNavBtn" type="button" class="mobile-nav-link" aria-label="Map" data-icon="map">
                     <span class="mobile-nav-link-label" data-i18n="map">Map</span>
                 </button>

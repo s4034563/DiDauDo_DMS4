@@ -113,6 +113,8 @@ const translations = {
         filters: 'Filters',
         active: 'active',
         clearFilters: 'Clear All Filters',
+        curatorPicks: 'Curator\'s Picks',
+        curatorChoice: 'Curator\'s Choice',
         locationDetails: 'Location Details',
         closeDetails: 'Close details',
         clickMarkerHint: 'Click a marker to view details.',
@@ -212,6 +214,8 @@ const translations = {
         filters: 'Bộ lọc',
         active: 'đang bật',
         clearFilters: 'Xóa tất cả bộ lọc',
+        curatorPicks: 'Lựa chọn của người quản lý',
+        curatorChoice: 'Lựa chọn của người quản lý',
         locationDetails: 'Chi tiết địa điểm',
         closeDetails: 'Đóng chi tiết',
         clickMarkerHint: 'Nhấn vào ghim để xem chi tiết.',
@@ -1548,7 +1552,7 @@ function showInfoWindow(location, markerElement) {
             ${location.curatorChoice ? `
             <div class="theme-surface-card rounded-xl border border-yellow-500/40 bg-yellow-950/20 p-3 flex items-center gap-2">
                 <span class="material-symbols-rounded ui-icon ui-icon-filled ui-icon-small text-yellow-300" aria-hidden="true">star</span>
-                <p class="theme-surface-title text-sm font-semibold text-yellow-200">Curator's Choice</p>
+                <p class="theme-surface-title text-sm font-semibold text-yellow-200">${t('curatorChoice')}</p>
             </div>
             ` : ''}
 

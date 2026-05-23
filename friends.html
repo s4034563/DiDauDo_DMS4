@@ -18,11 +18,10 @@
                 linear-gradient(135deg, #050816, #0a1024);
             color: #e2e8f0;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body.theme-light {
-            background: #edf2f7;
-            color: #0f172a;
+            <script src="./config.js"></script>
+            <script src="./friends.js"></script>
+        </body>
+        </html>
         }
 
         body.theme-light .panel,
@@ -1044,7 +1043,7 @@
                 </div>
 
                 <div class="desktop-nav-middle">
-                    <div class="desktop-nav-section-title">Main</div>
+                    <div class="desktop-nav-section-title" data-i18n="main">Main</div>
                     <button id="mapNavBtn" type="button" class="desktop-nav-item" aria-label="Map" data-icon="map">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
                     </button>
@@ -1079,34 +1078,34 @@
 
         <main class="content-wrap">
             <div id="signedOutNotice" class="panel mb-6 rounded-2xl p-5">
-                <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Sign in required</p>
-                <h2 class="mt-2 text-2xl font-bold text-white">Manage friends and compare favorites</h2>
-                <p class="mt-2 max-w-2xl text-sm text-slate-300">You need to sign in to send requests, respond to invitations, and compare favorite locations.</p>
+                <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90" data-i18n="signInRequired">Sign in required</p>
+                <h2 class="mt-2 text-2xl font-bold text-white" data-i18n="friendsSignInMessage">Manage friends and compare favorites</h2>
+                <p class="mt-2 max-w-2xl text-sm text-slate-300" data-i18n="friendsSignInMessage">You need to sign in to send requests, respond to invitations, and compare favorite locations.</p>
                 <div class="mt-4">
-                    <button id="signedOutLoginBtn" class="primary-btn rounded-xl px-4 py-3 text-sm">Sign in</button>
+                    <button id="signedOutLoginBtn" class="primary-btn rounded-xl px-4 py-3 text-sm" data-i18n="signInButton">Sign in</button>
                 </div>
             </div>
 
             <div id="friendsShell" class="space-y-6">
                 <section class="panel rounded-3xl p-5">
-                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90">Add Friend</p>
+                    <p class="text-xs uppercase tracking-[0.24em] text-cyan-300/90" data-i18n="addFriend">Add Friend</p>
                     <div class="mt-3 flex gap-2">
-                        <input id="friendEmailInput" type="email" class="field flex-1" placeholder="friend@email.com" />
-                        <button id="sendFriendRequestBtn" class="primary-btn rounded-xl px-3 py-2 text-sm">Send</button>
+                        <input id="friendEmailInput" type="email" class="field flex-1" placeholder="friend@email.com" data-i18n-placeholder="enterEmailAddress" />
+                        <button id="sendFriendRequestBtn" class="primary-btn rounded-xl px-3 py-2 text-sm" data-i18n="send">Send</button>
                     </div>
                     <div id="friendRequestStatus" class="mt-2 text-xs text-slate-400"></div>
                 </section>
 
                 <section class="grid gap-6 xl:grid-cols-2">
                     <div class="panel rounded-3xl p-5">
-                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Friends</p>
-                        <h3 class="mt-1 text-lg font-bold text-white">Connections</h3>
+                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400" data-i18n="friends">Friends</p>
+                        <h3 class="mt-1 text-lg font-bold text-white" data-i18n="connections">Connections</h3>
                         <div id="friendsList" class="mt-4 space-y-3"></div>
                     </div>
 
                     <div class="panel rounded-3xl p-5">
-                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Requests</p>
-                        <h3 class="mt-1 text-lg font-bold text-white">Incoming and outgoing</h3>
+                        <p class="text-xs uppercase tracking-[0.24em] text-slate-400" data-i18n="requests">Requests</p>
+                        <h3 class="mt-1 text-lg font-bold text-white" data-i18n="incomingOutgoing">Incoming and outgoing</h3>
                         <div id="requestsList" class="mt-4 space-y-3"></div>
                     </div>
                 </section>
@@ -1114,15 +1113,15 @@
                 <section class="panel rounded-3xl p-5">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Compare locations</p>
-                            <h3 class="mt-1 text-lg font-bold text-white">Shared favorite places</h3>
+                            <p class="text-xs uppercase tracking-[0.24em] text-slate-400" data-i18n="compareLocations">Compare locations</p>
+                            <h3 class="mt-1 text-lg font-bold text-white" data-i18n="sharedFavoritePlaces">Shared favorite places</h3>
                         </div>
-                        <button id="compareFavoritesBtn" class="primary-btn rounded-xl px-3 py-2 text-sm font-semibold">Compare selected</button>
+                        <button id="compareFavoritesBtn" class="primary-btn rounded-xl px-3 py-2 text-sm font-semibold" data-i18n="compareSelected">Compare selected</button>
                     </div>
                     <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
                         <div id="compareFriendPicker" class="space-y-2"></div>
                         <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-                            <p class="text-sm font-semibold text-slate-200">Compare result</p>
+                            <p class="text-sm font-semibold text-slate-200" data-i18n="compareResult">Compare result</p>
                             <div id="compareResult" class="mt-3 text-sm text-slate-300"></div>
                         </div>
                     </div>
@@ -1151,7 +1150,7 @@
             </div>
 
             <div class="mobile-nav-middle">
-                <div class="mobile-nav-section-title">Main</div>
+                <div class="mobile-nav-section-title" data-i18n="main">Main</div>
                 <button id="mobileMapNavBtn" type="button" class="mobile-nav-link" aria-label="Map" data-icon="map">
                     <span class="mobile-nav-link-label" data-i18n="map">Map</span>
                 </button>
@@ -1233,8 +1232,7 @@
             <div id="friendProfileContent"></div>
         </div>
     </div>
-+
-+    <script src="./config.js"></script>
-+    <script src="./friends.js"></script>
-+</body>
-+</html>
+    <script src="./config.js"></script>
+    <script src="./friends.js"></script>
+</body>
+</html>

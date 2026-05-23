@@ -306,26 +306,26 @@
         <div>
           <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/90">Admin Panel</p>
           <h1 class="mt-2 text-2xl font-black text-white">ĐiĐâuĐó</h1>
-          <p class="mt-1 text-sm text-slate-400">Edit map locations, add new spots, and promote curator picks.</p>
+          <p class="mt-1 text-sm text-slate-400">Chỉnh sửa vị trí trên bản đồ, thêm điểm mới và làm nổi bật lựa chọn của người quản lý.</p>
         </div>
-        <a href="./index.html" class="soft-btn rounded-xl px-3 py-2 text-xs font-semibold no-underline">Open app</a>
+        <a href="./index.html" class="soft-btn rounded-xl px-3 py-2 text-xs font-semibold no-underline">Mở ứng dụng</a>
       </div>
 
       <div class="mt-4 flex gap-2">
-        <button id="tabMap" class="tab-btn active flex-1 rounded-xl px-3 py-2 text-sm font-semibold">Map Editor</button>
-        <button id="tabAdd" class="tab-btn flex-1 rounded-xl px-3 py-2 text-sm font-semibold">Manual Add</button>
+        <button id="tabMap" class="tab-btn active flex-1 rounded-xl px-3 py-2 text-sm font-semibold">Trình chỉnh sửa bản đồ</button>
+        <button id="tabAdd" class="tab-btn flex-1 rounded-xl px-3 py-2 text-sm font-semibold">Thêm thủ công</button>
       </div>
 
       <div id="mapEditorTab" class="mt-4 flex min-h-0 flex-1 flex-col gap-4">
         <div class="rounded-2xl border border-white/10 bg-slate-950/45 p-3">
           <div class="flex items-center justify-between gap-3">
             <div>
-              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Selected location</p>
-              <h2 id="selectedTitle" class="mt-1 text-lg font-bold text-white">Choose a marker</h2>
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Địa điểm đã chọn</p>
+              <h2 id="selectedTitle" class="mt-1 text-lg font-bold text-white">Chọn một ghim</h2>
             </div>
-            <span id="curatorBadge" class="badge hidden curator">Curator's choice</span>
+            <span id="curatorBadge" class="badge hidden curator">Lựa chọn của người quản lý</span>
           </div>
-          <p id="selectedHint" class="mt-2 text-sm text-slate-400">Click a marker on the map to edit its details.</p>
+          <p id="selectedHint" class="mt-2 text-sm text-slate-400">Nhấn vào một ghim trên bản đồ để chỉnh sửa chi tiết.</p>
         </div>
 
         <div class="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
@@ -1318,13 +1318,13 @@
             <div>
               <div class="flex flex-wrap items-center gap-2">
                 <span class="text-sm font-semibold text-white">${location.name}</span>
-                ${location.curatorChoice ? '<span class="badge curator">Curator\'s choice</span>' : ''}
+                ${location.curatorChoice ? '<span class="badge curator">Lựa chọn của người quản lý</span>' : ''}
               </div>
               <p class="mt-1 text-xs text-slate-400">${(getPersistedActivities(location).join(', ') || location.type)} • ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</p>
             </div>
-            <span class="text-xs text-cyan-300">Edit</span>
+            <span class="text-xs text-cyan-300">Chỉnh sửa</span>
           </div>
-          <p class="mt-2 text-xs text-slate-400">${getVisibleVibeTags(location.tags || []).join(' · ') || 'No tags yet'}</p>
+          <p class="mt-2 text-xs text-slate-400">${getVisibleVibeTags(location.tags || []).join(' · ') || 'Chưa có thẻ nào'}</p>
         `;
         item.addEventListener('click', () => selectLocation(location.id));
         locationList.appendChild(item);

@@ -14,6 +14,8 @@ let currentLanguage = 'en';
 // --- Translations (kept in sync with main app.js) ---
 const translations = {
   en: {
+    main: 'Main',
+    map: 'Map',
     profile: 'Profile',
     login: 'Login',
     logout: 'Logout',
@@ -30,6 +32,14 @@ const translations = {
     searchPlaceholder: 'Type a location name...',
     noResults: 'No locations found',
     viewing: 'Viewing',
+    account: 'Account',
+    loadingProfile: 'Loading profile...',
+    favoritesTitle: 'Favorite locations',
+    ratingsTitle: 'Your rated places',
+    signInRequired: 'Sign in required',
+    profileSignInMessage: 'You need to sign in to manage profile data and favorite locations.',
+    signInButton: 'Sign in',
+    loadProfileError: 'Could not load profile',
     favorites: 'favorites',
     friends: 'friends',
     ratings: 'ratings',
@@ -38,6 +48,8 @@ const translations = {
     open: 'Open'
   },
   vi: {
+    main: 'Chính',
+    map: 'Bản đồ',
     profile: 'Hồ sơ',
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
@@ -54,6 +66,14 @@ const translations = {
     searchPlaceholder: 'Gõ tên địa điểm...',
     noResults: 'Không tìm thấy địa điểm',
     viewing: 'Đang xem',
+    account: 'Tài khoản',
+    loadingProfile: 'Đang tải hồ sơ...',
+    favoritesTitle: 'Địa điểm yêu thích',
+    ratingsTitle: 'Địa điểm đã đánh giá',
+    signInRequired: 'Cần đăng nhập',
+    profileSignInMessage: 'Bạn cần đăng nhập để quản lý hồ sơ và địa điểm yêu thích.',
+    signInButton: 'Đăng nhập',
+    loadProfileError: 'Không thể tải hồ sơ',
     favorites: 'yêu thích',
     friends: 'bạn bè',
     ratings: 'lượt đánh giá',
@@ -82,6 +102,45 @@ function applyLanguageToStaticText() {
     const key = el.getAttribute('data-i18n-aria-label');
     el.setAttribute('aria-label', t(key));
   });
+}
+
+function translateProfilePageText() {
+  const signedOutNotice = document.getElementById('signedOutNotice');
+  const signedOutHeading = signedOutNotice?.querySelector('h2');
+  const signedOutMessage = signedOutNotice?.querySelector('p.mt-2.max-w-2xl');
+  const signedOutLoginBtn = document.getElementById('signedOutLoginBtn');
+  const accountLabel = document.querySelector('#profileShell > section:first-child > p');
+  const loadingProfile = document.querySelector('#profileSummary > p');
+  const favoritesLabel = document.querySelector('#profileShell > section.space-y-6 > div:nth-child(1) > div > div > p');
+  const favoritesTitle = document.querySelector('#profileShell > section.space-y-6 > div:nth-child(1) > div > div > h3');
+  const ratingsLabel = document.querySelector('#profileShell > section.space-y-6 > div:nth-child(2) > div > div > p');
+  const ratingsTitle = document.querySelector('#profileShell > section.space-y-6 > div:nth-child(2) > div > div > h3');
+
+  if (signedOutNotice) signedOutNotice.querySelector('p')?.setAttribute('data-i18n', 'signInRequired');
+  if (signedOutHeading) signedOutHeading.textContent = t('signInRequired');
+  if (signedOutMessage) signedOutMessage.textContent = t('profileSignInMessage');
+  if (signedOutLoginBtn) signedOutLoginBtn.textContent = t('signInButton');
+  if (accountLabel) {
+    accountLabel.setAttribute('data-i18n', 'account');
+    accountLabel.textContent = t('account');
+  }
+  if (loadingProfile) loadingProfile.textContent = t('loadingProfile');
+  if (favoritesLabel) {
+    favoritesLabel.setAttribute('data-i18n', 'favorites');
+    favoritesLabel.textContent = t('favorites');
+  }
+  if (favoritesTitle) {
+    favoritesTitle.setAttribute('data-i18n', 'favoritesTitle');
+    favoritesTitle.textContent = t('favoritesTitle');
+  }
+  if (ratingsLabel) {
+    ratingsLabel.setAttribute('data-i18n', 'ratings');
+    ratingsLabel.textContent = t('ratings');
+  }
+  if (ratingsTitle) {
+    ratingsTitle.setAttribute('data-i18n', 'ratingsTitle');
+    ratingsTitle.textContent = t('ratingsTitle');
+  }
 }
 
 const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
@@ -220,7 +279,7 @@ function updateMobileNavUI() {
     }
     if (mobileUserAvatar) mobileUserAvatar.src = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
     if (mobileUserName) mobileUserName.textContent = 'Guest';
-    if (mobileUserStatus) mobileUserStatus.textContent = 'Sign in to continue';
+    if (mobileUserStatus) mobileUserStatus.textContent = t('signInContinue');
     if (mobileAuthBtn) {
       mobileAuthBtn.classList.remove('logout');
       mobileAuthBtn.classList.add('login');
@@ -261,7 +320,7 @@ function updateAuthUI() {
     if (shell) shell.classList.add('opacity-40', 'pointer-events-none');
     if (userAvatar) userAvatar.src = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
     if (userName) userName.textContent = 'Guest';
-    if (userStatus) userStatus.textContent = 'Sign in to continue';
+    if (userStatus) userStatus.textContent = t('signInContinue');
   }
   updateMobileNavUI();
 }
@@ -387,6 +446,7 @@ function applyLanguageFromStorage() {
   // Ensure static elements are localized
   currentLanguage = (lang === 'vi' ? 'vi' : 'en');
   applyLanguageToStaticText();
+  translateProfilePageText();
   if (activeProfile) {
     try { renderProfile(activeProfile); } catch (e) { /* ignore */ }
   }
@@ -431,7 +491,7 @@ function renderEmptyState() {
   const favoritesList = document.getElementById('favoritesList');
   const ratingsList = document.getElementById('ratingsList');
 
-  if (summary) summary.innerHTML = '<p class="text-slate-400">Sign in to load your profile.</p>';
+  if (summary) summary.innerHTML = `<p class="text-slate-400">${t('profileSignInMessage')}</p>`;
   if (favoritesList) favoritesList.innerHTML = '';
   if (ratingsList) ratingsList.innerHTML = '';
 }
@@ -456,12 +516,12 @@ async function loadProfile(userId) {
   if (!userId) return;
 
   const summary = document.getElementById('profileSummary');
-  if (summary) summary.innerHTML = '<p class="text-slate-400">Loading profile...</p>';
+  if (summary) summary.innerHTML = `<p class="text-slate-400">${t('loadingProfile')}</p>`;
 
   const response = await fetch(convexUrl(`/api/profile?userId=${encodeURIComponent(userId)}`));
   const profile = await response.json();
   if (!response.ok || !profile || profile.error) {
-    throw new Error(profile?.error || 'Could not load profile');
+    throw new Error(profile?.error || t('loadProfileError'));
   }
 
   activeProfile = profile;
@@ -710,7 +770,7 @@ window.addEventListener('load', async () => {
   } catch (error) {
     const summary = document.getElementById('profileSummary');
     if (summary) {
-      summary.innerHTML = `<p class="text-red-300">${String(error?.message || 'Could not load profile')}</p>`;
+      summary.innerHTML = `<p class="text-red-300">${String(error?.message || t('loadProfileError'))}</p>`;
     }
   }
 });

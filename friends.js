@@ -25,9 +25,11 @@ const themeStorageKey = 'didaudo_theme';
 // --- Translations (minimal locale map copied from main app) ---
 const translations = {
   en: {
+    main: 'Main',
     profile: 'Profile',
     map: 'Map',
     friends: 'Friends',
+    requests: 'Requests',
     preferences: 'Preferences',
     login: 'Login',
     logout: 'Logout',
@@ -39,11 +41,43 @@ const translations = {
     search: 'Search Places',
     searchPlaceholder: 'Type a location name...',
     noResults: 'No locations found'
+    ,
+    account: 'Account',
+    signInRequired: 'Sign in required',
+    friendsSignInMessage: 'You need to sign in to send requests, respond to invitations, and compare favorite locations.',
+    signInButton: 'Sign in',
+    addFriend: 'Add Friend',
+    send: 'Send',
+    connections: 'Connections',
+    incomingOutgoing: 'Incoming and outgoing',
+    compareLocations: 'Compare locations',
+    sharedFavoritePlaces: 'Shared favorite places',
+    compareSelected: 'Compare selected',
+    compareResult: 'Compare result',
+    noPendingRequests: 'No pending requests.',
+    addFriendsToCompare: 'Add friends to compare favorites.',
+    viewing: 'Viewing',
+    favorites: 'favorites',
+    friendsLabel: 'friends',
+    ratings: 'ratings',
+    noFriends: 'No friends yet.',
+    incomingRequest: 'Incoming request',
+    outgoingRequest: 'Outgoing request',
+    accept: 'Accept',
+    decline: 'Decline',
+    loadProfileError: 'Could not load profile',
+    loadFriendsError: 'Could not load friends data',
+    compareLoading: 'Comparing favorites...',
+    comparePickOneFriend: 'Pick at least one friend.',
+    compareNoShared: 'No shared favorites found.',
+    compareLoadingProfiles: 'Friend profiles are still loading. Try again in a moment.'
   },
   vi: {
+    main: 'Chính',
     profile: 'Hồ sơ',
     map: 'Bản đồ',
     friends: 'Bạn bè',
+    requests: 'Yêu cầu',
     preferences: 'Tùy chọn',
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
@@ -54,24 +88,46 @@ const translations = {
     signInContinue: 'Đăng nhập để tiếp tục',
     search: 'Tìm địa điểm',
     searchPlaceholder: 'Gõ tên địa điểm...',
-    noResults: 'Không tìm thấy địa điểm'
+    noResults: 'Không tìm thấy địa điểm',
+    account: 'Tài khoản',
+    signInRequired: 'Cần đăng nhập',
+    friendsSignInMessage: 'Bạn cần đăng nhập để gửi yêu cầu, phản hồi lời mời và so sánh địa điểm yêu thích.',
+    signInButton: 'Đăng nhập',
+    addFriend: 'Thêm bạn bè',
+    send: 'Gửi',
+    connections: 'Kết nối',
+    incomingOutgoing: 'Đến và đi',
+    compareLocations: 'So sánh địa điểm',
+    sharedFavoritePlaces: 'Các địa điểm yêu thích chung',
+    compareSelected: 'So sánh mục đã chọn',
+    compareResult: 'Kết quả so sánh',
+    noPendingRequests: 'Không có yêu cầu chờ xử lý.',
+    addFriendsToCompare: 'Thêm bạn bè để so sánh địa điểm yêu thích.',
+    viewing: 'Đang xem',
+    favorites: 'yêu thích',
+    friendsLabel: 'bạn bè',
+    ratings: 'đánh giá',
+    noFriends: 'Chưa có bạn bè.',
+    incomingRequest: 'Yêu cầu đến',
+    outgoingRequest: 'Yêu cầu gửi đi',
+    accept: 'Chấp nhận',
+    decline: 'Từ chối',
+    loadProfileError: 'Không thể tải hồ sơ',
+    loadFriendsError: 'Không thể tải dữ liệu bạn bè',
+    enterEmailAddress: 'Nhập địa chỉ email.',
+    friendRequestSent: 'Đã gửi lời mời kết bạn.',
+    friendRequestFailed: 'Không thể gửi lời mời kết bạn.',
+    compareLoading: 'Đang so sánh địa điểm yêu thích...',
+    comparePickOneFriend: 'Chọn ít nhất một người bạn.',
+    compareNoShared: 'Không tìm thấy địa điểm yêu thích chung.',
+    compareLoadingProfiles: 'Hồ sơ bạn bè vẫn đang tải. Hãy thử lại sau ít phút.'
   }
 };
-// extend missing keys
-translations.en.noFriends = 'No friends yet.';
-translations.en.incomingRequest = 'Incoming request';
-translations.en.outgoingRequest = 'Outgoing request';
-translations.en.accept = 'Accept';
-translations.en.decline = 'Decline';
-
-translations.vi.noFriends = 'Chưa có bạn bè.';
-translations.vi.incomingRequest = 'Yêu cầu đến';
-translations.vi.outgoingRequest = 'Yêu cầu gửi đi';
-translations.vi.accept = 'Chấp nhận';
-translations.vi.decline = 'Từ chối';
-// add view/open keys
 translations.en.view = 'View';
 translations.en.open = 'Open';
+translations.en.enterEmailAddress = 'Enter an email address.';
+translations.en.friendRequestSent = 'Friend request sent.';
+translations.en.friendRequestFailed = 'Friend request failed.';
 translations.vi.view = 'Xem';
 translations.vi.open = 'Mở';
 
@@ -94,6 +150,59 @@ function applyLanguageToStaticText() {
     const key = el.getAttribute('data-i18n-aria-label');
     el.setAttribute('aria-label', t(key));
   });
+}
+
+function translateFriendsPageText() {
+  const signedOutNotice = document.getElementById('signedOutNotice');
+  const signedOutHeading = signedOutNotice?.querySelector('h2');
+  const signedOutMessage = signedOutNotice?.querySelector('p.mt-2.max-w-2xl');
+  const signedOutLoginBtn = document.getElementById('signedOutLoginBtn');
+  const addFriendLabel = document.querySelector('#friendsShell > section:first-child > p');
+  const sendBtn = document.getElementById('sendFriendRequestBtn');
+  const friendsLabel = document.querySelector('#friendsShell > section:nth-child(2) > div:nth-child(1) > p');
+  const friendsTitle = document.querySelector('#friendsShell > section:nth-child(2) > div:nth-child(1) > h3');
+  const requestsLabel = document.querySelector('#friendsShell > section:nth-child(2) > div:nth-child(2) > p');
+  const requestsTitle = document.querySelector('#friendsShell > section:nth-child(2) > div:nth-child(2) > h3');
+  const compareLabel = document.querySelector('#friendsShell > section:nth-child(3) > div > div > p');
+  const compareTitle = document.querySelector('#friendsShell > section:nth-child(3) > div > div > h3');
+  const compareBtn = document.getElementById('compareFavoritesBtn');
+  const compareResultLabel = document.getElementById('compareResult');
+
+  if (signedOutNotice) signedOutNotice.querySelector('p')?.setAttribute('data-i18n', 'signInRequired');
+  if (signedOutHeading) signedOutHeading.textContent = t('signInRequired');
+  if (signedOutMessage) signedOutMessage.textContent = t('friendsSignInMessage');
+  if (signedOutLoginBtn) signedOutLoginBtn.textContent = t('signInButton');
+  if (addFriendLabel) {
+    addFriendLabel.setAttribute('data-i18n', 'addFriend');
+    addFriendLabel.textContent = t('addFriend');
+  }
+  if (sendBtn) sendBtn.textContent = t('send');
+  if (friendsLabel) {
+    friendsLabel.setAttribute('data-i18n', 'friends');
+    friendsLabel.textContent = t('friends');
+  }
+  if (friendsTitle) {
+    friendsTitle.setAttribute('data-i18n', 'connections');
+    friendsTitle.textContent = t('connections');
+  }
+  if (requestsLabel) {
+    requestsLabel.setAttribute('data-i18n', 'requests');
+    requestsLabel.textContent = t('requests');
+  }
+  if (requestsTitle) {
+    requestsTitle.setAttribute('data-i18n', 'incomingOutgoing');
+    requestsTitle.textContent = t('incomingOutgoing');
+  }
+  if (compareLabel) {
+    compareLabel.setAttribute('data-i18n', 'compareLocations');
+    compareLabel.textContent = t('compareLocations');
+  }
+  if (compareTitle) {
+    compareTitle.setAttribute('data-i18n', 'sharedFavoritePlaces');
+    compareTitle.textContent = t('sharedFavoritePlaces');
+  }
+  if (compareBtn) compareBtn.textContent = t('compareSelected');
+  if (compareResultLabel) compareResultLabel.textContent = t('compareResult');
 }
 
 function applyLanguageFromStorage() {
@@ -418,7 +527,7 @@ async function loadFriendsData() {
   const response = await fetch(convexUrl(`/api/profile?userId=${encodeURIComponent(currentUser.userId)}`));
   const profile = await response.json();
   if (!response.ok || !profile || profile.error) {
-    throw new Error(profile?.error || 'Could not load friends data');
+    throw new Error(t('loadFriendsError'));
   }
 
   activeProfile = profile;
@@ -496,7 +605,7 @@ function renderFriendsData(profile) {
       </div>
     `).join('');
 
-    requestsList.innerHTML = (incomingHtml + outgoingHtml) || '<p class="theme-surface-muted text-slate-400">No pending requests.</p>';
+    requestsList.innerHTML = (incomingHtml + outgoingHtml) || `<p class="theme-surface-muted text-slate-400">${t('noPendingRequests')}</p>`;
   }
 
   if (compareFriendPicker) {
@@ -506,7 +615,7 @@ function renderFriendsData(profile) {
         <span class="ui-checkbox" aria-hidden="true"></span>
         <span class="theme-surface-title">${friend.name || friend.email}</span>
       </label>
-    `).join('') : '<p class="theme-surface-muted text-slate-400">Add friends to compare favorites.</p>';
+    `).join('') : `<p class="theme-surface-muted text-slate-400">${t('addFriendsToCompare')}</p>`;
   }
 
   document.querySelectorAll('.friend-view-btn').forEach(button => {
@@ -517,7 +626,7 @@ function renderFriendsData(profile) {
         const response = await fetch(convexUrl(`/api/profile?userId=${encodeURIComponent(userId)}`));
         const profile = await response.json();
         if (!response.ok || !profile || profile.error) {
-          throw new Error(profile?.error || 'Could not load profile');
+          throw new Error(profile?.error || t('loadProfileError'));
         }
 
         const modal = document.getElementById('friendProfileModal');
@@ -526,7 +635,7 @@ function renderFriendsData(profile) {
         if (content && profile) {
           content.innerHTML = `
             <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-              <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
+              <p class="text-xs uppercase tracking-[0.24em] text-slate-400">${t('viewing')}</p>
               <div class="mt-3 flex items-center gap-3">
                 <img src="${getProfileAvatarUrl(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover" />
                 <div class="min-w-0">
@@ -535,13 +644,13 @@ function renderFriendsData(profile) {
                 </div>
               </div>
               <div class="mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
-                <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${(profile.friends||[]).length} friends</span>
-                <span class="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${(profile.favoriteLocations||[]).length} favorites</span>
-                <span class="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${(profile.ratingsWithLocations||[]).length} ratings</span>
+                <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${(profile.friends||[]).length} ${t('friendsLabel')}</span>
+                <span class="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${(profile.favoriteLocations||[]).length} ${t('favorites')}</span>
+                <span class="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${(profile.ratingsWithLocations||[]).length} ${t('ratings')}</span>
               </div>
             </div>
             <div class="mt-4">
-              <h3 class="text-lg font-bold text-white">Favorites</h3>
+              <h3 class="text-lg font-bold text-white">${t('favorites')}</h3>
               <div class="mt-3 space-y-2">
                 ${(profile.favoriteLocations||[]).map(loc => `
                   <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
@@ -582,7 +691,7 @@ function renderFriendsData(profile) {
           });
         }
       } catch (error) {
-        alert(String(error?.message || 'Could not load friend profile'));
+        alert(String(error?.message || t('loadProfileError')));
       }
     });
   });
@@ -601,7 +710,7 @@ function renderFriendsData(profile) {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        alert(data.error || 'Could not update friend request');
+        alert(data.error || t('friendRequestFailed'));
         return;
       }
       await loadFriendsData();
@@ -614,7 +723,7 @@ async function compareFavorites(friendIds) {
   if (!result || !currentUser) return;
 
   try {
-    result.textContent = 'Comparing favorites...';
+    result.textContent = t('compareLoading');
     await friendProfileCacheLoad;
 
     const activeFavorites = Array.isArray(activeProfile?.favoriteLocations) ? activeProfile.favoriteLocations : [];
@@ -623,7 +732,7 @@ async function compareFavorites(friendIds) {
     const friendProfiles = friendIds.map((friendId) => {
       const profile = friendProfileCache.get(friendId);
       if (!profile) {
-        throw new Error('Friend profiles are still loading. Try again in a moment.');
+        throw new Error(t('compareLoadingProfiles'));
       }
       return { friendId, profile };
     });
@@ -647,11 +756,11 @@ async function compareFavorites(friendIds) {
           <button class="compare-location-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${location.id}">${t('open')}</button>
         </div>
       </div>
-    `).join('') : '<p class="theme-surface-muted text-slate-400">No shared favorites found.</p>';
+    `).join('') : `<p class="theme-surface-muted text-slate-400">${t('compareNoShared')}</p>`;
     result.innerHTML = `
       <div class="space-y-3">
         <div>
-          <p class="theme-surface-meta text-xs uppercase tracking-[0.18em] text-slate-500">Shared by all selected</p>
+          <p class="theme-surface-meta text-xs uppercase tracking-[0.18em] text-slate-500">${t('sharedFavoritePlaces')}</p>
           <div class="mt-2 space-y-2">${sharedLocationsHtml}</div>
         </div>
       </div>
@@ -662,7 +771,7 @@ async function compareFavorites(friendIds) {
     });
   } catch (error) {
     console.error('compareFavorites failed', error);
-    result.textContent = String(error?.message || error?.stack || error || 'Comparison failed');
+    result.textContent = String(error?.message || error?.stack || error || t('friendRequestFailed'));
   }
 }
 
@@ -768,7 +877,7 @@ function bindEvents() {
     const status = document.getElementById('friendRequestStatus');
     const receiverEmail = String(input?.value || '').trim();
     if (!receiverEmail || !currentUser) {
-      if (status) status.textContent = 'Enter an email address.';
+      if (status) status.textContent = t('enterEmailAddress');
       return;
     }
     try {
@@ -778,12 +887,12 @@ function bindEvents() {
         body: JSON.stringify({ senderId: currentUser.userId, receiverEmail }),
       });
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Friend request failed');
-      if (status) status.textContent = 'Friend request sent.';
+      if (!response.ok || !data.ok) throw new Error(data.error || t('friendRequestFailed'));
+      if (status) status.textContent = t('friendRequestSent');
       if (input) input.value = '';
       await loadFriendsData();
     } catch (error) {
-      if (status) status.textContent = String(error?.message || 'Friend request failed');
+      if (status) status.textContent = String(error?.message || t('friendRequestFailed'));
     }
   });
 
@@ -799,7 +908,7 @@ function bindEvents() {
 
     if (selected.length === 0) {
       const compareResult = document.getElementById('compareResult');
-      if (compareResult) compareResult.textContent = 'Pick at least one friend.';
+      if (compareResult) compareResult.textContent = t('comparePickOneFriend');
       return;
     }
 
@@ -865,7 +974,7 @@ window.addEventListener('load', async () => {
   } catch (error) {
     const status = document.getElementById('friendRequestStatus');
     if (status) {
-      status.textContent = String(error?.message || 'Could not load friends data');
+      status.textContent = String(error?.message || t('loadFriendsError'));
     }
   }
 });
