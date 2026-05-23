@@ -358,7 +358,6 @@ function bindEvents() {
   const signupTabBtn = document.getElementById('signupTabBtn');
   const loginForm = document.getElementById('loginForm');
   const signupForm = document.getElementById('signupForm');
-  const profileLookupBtn = document.getElementById('profileLookupBtn');
   const desktopProfileButton = document.getElementById('desktopProfileButton');
   const mapNavBtn = document.getElementById('mapNavBtn');
   const friendsNavBtn = document.getElementById('friendsNavBtn');
@@ -402,14 +401,6 @@ function bindEvents() {
     const next = current === 'dark' ? 'light' : 'dark';
     localStorage.setItem(key, next);
     applyThemeFromStorage();
-  });
-
-  profileLookupBtn?.addEventListener('click', () => {
-    const input = document.getElementById('profileLookupInput');
-    const value = String(input?.value || '').trim();
-    if (!value) return;
-    setProfileUserId(value);
-    void loadProfile(profileUserId);
   });
 
   loginForm?.addEventListener('submit', async (event) => {
