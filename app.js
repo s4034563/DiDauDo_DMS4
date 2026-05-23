@@ -638,6 +638,12 @@ function applyLanguageToStaticText() {
         const key = element.getAttribute('data-i18n-aria-label');
         element.setAttribute('aria-label', t(key));
     });
+
+    // placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        element.placeholder = t(key);
+    });
 }
 
 function applyLanguage() {
