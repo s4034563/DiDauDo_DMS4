@@ -50,11 +50,14 @@
         }
 
         .ui-checkbox-input {
-            position: absolute;
-            opacity: 0;
-            width: 1px;
-            height: 1px;
-            pointer-events: none;
+            -webkit-appearance: auto;
+            appearance: auto;
+            width: 1rem;
+            height: 1rem;
+            accent-color: #7c3aed;
+            border-radius: 0 !important;
+            cursor: pointer;
+            flex: 0 0 auto;
         }
 
         .ui-checkbox {
@@ -84,86 +87,18 @@
 
         .ui-checkbox-input:checked + .ui-checkbox {
             border-color: #7c3aed !important;
-            background: #7c3aed !important;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
-        }
-
-        .ui-checkbox.checked {
+                -webkit-appearance: auto;
+                appearance: auto;
+                width: 1rem;
+                height: 1rem;
+                accent-color: #7c3aed;
+                border-radius: 0 !important;
+                cursor: pointer;
+                flex: 0 0 auto;
             border-color: #7c3aed !important;
             background: #7c3aed !important;
             box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
-        }
-
-        .ui-checkbox-input:checked + .ui-checkbox::before {
-            transform: scale(1) !important;
-        }
-
-        .ui-checkbox.checked::before {
-            transform: scale(1) !important;
-        }
-
-        .ui-checkbox-input:focus-visible + .ui-checkbox {
-            outline: 2px solid rgba(34, 211, 238, 0.7);
-            outline-offset: 2px;
-        }
-
-        body.theme-light .ui-checkbox {
-            border-color: rgba(71, 85, 105, 0.55);
-            background: rgba(255, 255, 255, 0.92);
-        }
-
-        body.theme-light .ui-checkbox-input:checked + .ui-checkbox {
-            border-color: #7c3aed !important;
-            background: #7c3aed !important;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
-        }
-
-        body.theme-light .primary-btn {
-            color: #2e1065;
-        }
-
-        .material-symbols-rounded {
-            font-family: 'Material Symbols Rounded';
-            font-weight: normal;
-            font-style: normal;
-            font-size: 20px;
-            line-height: 1;
-            letter-spacing: normal;
-            text-transform: none;
-            display: inline-flex;
-            vertical-align: middle;
-            white-space: nowrap;
-            word-wrap: normal;
-            direction: ltr;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-            -moz-osx-font-smoothing: grayscale;
-            font-feature-settings: 'liga';
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        [data-icon] {
-            display: inline-flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 0.55rem;
-            line-height: 1.1;
-        }
-
-        [data-icon]::before {
-            content: attr(data-icon);
-            font-family: 'Material Symbols Rounded';
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            font-size: 1.05em;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 1.2em;
-            flex: 0 0 auto;
-            vertical-align: middle;
-            height: 1.2em;
-        }
+                display: none !important;
 
         [data-icon].icon-only {
             justify-content: center;

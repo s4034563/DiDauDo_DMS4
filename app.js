@@ -548,6 +548,10 @@ function createPinStyles(location, isSelected, resolution) {
     const label = truncateLabel(location.name, 24);
     const labelSide = getLocationLabelSide(location, label);
     const iconName = getLocationPinIcon(location);
+    const zoom = map && map.getView && typeof map.getView().getZoomForResolution === 'function'
+        ? map.getView().getZoomForResolution(resolution)
+        : 0;
+    const showLabel = zoom >= 15;
     const radius = isSelected ? 16 : 14;
     const strokeWidth = isSelected ? 3 : 2;
     const labelOffset = labelSide === 'right' ? 28 : -28;
@@ -576,22 +580,26 @@ function createPinStyles(location, isSelected, resolution) {
         })
     });
 
-    const labelStyle = new ol.style.Style({
-        text: new ol.style.Text({
-            text: label,
-            font: '600 13px "Segoe UI", sans-serif',
-            fill: new ol.style.Fill({ color: labelFill }),
-            stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 }),
-            padding: labelPadding,
-            offsetX: labelOffset,
-            textAlign: labelAlign,
-            textBaseline: 'middle',
-            placement: 'point',
-            overflow: true,
-        })
-    });
+    const styles = [pinStyle, iconStyle];
 
-    return [pinStyle, iconStyle, labelStyle];
+    if (showLabel) {
+        styles.push(new ol.style.Style({
+            text: new ol.style.Text({
+                text: label,
+                font: '600 13px "Segoe UI", sans-serif',
+                fill: new ol.style.Fill({ color: labelFill }),
+                stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 }),
+                padding: labelPadding,
+                offsetX: labelOffset,
+                textAlign: labelAlign,
+                textBaseline: 'middle',
+                placement: 'point',
+                overflow: true,
+            })
+        }));
+    }
+
+    return styles;
 }
 
 function applyLanguageToStaticText() {
@@ -1207,10 +1215,15 @@ function initMap() {
 
     // Initialize vector source for location markers
     vectorSource = new ol.source.Vector();
+    clusterSource = new ol.source.Cluster({
+        distance: 42,
+        minDistance: 18,
+        source: vectorSource
+    });
     
     // Create vector layer with direct per-location styling
     vectorLayer = new ol.layer.Vector({
-        source: vectorSource,
+        source: clusterSource,
         style: styleClusterOrMarker
     });
 
@@ -1797,10 +1810,30 @@ function syncUiCheckboxes(root = document) {
     });
 }
 
+function bindUiCheckboxBoxes(root = document) {
+    root.querySelectorAll('.ui-checkbox').forEach(box => {
+        if (box.dataset.uiCheckboxBoxBound) return;
+        const input = box.previousElementSibling;
+        if (!input || !input.classList || !input.classList.contains('ui-checkbox-input')) return;
+
+        box.addEventListener('click', event => {
+            event.preventDefault();
+            input.checked = !input.checked;
+            box.classList.toggle('checked', input.checked);
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        box.dataset.uiCheckboxBoxBound = '1';
+        box.classList.toggle('checked', input.checked);
+    });
+}
+
 const uiCheckboxObserver = new MutationObserver(() => syncUiCheckboxes());
 uiCheckboxObserver.observe(document.body, { childList: true, subtree: true });
 syncUiCheckboxes();
+bindUiCheckboxBoxes();
 setInterval(syncUiCheckboxes, 250);
+setInterval(bindUiCheckboxBoxes, 250);
 
 // Social momentum controls removed
 
@@ -2397,7 +2430,7 @@ function renderProfileModal(profile) {
                     ${friends.length > 0 ? friends.slice(0, 3).map(friend => `
                         <label class="flex items-center gap-2 text-sm text-slate-200">
                             <input type="checkbox" class="friend-compare-checkbox ui-checkbox-input" value="${friend._id}" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
-                            <span class="ui-checkbox" aria-hidden="true"></span>
+                            <span class="ui-checkbox" aria-hidden="true" onclick="const input=this.previousElementSibling; if(input){input.checked=!input.checked; this.classList.toggle('checked', input.checked); input.dispatchEvent(new Event('change', { bubbles: true }));}"></span>
                             <span>${friend.name || friend.email}</span>
                         </label>
                     `).join('') : '<p class="text-sm text-slate-400">No friends yet.</p>'}
