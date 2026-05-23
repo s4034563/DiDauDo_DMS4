@@ -1323,8 +1323,8 @@ function showInfoWindow(location, markerElement) {
     const hoursDisplay = location.hours ? formatHours(location.hours) : '';
     // Build detailed weekly hours HTML and interactive summary
     const detailedTagsHtml = location.detailedTags && location.detailedTags.length > 0 ? `
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2">Details</p>
+        <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2">Details</p>
             <div class="flex flex-wrap gap-2">
                 ${location.detailedTags.map(tag => {
                     const color = detailedTagColors[location.type] || '#c084fc';
@@ -1372,25 +1372,25 @@ function showInfoWindow(location, markerElement) {
     }
 
     const ratingsSection = `
-        <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
+        <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
             <div class="space-y-2">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Community Ratings</p>
-                <div id="ratingsSummary-${location.id}" class="text-sm text-slate-300">
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Community Ratings</p>
+                <div id="ratingsSummary-${location.id}" class="theme-surface-body text-sm text-slate-300">
                     <p style="font-size: 13px; color: #cbd5e1;">Loading ratings...</p>
                 </div>
             </div>
 
             <div class="space-y-2">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
-                <div id="existingRatings-${location.id}" class="text-sm text-slate-300"></div>
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
+                <div id="existingRatings-${location.id}" class="theme-surface-body text-sm text-slate-300"></div>
             </div>
             ${currentUser ? `
             <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
             <div class="space-y-2">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
                 <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
-                <textarea id="userComment-${location.id}" class="w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
-                <button onclick="submitUserRatingHandler('${location.id}')" class="w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
+                <textarea id="userComment-${location.id}" class="theme-surface-card w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
+                <button onclick="submitUserRatingHandler('${location.id}')" class="theme-surface-action w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
             </div>
             ` : ``}
         </div>
@@ -1410,9 +1410,9 @@ function showInfoWindow(location, markerElement) {
             </div>
 
             ${location.address ? `
-            <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Address</p>
-                <p class="mt-1 text-sm text-slate-200">${location.address}</p>
+            <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3">
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Address</p>
+                <p class="theme-surface-title mt-1 text-sm text-slate-200">${location.address}</p>
             </div>
             ` : ''}
 
@@ -1425,19 +1425,19 @@ function showInfoWindow(location, markerElement) {
             ` : ''}
 
             <div class="flex flex-wrap gap-2">
-                ${getLocationActivities(location).map(activity => `<span class="location-activity">${getLocalizedActivityType(activity)}</span>`).join('')}
+                ${getLocationActivities(location).map(activity => `<span class="theme-surface-chip location-activity">${getLocalizedActivityType(activity)}</span>`).join('')}
             </div>
 
             <div class="flex flex-wrap gap-2">
-                ${location.vibes.map(vibe => `<span class="location-vibe">${getLocalizedVibe(vibe)}</span>`).join('')}
+                ${location.vibes.map(vibe => `<span class="theme-surface-chip location-vibe">${getLocalizedVibe(vibe)}</span>`).join('')}
             </div>
 
             ${detailedTagsHtml}
 
             ${location.curatorChoice ? `
-            <div class="rounded-xl border border-yellow-500/40 bg-yellow-950/20 p-3 flex items-center gap-2">
+            <div class="theme-surface-card rounded-xl border border-yellow-500/40 bg-yellow-950/20 p-3 flex items-center gap-2">
                 <span class="material-symbols-rounded ui-icon ui-icon-filled ui-icon-small text-yellow-300" aria-hidden="true">star</span>
-                <p class="text-sm font-semibold text-yellow-200">Curator's Choice</p>
+                <p class="theme-surface-title text-sm font-semibold text-yellow-200">Curator's Choice</p>
             </div>
             ` : ''}
 
