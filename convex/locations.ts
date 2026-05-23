@@ -24,6 +24,7 @@ const locationValidator = v.object({
     saturday: v.optional(v.object({ open: v.string(), close: v.string() })),
     sunday: v.optional(v.object({ open: v.string(), close: v.string() })),
   })),
+  alwaysOpen: v.optional(v.boolean()),
   curatorChoice: v.boolean(),
   caption: v.string(),
   address: v.string(),
