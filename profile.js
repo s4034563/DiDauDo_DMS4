@@ -133,6 +133,29 @@ function toggleDesktopNav() {
   applyDesktopNavState(!document.body.classList.contains('desktop-nav-collapsed'));
 }
 
+function setProfileNavActive() {
+  const desktopProfileButton = document.getElementById('desktopProfileButton');
+  const mobileProfileButton = document.getElementById('mobileProfileButton');
+  const mapNavBtn = document.getElementById('mapNavBtn');
+  const friendsNavBtn = document.getElementById('friendsNavBtn');
+  const mobileMapNavBtn = document.getElementById('mobileMapNavBtn');
+  const mobileFriendsNavBtn = document.getElementById('mobileFriendsNavBtn');
+
+  desktopProfileButton?.classList.add('active');
+  mobileProfileButton?.classList.add('active');
+  mapNavBtn?.classList.remove('active');
+  friendsNavBtn?.classList.remove('active');
+  mobileMapNavBtn?.classList.remove('active');
+  mobileFriendsNavBtn?.classList.remove('active');
+
+  desktopProfileButton?.setAttribute('aria-current', 'page');
+  mobileProfileButton?.setAttribute('aria-current', 'page');
+  mapNavBtn?.removeAttribute('aria-current');
+  friendsNavBtn?.removeAttribute('aria-current');
+  mobileMapNavBtn?.removeAttribute('aria-current');
+  mobileFriendsNavBtn?.removeAttribute('aria-current');
+}
+
 function setMobileNavState(isOpen = false) {
   document.body.classList.toggle('mobile-nav-open', Boolean(isOpen));
   const tray = document.getElementById('mobileNavTray');
@@ -650,6 +673,7 @@ window.addEventListener('load', async () => {
   updateAuthUI();
   bindEvents();
   applyDesktopNavState(getStoredDesktopNavState());
+  setProfileNavActive();
   applyLanguageFromStorage();
   applyThemeFromStorage();
   await loadLocationDirectory();

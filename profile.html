@@ -548,6 +548,11 @@
             border-color: rgba(192, 132, 252, 0.22);
         }
 
+        .desktop-nav-profile.active {
+            background: rgba(192, 132, 252, 0.12);
+            border-color: rgba(192, 132, 252, 0.22);
+        }
+
         .desktop-nav-item-icon {
             width: 28px;
             height: 28px;
@@ -968,6 +973,11 @@
                 border-color: rgba(192, 132, 252, 0.3);
             }
 
+            .mobile-nav-profile.active {
+                background: rgba(192, 132, 252, 0.16);
+                border-color: rgba(192, 132, 252, 0.3);
+            }
+
             .mobile-nav-link-icon {
                 width: 28px;
                 height: 28px;
@@ -1041,7 +1051,7 @@
 
                 <div class="desktop-nav-middle">
                     <div class="desktop-nav-section-title">Main</div>
-                    <button id="mapNavBtn" type="button" class="desktop-nav-item active" aria-label="Map" data-icon="map">
+                        <button id="mapNavBtn" type="button" class="desktop-nav-item" aria-label="Map" data-icon="map">
                         <span class="desktop-nav-item-label desktop-nav-label" data-i18n="map">Map</span>
                     </button>
                     <button id="friendsNavBtn" type="button" class="desktop-nav-item" aria-label="Friends" data-icon="group">
@@ -1137,7 +1147,7 @@
 
             <div class="mobile-nav-middle">
                 <div class="mobile-nav-section-title">Main</div>
-                <button id="mobileMapNavBtn" type="button" class="mobile-nav-link active" aria-label="Map" data-icon="map">
+                    <button id="mobileMapNavBtn" type="button" class="mobile-nav-link" aria-label="Map" data-icon="map">
                     <span class="mobile-nav-link-label" data-i18n="map">Map</span>
                 </button>
                 <button id="mobileFriendsNavBtn" type="button" class="mobile-nav-link" aria-label="Friends" data-icon="group">
