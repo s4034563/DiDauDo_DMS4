@@ -804,10 +804,10 @@
             .mobile-nav-tray {
                 display: block;
                 position: fixed;
-                top: calc(env(safe-area-inset-top, 0px) + 62px);
+                top: calc(env(safe-area-inset-top, 0px) + 74px);
                 right: 12px;
                 width: min(88vw, 340px);
-                max-height: calc(100dvh - 84px);
+                max-height: calc(100dvh - 96px);
                 padding: 12px;
                 border-radius: 22px;
                 border: 1px solid rgba(192, 132, 252, 0.28);
@@ -838,7 +838,7 @@
             }
 
             .mobile-nav-shell {
-                max-height: calc(100dvh - 108px);
+                max-height: calc(100dvh - 120px);
                 overflow: hidden;
             }
 
@@ -861,11 +861,17 @@
                 color: #e2e8f0;
             }
 
+            .mobile-nav-profile-row {
+                display: flex;
+                align-items: stretch;
+                gap: 10px;
+            }
+
             .mobile-nav-profile {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                width: 100%;
+                flex: 1 1 auto;
                 padding: 12px;
                 border-radius: 18px;
                 border: 1px solid rgba(192, 132, 252, 0.18);
@@ -904,19 +910,17 @@
                 color: rgba(226, 232, 240, 0.72);
             }
 
-            .mobile-nav-logouts {
-                display: flex;
-                justify-content: flex-end;
-            }
-
-            .mobile-nav-logout {
+            .mobile-nav-auth {
+                min-width: 88px;
                 border-radius: 999px;
                 border: 1px solid rgba(192, 132, 252, 0.22);
                 background: rgba(192, 132, 252, 0.14);
                 color: #f5d0fe;
-                padding: 0.5rem 0.8rem;
+                padding: 0.75rem 0.8rem;
                 font-size: 12px;
                 font-weight: 700;
+                align-self: center;
+                white-space: nowrap;
             }
 
             .mobile-nav-link,
@@ -952,6 +956,7 @@
             .mobile-nav-link-label {
                 font-size: 14px;
                 font-weight: 600;
+                text-transform: capitalize;
             }
 
             .mobile-nav-section-title {
@@ -960,6 +965,12 @@
                 text-transform: uppercase;
                 color: rgba(226, 232, 240, 0.52);
                 margin: 2px 2px 0;
+            }
+
+            .mobile-nav-toggle-label {
+                font-size: 13px;
+                font-weight: 600;
+                text-transform: capitalize;
             }
 
             .mobile-nav-toggle-row {
@@ -1086,16 +1097,16 @@
                 <div class="mobile-nav-close-row">
                     <button id="mobileNavCloseBtn" type="button" class="mobile-nav-close icon-only" aria-label="Close navigation" data-icon="close"></button>
                 </div>
-                <button id="mobileProfileButton" type="button" class="mobile-nav-profile" aria-label="Open profile">
-                    <img id="mobileUserAvatar" src="" alt="Profile picture" class="mobile-nav-avatar" />
-                    <div class="mobile-nav-copy">
-                        <div class="mobile-nav-kicker" data-i18n="profile">Profile</div>
-                        <div id="mobileUserName" class="mobile-nav-title">Guest</div>
-                        <div id="mobileUserStatus" class="mobile-nav-subtitle">Sign in to continue</div>
-                    </div>
-                </button>
-                <div class="mobile-nav-logouts">
-                    <button id="mobileLogoutBtn" type="button" class="mobile-nav-logout hidden" data-i18n="logout">Logout</button>
+                <div class="mobile-nav-profile-row">
+                    <button id="mobileProfileButton" type="button" class="mobile-nav-profile" aria-label="Open profile">
+                        <img id="mobileUserAvatar" src="" alt="Profile picture" class="mobile-nav-avatar" />
+                        <div class="mobile-nav-copy">
+                            <div class="mobile-nav-kicker" data-i18n="profile">Profile</div>
+                            <div id="mobileUserName" class="mobile-nav-title">Guest</div>
+                            <div id="mobileUserStatus" class="mobile-nav-subtitle">Sign in to continue</div>
+                        </div>
+                    </button>
+                    <button id="mobileAuthBtn" type="button" class="mobile-nav-auth" data-i18n="login">Login</button>
                 </div>
             </div>
 

@@ -197,7 +197,7 @@ function updateMobileNavUI() {
   const mobileUserAvatar = document.getElementById('mobileUserAvatar');
   const mobileUserName = document.getElementById('mobileUserName');
   const mobileUserStatus = document.getElementById('mobileUserStatus');
-  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  const mobileAuthBtn = document.getElementById('mobileAuthBtn');
   const mobileNavBtn = document.getElementById('mobileNavBtn');
   const mobileNavCloseBtn = document.getElementById('mobileNavCloseBtn');
   const mobileLanguageText = document.getElementById('mobileLanguageToggleText');
@@ -216,7 +216,10 @@ function updateMobileNavUI() {
     if (mobileUserAvatar) mobileUserAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
     if (mobileUserName) mobileUserName.textContent = currentUser.name || currentUser.email || 'Guest';
     if (mobileUserStatus) mobileUserStatus.textContent = currentUser.email || 'Signed in';
-    if (mobileLogoutBtn) mobileLogoutBtn.classList.remove('hidden');
+    if (mobileAuthBtn) {
+      mobileAuthBtn.textContent = t('logout');
+      mobileAuthBtn.setAttribute('aria-label', t('logout'));
+    }
   } else {
     if (mobileProfileButton) {
       mobileProfileButton.setAttribute('aria-label', t('signInContinue'));
@@ -225,7 +228,10 @@ function updateMobileNavUI() {
     if (mobileUserAvatar) mobileUserAvatar.src = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
     if (mobileUserName) mobileUserName.textContent = 'Guest';
     if (mobileUserStatus) mobileUserStatus.textContent = 'Sign in to continue';
-    if (mobileLogoutBtn) mobileLogoutBtn.classList.add('hidden');
+    if (mobileAuthBtn) {
+      mobileAuthBtn.textContent = t('login');
+      mobileAuthBtn.setAttribute('aria-label', t('login'));
+    }
   }
 }
 
@@ -699,9 +705,14 @@ function bindEvents() {
     localStorage.setItem(key, next);
     applyLanguageFromStorage();
   });
-  document.getElementById('mobileLogoutBtn')?.addEventListener('click', () => {
-    handleLogout();
+  document.getElementById('mobileAuthBtn')?.addEventListener('click', () => {
+    if (currentUser) {
+      handleLogout();
+      setMobileNavState(false);
+      return;
+    }
     setMobileNavState(false);
+    openLoginModal('Sign in to manage your friends.');
   });
   desktopNavToggle?.addEventListener('click', toggleDesktopNav);
 
