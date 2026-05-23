@@ -1075,6 +1075,20 @@
             color: #7c3aed !important;
         }
 
+        /* Preserve intentional neon-purple action buttons in light mode */
+        body.theme-light .theme-surface-action.bg-neon-purple,
+        body.theme-light .theme-surface-card .theme-surface-action.bg-neon-purple,
+        body.theme-light .theme-surface-panel .theme-surface-action.bg-neon-purple {
+            background: #c084fc !important;
+            color: #0f172a !important;
+            border-color: rgba(124, 58, 237, 0.12) !important;
+        }
+
+        body.theme-light .theme-surface-action.bg-neon-purple:hover {
+            background: #7c3aed !important;
+            color: #ffffff !important;
+        }
+
         body.theme-light .theme-surface-chip-group .theme-surface-chip {
             color: #0f172a !important;
         }
