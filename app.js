@@ -31,6 +31,8 @@ let desktopNavCollapsed = false;
 const appConfig = window.VIBEMAP_CONFIG || {};
 const locationFeatureMap = new Map(); // Map locationId to ol.Feature for diff updates
 const markerStyleCache = new Map();
+const markerLabelZoomThreshold = 15;
+const markerClusterDistance = 58;
 const themeStorageKey = 'didaudo_theme';
 const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
 const languageStorageKey = 'didaudo_language';
@@ -550,8 +552,8 @@ function createPinStyles(location, isSelected, resolution) {
     const iconName = getLocationPinIcon(location);
     const zoom = map && map.getView && typeof map.getView().getZoomForResolution === 'function'
         ? map.getView().getZoomForResolution(resolution)
-        : 0;
-    const showLabel = zoom >= 15;
+        : (map && map.getView && typeof map.getView().getZoom === 'function' ? map.getView().getZoom() : 0);
+    const shouldShowLabel = zoom >= markerLabelZoomThreshold;
     const radius = isSelected ? 16 : 14;
     const strokeWidth = isSelected ? 3 : 2;
     const labelOffset = labelSide === 'right' ? 28 : -28;
@@ -582,7 +584,7 @@ function createPinStyles(location, isSelected, resolution) {
 
     const styles = [pinStyle, iconStyle];
 
-    if (showLabel) {
+    if (shouldShowLabel) {
         styles.push(new ol.style.Style({
             text: new ol.style.Text({
                 text: label,
@@ -1216,9 +1218,8 @@ function initMap() {
     // Initialize vector source for location markers
     vectorSource = new ol.source.Vector();
     clusterSource = new ol.source.Cluster({
-        distance: 42,
-        minDistance: 18,
-        source: vectorSource
+        distance: markerClusterDistance,
+        source: vectorSource,
     });
     
     // Create vector layer with direct per-location styling
@@ -1810,30 +1811,10 @@ function syncUiCheckboxes(root = document) {
     });
 }
 
-function bindUiCheckboxBoxes(root = document) {
-    root.querySelectorAll('.ui-checkbox').forEach(box => {
-        if (box.dataset.uiCheckboxBoxBound) return;
-        const input = box.previousElementSibling;
-        if (!input || !input.classList || !input.classList.contains('ui-checkbox-input')) return;
-
-        box.addEventListener('click', event => {
-            event.preventDefault();
-            input.checked = !input.checked;
-            box.classList.toggle('checked', input.checked);
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-
-        box.dataset.uiCheckboxBoxBound = '1';
-        box.classList.toggle('checked', input.checked);
-    });
-}
-
 const uiCheckboxObserver = new MutationObserver(() => syncUiCheckboxes());
 uiCheckboxObserver.observe(document.body, { childList: true, subtree: true });
 syncUiCheckboxes();
-bindUiCheckboxBoxes();
 setInterval(syncUiCheckboxes, 250);
-setInterval(bindUiCheckboxBoxes, 250);
 
 // Social momentum controls removed
 
@@ -2430,7 +2411,7 @@ function renderProfileModal(profile) {
                     ${friends.length > 0 ? friends.slice(0, 3).map(friend => `
                         <label class="flex items-center gap-2 text-sm text-slate-200">
                             <input type="checkbox" class="friend-compare-checkbox ui-checkbox-input" value="${friend._id}" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
-                            <span class="ui-checkbox" aria-hidden="true" onclick="const input=this.previousElementSibling; if(input){input.checked=!input.checked; this.classList.toggle('checked', input.checked); input.dispatchEvent(new Event('change', { bubbles: true }));}"></span>
+                            <span class="ui-checkbox" aria-hidden="true"></span>
                             <span>${friend.name || friend.email}</span>
                         </label>
                     `).join('') : '<p class="text-sm text-slate-400">No friends yet.</p>'}
