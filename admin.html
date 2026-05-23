@@ -404,6 +404,14 @@
             <p class="mt-1 text-xs text-slate-500">Format: h:mm AM-h:mm PM (e.g., 9:00 AM-5:00 PM). Leave a day empty if closed.</p>
           </div>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
+            <input id="editAlwaysOpen" type="checkbox" class="ui-checkbox-input" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
+            <span class="ui-checkbox" aria-hidden="true"></span>
+            <span>
+              <span class="block text-sm font-semibold text-white">Always open</span>
+              <span class="block text-xs text-slate-400">Use this for locations that stay open around the clock.</span>
+            </span>
+          </label>
+          <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="editCurator" type="checkbox" class="ui-checkbox-input" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
             <span class="ui-checkbox" aria-hidden="true"></span>
             <span>
@@ -504,6 +512,14 @@
             </div>
             <p class="mt-1 text-xs text-slate-500">Format: h:mm AM-h:mm PM (e.g., 9:00 AM-5:00 PM). Leave a day empty if closed.</p>
           </div>
+          <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
+            <input id="addAlwaysOpen" type="checkbox" class="ui-checkbox-input" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
+            <span class="ui-checkbox" aria-hidden="true"></span>
+            <span>
+              <span class="block text-sm font-semibold text-white">Always open</span>
+              <span class="block text-xs text-slate-400">Use this for locations that stay open around the clock.</span>
+            </span>
+          </label>
           <label class="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3">
             <input id="addCurator" type="checkbox" class="ui-checkbox-input" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
             <span class="ui-checkbox" aria-hidden="true"></span>
@@ -686,6 +702,7 @@
       thumbnailUrl: document.getElementById('editThumbnailUrl'),
       address: document.getElementById('editAddress'),
       googleMapsUrl: document.getElementById('editGoogleMapsUrl'),
+      alwaysOpen: document.getElementById('editAlwaysOpen'),
       curator: document.getElementById('editCurator')
     };
 
@@ -696,12 +713,37 @@
       thumbnail: document.getElementById('addThumbnail'),
       address: document.getElementById('addAddress'),
       googleMapsUrl: document.getElementById('addGoogleMapsUrl'),
+      alwaysOpen: document.getElementById('addAlwaysOpen'),
       curator: document.getElementById('addCurator'),
       coordinates: document.getElementById('addCoordinates')
     };
 
     function formatCoordinates(lat, lng) {
       return `${lat}, ${lng}`;
+    }
+
+    const hoursInputDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    function setHoursInputsDisabled(mode, disabled) {
+      hoursInputDays.forEach(day => {
+        const input = document.getElementById(`${mode}Hours${day}`);
+        if (input) {
+          input.disabled = disabled;
+        }
+      });
+    }
+
+    function syncAlwaysOpenState(mode, checked) {
+      setHoursInputsDisabled(mode, checked);
+    }
+
+    function setAlwaysOpenCheckbox(mode, checked) {
+      const checkbox = mode === 'edit' ? editFields.alwaysOpen : addFields.alwaysOpen;
+      if (checkbox) {
+        checkbox.checked = checked;
+        checkbox.nextElementSibling?.classList.toggle('checked', checked);
+      }
+      syncAlwaysOpenState(mode, checked);
     }
 
     function parseCoordinates(value) {
@@ -1009,6 +1051,7 @@
       const mediaType = location.mediaType || (mediaURL ? 'video' : 'image');
       const types = getPersistedActivities(location);
       const primaryType = types[0] || location.type || 'Cafes';
+      const alwaysOpen = Boolean(location.alwaysOpen);
 
       // Helper: check if hours is already in correct format
       const isValidHoursFormat = (obj) => {
@@ -1036,7 +1079,8 @@
         googleMapsUrl: location.googleMapsUrl || '',
         tags: getVisibleVibeTags(tags),
         detailedTags: (location.detailedTags || []).filter(Boolean),
-        hours: normalizedHours,
+        hours: alwaysOpen ? undefined : normalizedHours,
+        alwaysOpen,
         curatorChoice: Boolean(location.curatorChoice),
         caption: location.caption || `${location.name || 'Untitled location'} ${getVisibleVibeTags(tags).join(' ')}`.trim(),
         address: location.address || ''
@@ -1045,7 +1089,7 @@
 
     function normalizeLocations(remoteLocations) {
       const mapped = Array.isArray(remoteLocations) ? remoteLocations.map(normalizeLocation) : [];
-      // Preserve existing detailedTags and hours when server response omits them
+      // Preserve existing detailedTags, hours, and alwaysOpen when server response omits them
       return mapped.map(loc => {
         const prev = state.locations.find(l => l.id === loc.id);
         if (prev) {
@@ -1056,6 +1100,9 @@
           const prevHoursPresent = prev.hours && Object.keys(prev.hours || {}).length > 0;
           if (locHoursEmpty && prevHoursPresent) {
             loc.hours = prev.hours;
+          }
+          if (typeof loc.alwaysOpen !== 'boolean') {
+            loc.alwaysOpen = Boolean(prev.alwaysOpen);
           }
         }
         return loc;
@@ -1250,6 +1297,7 @@
         document.getElementById(`editHours${dayCapitals[idx]}`).value = hoursValue;
         if (h) console.log(`📝 Filled ${day}:`, hoursValue);
       });
+      setAlwaysOpenCheckbox('edit', Boolean(location.alwaysOpen));
       
       setSelectedActivities(activityPickers.edit, getPersistedActivities(location));
       setSelectedTags(vibePickers.edit, getVisibleVibeTags(location.tags || []));
@@ -1297,6 +1345,7 @@
         || id === 'editAddress'
         || id === 'editGoogleMapsUrl'
         || id === 'editDetailedTags'
+        || id === 'editAlwaysOpen'
         || id === 'editCurator') {
         return true;
       }
@@ -1380,14 +1429,15 @@
       
       // Preserve original hours if all day fields are empty; validate AM/PM input when provided.
       console.log('🔍 updateSelectedFromForm: parsing edit hours...');
-      const parsedEditHours = parseHoursFromInputs('edit');
+      const alwaysOpen = Boolean(editFields.alwaysOpen.checked);
+      const parsedEditHours = alwaysOpen ? { hasInput: false, invalidDay: null, hours: undefined } : parseHoursFromInputs('edit');
       console.log('🔍 updateSelectedFromForm: parsedEditHours result:', parsedEditHours);
       if (parsedEditHours.invalidDay) {
         console.log(`❌ Invalid hours for ${parsedEditHours.invalidDay}`);
         setMapStatus(`Invalid hours for ${parsedEditHours.invalidDay}. Use format like 9:00 AM-5:00 PM.`);
         return;
       }
-      const hours = parsedEditHours.hasInput ? parsedEditHours.hours : (location.hours || undefined);
+      const hours = alwaysOpen ? undefined : (parsedEditHours.hasInput ? parsedEditHours.hours : (location.hours || undefined));
       console.log('✅ Final hours object to save:', hours);
 
       const updated = normalizeLocation({
@@ -1406,6 +1456,7 @@
         tags: getSelectedTags(vibePickers.edit),
         detailedTags: detailedTags,
         hours: hours,
+        alwaysOpen,
         curatorChoice: editFields.curator.checked
       });
 
@@ -1446,12 +1497,13 @@
       const activities = getSelectedActivities(activityPickers.add);
       const activity = activities[0] || 'Cafes';
       const file = addFields.image.files && addFields.image.files[0];
+      const alwaysOpen = Boolean(addFields.alwaysOpen.checked);
       const detailedTags = document.getElementById('addDetailedTags').value
         .split(',')
         .map(tag => tag.trim())
         .filter(Boolean);
 
-      const parsedAddHours = parseHoursFromInputs('add');
+      const parsedAddHours = alwaysOpen ? { hasInput: false, invalidDay: null, hours: undefined } : parseHoursFromInputs('add');
       if (parsedAddHours.invalidDay) {
         setMapStatus(`Invalid hours for ${parsedAddHours.invalidDay}. Use format like 9:00 AM-5:00 PM.`);
         return;
@@ -1471,7 +1523,8 @@
           googleMapsUrl,
           tags,
           detailedTags,
-          hours: parsedAddHours.hours,
+          hours: alwaysOpen ? undefined : parsedAddHours.hours,
+          alwaysOpen,
           types: activities.length > 0 ? activities : [activity],
           curatorChoice: addFields.curator.checked,
           type: activity
@@ -1493,6 +1546,7 @@
         setSelectedActivities(activityPickers.add, ['Cafes']);
         setSelectedTags(vibePickers.add, []);
         addFields.curator.checked = false;
+        setAlwaysOpenCheckbox('add', false);
         addFields.coordinates.value = formatCoordinates(lat, lng);
         renderAll();
         setTab('map');
@@ -1579,6 +1633,12 @@
     document.getElementById('editAddress').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editGoogleMapsUrl').addEventListener('change', updateSelectedFromForm);
     document.getElementById('editCurator').addEventListener('change', updateSelectedFromForm);
+    document.getElementById('editAlwaysOpen').addEventListener('change', () => {
+      setAlwaysOpenCheckbox('edit', editFields.alwaysOpen.checked);
+    });
+    document.getElementById('addAlwaysOpen').addEventListener('change', () => {
+      setAlwaysOpenCheckbox('add', addFields.alwaysOpen.checked);
+    });
 
     renderTagPicker(activityPickers.edit, ACTIVITY_OPTIONS, ['Cafes']);
     renderTagPicker(activityPickers.add, ACTIVITY_OPTIONS, ['Cafes']);

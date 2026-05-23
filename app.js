@@ -33,6 +33,7 @@ const locationFeatureMap = new Map(); // Map locationId to ol.Feature for diff u
 const markerStyleCache = new Map();
 const markerLabelZoomThreshold = 15;
 const markerClusterDistance = 58;
+const hoursClosingSoonThresholdMinutes = 60;
 const themeStorageKey = 'didaudo_theme';
 const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
 const languageStorageKey = 'didaudo_language';
@@ -124,6 +125,8 @@ const translations = {
         overallRating: 'Overall rating',
         openNow: 'Open',
         closedNow: 'Closed',
+        alwaysOpen: 'Always open',
+        closingSoon: 'Closing soon',
         tags: 'Tags',
         
         search: 'Search Places',
@@ -217,6 +220,8 @@ const translations = {
         overallRating: 'Đánh giá chung',
         openNow: 'Mở',
         closedNow: 'Đóng',
+        alwaysOpen: 'Luôn mở cửa',
+        closingSoon: 'Sắp đóng cửa',
         tags: 'Thẻ',
         
         search: 'Tìm địa điểm',
@@ -1366,7 +1371,8 @@ function showInfoWindow(location, markerElement) {
 
     // Prepare info window for location
 
-    const hoursDisplay = location.hours ? formatHours(location.hours) : '';
+    const hoursStatus = getHoursStatusData(location);
+    const hoursDisplay = hoursStatus.summaryText || '';
     // Build detailed weekly hours HTML and interactive summary
     const detailedTagsHtml = location.detailedTags && location.detailedTags.length > 0 ? `
         <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3">
@@ -1382,8 +1388,15 @@ function showInfoWindow(location, markerElement) {
 
     // Weekly hours panel (click to expand)
     let hoursHtml = '';
-    if (location.hours && hasConfiguredHours(location.hours)) {
+    if (location.alwaysOpen || (location.hours && hasConfiguredHours(location.hours))) {
         const weeklyHtml = (() => {
+            if (location.alwaysOpen) {
+                return `
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1"><span>${t('alwaysOpen')}</span><span>24/7</span></div>
+                    </div>
+                `;
+            }
             const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
             const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
             return `
@@ -1397,10 +1410,9 @@ function showInfoWindow(location, markerElement) {
             `;
         })();
 
-        const nextOpening = (function() {
-            const next = getNextOpening(location.hours);
-            return next ? `<div style="font-size:12px;color:#94a3b8;margin-top:6px">Opens ${next}</div>` : '';
-        })();
+        const nextOpening = hoursStatus.nextOpening
+            ? `<div style="font-size:12px;color:#94a3b8;margin-top:6px">${hoursStatus.nextOpening}</div>`
+            : '';
 
         hoursHtml = `
             <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3" id="hoursBlock-${location.id}">
@@ -1942,8 +1954,8 @@ function renderHoverPreview(location, summary) {
     const ratingText = ratingCount > 0
         ? `${t('overallRating')}: ${ratingValue} / 5 • ${ratingCount} ${t('ratings')}`
         : `${t('overallRating')}: ${t('ratingNotAvailable')}`;
-    const statusText = getOpenCloseStatusLabel(location.hours);
-    const statusClass = statusText === t('openNow') ? 'open' : 'closed';
+    const statusText = getOpenCloseStatusLabel(location);
+    const statusClass = statusText === t('closingSoon') ? 'closing-soon' : (statusText === t('openNow') || statusText === t('alwaysOpen') ? 'open' : 'closed');
     const tags = getLocationPreviewTags(location);
 
     hoverPreviewInnerElement.innerHTML = `
@@ -2727,8 +2739,50 @@ function hasConfiguredHours(hoursObj) {
 }
 
 // Format hours for display using Vietnam local time.
-function formatHours(hoursObj) {
-    if (!hasConfiguredHours(hoursObj)) return '';
+function normalizeHoursSource(source) {
+    if (source && typeof source === 'object' && ('hours' in source || 'alwaysOpen' in source)) {
+        return source;
+    }
+
+    return { hours: source };
+}
+
+function getMinutesUntilClose(openMinutes, closeMinutes, currentMinutes) {
+    if (!isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes)) return null;
+    if (openMinutes === closeMinutes) return null;
+
+    if (openMinutes < closeMinutes) {
+        return closeMinutes - currentMinutes;
+    }
+
+    if (currentMinutes >= openMinutes) {
+        return (24 * 60 - currentMinutes) + closeMinutes;
+    }
+
+    return closeMinutes - currentMinutes;
+}
+
+function getHoursStatusData(source) {
+    const location = normalizeHoursSource(source);
+
+    if (location.alwaysOpen) {
+        return {
+            summaryText: `🟢 ${t('alwaysOpen')}`,
+            statusLabel: t('alwaysOpen'),
+            statusClass: 'open',
+            nextOpening: ''
+        };
+    }
+
+    const hoursObj = location.hours;
+    if (!hasConfiguredHours(hoursObj)) {
+        return {
+            summaryText: '',
+            statusLabel: '',
+            statusClass: 'closed',
+            nextOpening: ''
+        };
+    }
 
     const { weekday, currentMinutes } = getVietnamNowParts();
     const dayKey = {
@@ -2741,54 +2795,77 @@ function formatHours(hoursObj) {
         sunday: 'sunday'
     }[weekday];
 
-    if (!dayKey) return '';
+    if (!dayKey) {
+        return {
+            summaryText: '',
+            statusLabel: '',
+            statusClass: 'closed',
+            nextOpening: ''
+        };
+    }
 
     const todayHours = hoursObj[dayKey];
     if (!todayHours) {
-        return '🔴 Closed • Closed today';
+        const nextOpening = getNextOpening(hoursObj);
+        return {
+            summaryText: `🔴 ${t('closedNow')} • Closed today`,
+            statusLabel: t('closedNow'),
+            statusClass: 'closed',
+            nextOpening: nextOpening ? `Opens ${nextOpening}` : ''
+        };
     }
 
     const openMinutes = parseTimeToMinutes(todayHours.open);
     const closeMinutes = parseTimeToMinutes(todayHours.close);
-    if (openMinutes === null || closeMinutes === null) return '';
+    if (openMinutes === null || closeMinutes === null) {
+        return {
+            summaryText: '',
+            statusLabel: '',
+            statusClass: 'closed',
+            nextOpening: ''
+        };
+    }
 
     const isOpen = isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes);
+    const minutesUntilClose = isOpen ? getMinutesUntilClose(openMinutes, closeMinutes, currentMinutes) : null;
+    const isClosingSoon = isOpen && minutesUntilClose !== null && minutesUntilClose <= hoursClosingSoonThresholdMinutes;
     const openDisplay = formatTimeTo12Hour(todayHours.open);
     const closeDisplay = formatTimeTo12Hour(todayHours.close);
     const rangeText = `${openDisplay} - ${closeDisplay}`;
 
-    return isOpen
-        ? `🟢 Open • ${rangeText}`
-        : `🔴 Closed • ${rangeText}`;
-}
-
-function getOpenCloseStatusLabel(hoursObj) {
-    if (!hasConfiguredHours(hoursObj)) return '';
-
-    const { weekday, currentMinutes } = getVietnamNowParts();
-    const dayKey = {
-        monday: 'monday',
-        tuesday: 'tuesday',
-        wednesday: 'wednesday',
-        thursday: 'thursday',
-        friday: 'friday',
-        saturday: 'saturday',
-        sunday: 'sunday'
-    }[weekday];
-
-    if (!dayKey) return '';
-
-    const todayHours = hoursObj[dayKey];
-    if (!todayHours) {
-        return t('closedNow');
+    if (isClosingSoon) {
+        return {
+            summaryText: `🟠 ${t('closingSoon')} • ${rangeText}`,
+            statusLabel: t('closingSoon'),
+            statusClass: 'closing-soon',
+            nextOpening: ''
+        };
     }
 
-    const openMinutes = parseTimeToMinutes(todayHours.open);
-    const closeMinutes = parseTimeToMinutes(todayHours.close);
-    if (openMinutes === null || closeMinutes === null) return '';
+    if (isOpen) {
+        return {
+            summaryText: `🟢 ${t('openNow')} • ${rangeText}`,
+            statusLabel: t('openNow'),
+            statusClass: 'open',
+            nextOpening: ''
+        };
+    }
 
-    const isOpen = isCurrentlyOpen(openMinutes, closeMinutes, currentMinutes);
-    return isOpen ? t('openNow') : t('closedNow');
+    const nextOpening = getNextOpening(hoursObj);
+    return {
+        summaryText: `🔴 ${t('closedNow')} • ${rangeText}`,
+        statusLabel: t('closedNow'),
+        statusClass: 'closed',
+        nextOpening: nextOpening ? `Opens ${nextOpening}` : ''
+    };
+}
+
+function formatHours(hoursObj) {
+    return getHoursStatusData({ hours: hoursObj }).summaryText || '';
+}
+
+function getOpenCloseStatusLabel(source) {
+    return getHoursStatusData(source).statusLabel || '';
 }
 
 // Supports same-day and overnight ranges (e.g., 8:30 PM-4:30 AM).
