@@ -48,6 +48,18 @@ const translations = {
     noResults: 'Không tìm thấy địa điểm'
   }
 };
+// extend missing keys
+translations.en.noFriends = 'No friends yet.';
+translations.en.incomingRequest = 'Incoming request';
+translations.en.outgoingRequest = 'Outgoing request';
+translations.en.accept = 'Accept';
+translations.en.decline = 'Decline';
+
+translations.vi.noFriends = 'Chưa có bạn bè.';
+translations.vi.incomingRequest = 'Yêu cầu đến';
+translations.vi.outgoingRequest = 'Yêu cầu gửi đi';
+translations.vi.accept = 'Chấp nhận';
+translations.vi.decline = 'Từ chối';
 // add view/open keys
 translations.en.view = 'View';
 translations.en.open = 'Open';
@@ -359,17 +371,17 @@ function renderFriendsData(profile) {
           <button class="friend-view-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-user-id="${friend._id}">${t('view')} ${t('profile')}</button>
         </div>
       </div>
-    `).join('') : '<p class="theme-surface-muted text-slate-400">No friends yet.</p>';
+    `).join('') : `<p class="theme-surface-muted text-slate-400">${t('noFriends')}</p>`;
   }
 
   if (requestsList) {
     const incomingHtml = incoming.map(request => `
       <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-900/60 p-3">
         <p class="theme-surface-title font-semibold text-white">${request.senderEmail}</p>
-        <p class="theme-surface-subtitle text-xs text-slate-400">Incoming request</p>
+        <p class="theme-surface-subtitle text-xs text-slate-400">${t('incomingRequest')}</p>
         <div class="mt-3 flex gap-2">
-          <button class="request-action-btn rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">Accept</button>
-          <button class="request-action-btn theme-surface-action rounded-xl bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
+          <button class="request-action-btn rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">${t('accept')}</button>
+          <button class="request-action-btn theme-surface-action rounded-xl bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">${t('decline')}</button>
         </div>
       </div>
     `).join('');
@@ -377,7 +389,7 @@ function renderFriendsData(profile) {
     const outgoingHtml = outgoing.map(request => `
       <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-900/60 p-3">
         <p class="theme-surface-title font-semibold text-white">${request.receiverEmail}</p>
-        <p class="theme-surface-subtitle text-xs text-slate-400">Outgoing request</p>
+        <p class="theme-surface-subtitle text-xs text-slate-400">${t('outgoingRequest')}</p>
       </div>
     `).join('');
 
