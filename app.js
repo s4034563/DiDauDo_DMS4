@@ -136,8 +136,9 @@ const translations = {
         permissionMessage: 'Allow access to your location to show nearby places more accurately.',
         permissionAllow: 'Allow',
         permissionDeny: 'Not Now',
-        openGoogleMaps: 'Open in Google Maps'
-        ,
+        openGoogleMaps: 'Open in Google Maps',
+        copyAddress: 'Copy address',
+        copied: 'Copied!',
         friends: 'Friends',
         friendRequests: 'Friend Requests',
         noAcceptedFriends: 'No accepted friends yet.',
@@ -231,8 +232,9 @@ const translations = {
         permissionMessage: 'Cho phép truy cập vị trí để hiển thị các địa điểm gần đó chính xác hơn.',
         permissionAllow: 'Cho phép',
         permissionDeny: 'Không',
-        openGoogleMaps: 'Mở trên Google Maps'
-        ,
+        openGoogleMaps: 'Mở trên Google Maps',
+        copyAddress: 'Sao chép địa chỉ',
+        copied: 'Đã sao chép!',
         friends: 'Bạn bè',
         friendRequests: 'Yêu cầu kết bạn',
         noAcceptedFriends: 'Chưa có bạn bè được chấp nhận.',
@@ -1469,9 +1471,15 @@ function showInfoWindow(location, markerElement) {
             </div>
 
             ${location.address ? `
-            <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3">
+            <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3" id="addressBlock-${location.id}">
                 <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Address</p>
-                <p class="theme-surface-title mt-1 text-sm text-slate-200">${location.address}</p>
+                <div class="flex items-start justify-between gap-3">
+                    <p class="theme-surface-title mt-1 text-sm text-slate-200" id="addressText-${location.id}">${location.address}</p>
+                    <button id="copyAddressBtn-${location.id}" type="button" class="ml-3 p-2 rounded hover:bg-white/5" aria-label="${t('copyAddress')}" title="${t('copyAddress')}">
+                        <span class="material-symbols-rounded ui-icon">content_copy</span>
+                    </button>
+                </div>
+                <div id="copyAddressFeedback-${location.id}" class="text-xs text-slate-400 mt-1" style="display:none">${t('copied')}</div>
             </div>
             ` : ''}
 
@@ -1547,6 +1555,37 @@ function showInfoWindow(location, markerElement) {
     }
 
     // Wire up hours toggle
+        // Wire up copy-to-clipboard for address
+        const copyBtn = document.getElementById(`copyAddressBtn-${location.id}`);
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const text = location.address || '';
+                if (!text) return;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(text);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.style.position = 'fixed';
+                        ta.style.left = '-9999px';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                    }
+                    const feedback = document.getElementById(`copyAddressFeedback-${location.id}`);
+                    if (feedback) {
+                        feedback.textContent = t('copied');
+                        feedback.style.display = 'block';
+                        setTimeout(() => { feedback.style.display = 'none'; }, 1600);
+                    }
+                } catch (err) {
+                    console.warn('Copy failed', err);
+                }
+            });
+        }
     if (location.hours && hasConfiguredHours(location.hours)) {
         console.log('🕐 Setting up hours toggle for location:', location.id);
         const summary = document.getElementById(`hoursSummary-${location.id}`);
