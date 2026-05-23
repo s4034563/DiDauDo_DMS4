@@ -64,6 +64,7 @@ const translations = {
         login: 'Login',
         logout: 'Logout',
         theme: 'Theme',
+        language: 'Language',
         darkMode: 'Dark mode',
         lightMode: 'Light mode',
         signInContinue: 'Sign in to continue',
@@ -139,6 +140,8 @@ const translations = {
         openGoogleMaps: 'Open in Google Maps',
         copyAddress: 'Copy address',
         copied: 'Copied!',
+        openNavigation: 'Open navigation',
+        closeNavigation: 'Close navigation',
         friends: 'Friends',
         friendRequests: 'Friend Requests',
         noAcceptedFriends: 'No accepted friends yet.',
@@ -160,6 +163,7 @@ const translations = {
         login: 'Đăng nhập',
         logout: 'Đăng xuất',
         theme: 'Giao diện',
+        language: 'Ngôn ngữ',
         darkMode: 'Chế độ tối',
         lightMode: 'Chế độ sáng',
         signInContinue: 'Đăng nhập để tiếp tục',
@@ -235,6 +239,8 @@ const translations = {
         openGoogleMaps: 'Mở trên Google Maps',
         copyAddress: 'Sao chép địa chỉ',
         copied: 'Đã sao chép!',
+        openNavigation: 'Mở điều hướng',
+        closeNavigation: 'Đóng điều hướng',
         friends: 'Bạn bè',
         friendRequests: 'Yêu cầu kết bạn',
         noAcceptedFriends: 'Chưa có bạn bè được chấp nhận.',
@@ -707,10 +713,15 @@ function getStoredTheme() {
 
 function updateThemeToggleLabel() {
     const themeToggleText = document.getElementById('themeToggleText');
+    const mobileThemeToggleText = document.getElementById('mobileThemeToggleText');
     const themeToggleButton = document.getElementById('themeToggleBtn');
 
     if (themeToggleText) {
         themeToggleText.textContent = currentTheme === 'light' ? t('darkMode') : t('lightMode');
+    }
+
+    if (mobileThemeToggleText) {
+        mobileThemeToggleText.textContent = currentTheme === 'light' ? t('darkMode') : t('lightMode');
     }
 
     if (themeToggleButton) {
@@ -725,15 +736,27 @@ function getStoredLanguage() {
 
 function updateLanguageToggleLabel() {
     const languageToggleText = document.getElementById('desktopLanguageToggleText');
+    const mobileLanguageToggleText = document.getElementById('mobileLanguageToggleText');
 
     if (languageToggleText) {
         languageToggleText.textContent = currentLanguage === 'vi' ? 'VN' : 'EN';
+    }
+
+    if (mobileLanguageToggleText) {
+        mobileLanguageToggleText.textContent = currentLanguage === 'vi' ? 'VN' : 'EN';
     }
 }
 
 function setupNavTooltips() {
     const mapBtn = document.getElementById('mapNavBtn');
     const friendsBtn = document.getElementById('friendsNavBtn');
+    const mobileMapBtn = document.getElementById('mobileMapNavBtn');
+    const mobileFriendsBtn = document.getElementById('mobileFriendsNavBtn');
+    const mobileProfileBtn = document.getElementById('mobileProfileButton');
+    const mobileNavBtn = document.getElementById('mobileNavBtn');
+    const mobileNavCloseBtn = document.getElementById('mobileNavCloseBtn');
+    const mobileThemeBtn = document.getElementById('mobileThemeToggleBtn');
+    const mobileLanguageBtn = document.getElementById('mobileLanguageToggleBtn');
     const langBtn = document.getElementById('desktopLanguageToggleBtn');
     const themeBtn = document.getElementById('themeToggleBtn');
     const loginBtn = document.getElementById('desktopLoginBtn');
@@ -743,6 +766,13 @@ function setupNavTooltips() {
 
     if (mapBtn) mapBtn.title = t('map');
     if (friendsBtn) friendsBtn.title = t('friends');
+    if (mobileMapBtn) mobileMapBtn.title = t('map');
+    if (mobileFriendsBtn) mobileFriendsBtn.title = t('friends');
+    if (mobileProfileBtn) mobileProfileBtn.title = currentUser ? t('profile') : t('signInContinue');
+    if (mobileNavBtn) mobileNavBtn.title = t('openNavigation');
+    if (mobileNavCloseBtn) mobileNavCloseBtn.title = t('closeNavigation');
+    if (mobileThemeBtn) mobileThemeBtn.title = t('theme');
+    if (mobileLanguageBtn) mobileLanguageBtn.title = t('language');
     if (langBtn) langBtn.title = t('preferences');
     if (themeBtn) themeBtn.title = t('theme');
     if (loginBtn) loginBtn.title = t('login');
@@ -800,6 +830,8 @@ function toggleDesktopNav() {
 function setDesktopNavActive(section) {
     const mapNavBtn = document.getElementById('mapNavBtn');
     const friendsNavBtn = document.getElementById('friendsNavBtn');
+    const mobileMapNavBtn = document.getElementById('mobileMapNavBtn');
+    const mobileFriendsNavBtn = document.getElementById('mobileFriendsNavBtn');
 
     if (mapNavBtn) {
         mapNavBtn.classList.toggle('active', section === 'map');
@@ -808,6 +840,18 @@ function setDesktopNavActive(section) {
     if (friendsNavBtn) {
         friendsNavBtn.classList.toggle('active', section === 'friends');
     }
+
+    if (mobileMapNavBtn) {
+        mobileMapNavBtn.classList.toggle('active', section === 'map');
+    }
+
+    if (mobileFriendsNavBtn) {
+        mobileFriendsNavBtn.classList.toggle('active', section === 'friends');
+    }
+}
+
+function setMobileNavActive(section) {
+    setDesktopNavActive(section);
 }
 
 function getFilteredLocations() {
@@ -1961,6 +2005,7 @@ function updateFilterCount() {
 
 function closeMobileOverlays() {
     setMobileOverlayState({ searchOpen: false, filtersOpen: false });
+    setMobileNavState(false);
 }
 
 function setInfoPanelVisibility(isVisible) {
@@ -2066,10 +2111,37 @@ function setMobileOverlayState({ searchOpen = false, filtersOpen = false } = {})
 
     document.body.classList.toggle('mobile-search-open', Boolean(searchOpen));
     document.body.classList.toggle('mobile-filters-open', Boolean(filtersOpen));
+    document.body.classList.remove('mobile-nav-open');
 
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     if (sidebarBackdrop) {
         sidebarBackdrop.classList.toggle('visible', Boolean(searchOpen || filtersOpen));
+    }
+
+    const mobileNavTray = document.getElementById('mobileNavTray');
+    if (mobileNavTray) {
+        mobileNavTray.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function setMobileNavState(navOpen = false) {
+    if (!isMobileViewport()) {
+        navOpen = false;
+    }
+
+    document.body.classList.toggle('mobile-nav-open', Boolean(navOpen));
+    if (navOpen) {
+        document.body.classList.remove('mobile-search-open', 'mobile-filters-open');
+    }
+
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    if (sidebarBackdrop) {
+        sidebarBackdrop.classList.toggle('visible', Boolean(navOpen));
+    }
+
+    const mobileNavTray = document.getElementById('mobileNavTray');
+    if (mobileNavTray) {
+        mobileNavTray.setAttribute('aria-hidden', navOpen ? 'false' : 'true');
     }
 }
 
@@ -2223,6 +2295,10 @@ function updateAuthUI() {
     const userAvatar = document.getElementById('desktopUserAvatar');
     const userName = document.getElementById('desktopUserName');
     const userStatus = document.getElementById('desktopUserStatus');
+    const mobileProfileButton = document.getElementById('mobileProfileButton');
+    const mobileUserAvatar = document.getElementById('mobileUserAvatar');
+    const mobileUserName = document.getElementById('mobileUserName');
+    const mobileUserStatus = document.getElementById('mobileUserStatus');
 
     if (currentUser) {
         if (loginBtn) loginBtn.style.display = 'none';
@@ -2244,6 +2320,20 @@ function updateAuthUI() {
         if (userStatus) {
             userStatus.textContent = currentUser.email || t('profile');
         }
+        if (mobileProfileButton) {
+            mobileProfileButton.title = currentUser.name || currentUser.email || t('profile');
+            mobileProfileButton.setAttribute('aria-label', `${t('profile')}: ${currentUser.name || currentUser.email || t('profile')}`);
+        }
+        if (mobileUserAvatar) {
+            mobileUserAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
+            mobileUserAvatar.alt = `${currentUser.name || currentUser.email || 'User'} profile picture`;
+        }
+        if (mobileUserName) {
+            mobileUserName.textContent = currentUser.name || currentUser.email || t('guest');
+        }
+        if (mobileUserStatus) {
+            mobileUserStatus.textContent = currentUser.email || t('profile');
+        }
     } else {
         if (loginBtn) loginBtn.style.display = 'inline-flex';
         if (logoutBtn) {
@@ -2264,6 +2354,21 @@ function updateAuthUI() {
         }
         if (userStatus) {
             userStatus.textContent = t('signInContinue');
+        }
+        if (mobileProfileButton) {
+            mobileProfileButton.title = t('signInContinue');
+            mobileProfileButton.setAttribute('aria-label', t('signInContinue'));
+        }
+        if (mobileUserAvatar) {
+            const defaultGuestAvatar = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
+            mobileUserAvatar.src = defaultGuestAvatar;
+            mobileUserAvatar.alt = `${t('guest')} profile picture`;
+        }
+        if (mobileUserName) {
+            mobileUserName.textContent = t('guest');
+        }
+        if (mobileUserStatus) {
+            mobileUserStatus.textContent = t('signInContinue');
         }
     }
     // Refresh tooltip texts (language may have changed)
@@ -3152,6 +3257,13 @@ window.addEventListener('load', () => {
     const profileButton = document.getElementById('desktopProfileButton');
     const mapNavBtn = document.getElementById('mapNavBtn');
     const friendsNavBtn = document.getElementById('friendsNavBtn');
+    const mobileNavBtn = document.getElementById('mobileNavBtn');
+    const mobileNavCloseBtn = document.getElementById('mobileNavCloseBtn');
+    const mobileProfileButton = document.getElementById('mobileProfileButton');
+    const mobileMapNavBtn = document.getElementById('mobileMapNavBtn');
+    const mobileFriendsNavBtn = document.getElementById('mobileFriendsNavBtn');
+    const mobileThemeToggleBtn = document.getElementById('mobileThemeToggleBtn');
+    const mobileLanguageToggleBtn = document.getElementById('mobileLanguageToggleBtn');
     const languageToggleBtn = document.getElementById('desktopLanguageToggleBtn');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const loginBtn = document.getElementById('desktopLoginBtn');
@@ -3185,9 +3297,51 @@ window.addEventListener('load', () => {
             openLoginModal('Sign in to view your profile.');
         });
     }
+    if (mobileNavBtn) {
+        mobileNavBtn.addEventListener('click', () => {
+            const navOpen = !document.body.classList.contains('mobile-nav-open');
+            setMobileNavState(navOpen);
+        });
+    }
+    if (mobileNavCloseBtn) {
+        mobileNavCloseBtn.addEventListener('click', () => {
+            setMobileNavState(false);
+        });
+    }
+    if (mobileProfileButton) {
+        mobileProfileButton.addEventListener('click', () => {
+            setMobileNavState(false);
+            if (currentUser) {
+                openProfileModal();
+                return;
+            }
+            openLoginModal('Sign in to view your profile.');
+        });
+    }
+    if (mobileMapNavBtn) {
+        mobileMapNavBtn.addEventListener('click', () => {
+            setMobileNavActive('map');
+            setMobileNavState(false);
+            hidePopup();
+        });
+    }
+    if (mobileFriendsNavBtn) {
+        mobileFriendsNavBtn.addEventListener('click', () => {
+            setMobileNavActive('friends');
+            setMobileNavState(false);
+            if (!currentUser) {
+                openLoginModal('Sign in to view your friends.');
+                return;
+            }
+            window.location.href = './profile.html';
+        });
+    }
+    if (mobileThemeToggleBtn) mobileThemeToggleBtn.addEventListener('click', toggleTheme);
+    if (mobileLanguageToggleBtn) mobileLanguageToggleBtn.addEventListener('click', toggleLanguage);
     if (loginBtn) loginBtn.addEventListener('click', () => openLoginModal());
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     setDesktopNavActive('map');
+    setMobileNavActive('map');
 
     // Setup auth modal and buttons
     const loginModalClose = document.getElementById('loginModalClose');
@@ -3247,27 +3401,19 @@ window.addEventListener('load', () => {
     mobileSearchInputElement = document.getElementById('mobileSearchInput');
     syncSearchInputs(filterState.searchQuery);
 
-    const mobileSearchBtn = document.getElementById('mobileSearchBtn');
     const mobileFiltersBtn = document.getElementById('mobileFiltersBtn');
     const mobileSearchCloseBtn = document.getElementById('mobileSearchCloseBtn');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
     setupMobileSidebarSwipeClose();
 
-    if (mobileSearchBtn) {
-        mobileSearchBtn.addEventListener('click', () => {
-            const searchOpen = !document.body.classList.contains('mobile-search-open');
-            setMobileOverlayState({ searchOpen, filtersOpen: false });
-            if (searchOpen && mobileSearchInputElement) {
-                mobileSearchInputElement.focus();
-            }
-        });
-    }
-
     if (mobileFiltersBtn) {
         mobileFiltersBtn.addEventListener('click', () => {
             const filtersOpen = !document.body.classList.contains('mobile-filters-open');
             setMobileOverlayState({ searchOpen: false, filtersOpen });
+            if (filtersOpen) {
+                setMobileNavState(false);
+            }
         });
     }
 
@@ -3279,7 +3425,7 @@ window.addEventListener('load', () => {
 
     if (sidebarBackdrop) {
         sidebarBackdrop.addEventListener('click', () => {
-            setMobileOverlayState({ searchOpen: false, filtersOpen: false });
+            closeMobileOverlays();
         });
     }
 
