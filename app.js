@@ -1357,7 +1357,7 @@ function showInfoWindow(location, markerElement) {
         })();
 
         hoursHtml = `
-            <div class="rounded-xl border border-white/10 bg-slate-950/40 p-3" id="hoursBlock-${location.id}">
+            <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3" id="hoursBlock-${location.id}">
                 <div id="hoursSummary-${location.id}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
                     <div>
                         <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Hours</p>
@@ -1404,7 +1404,7 @@ function showInfoWindow(location, markerElement) {
         <div class="space-y-3">
             <div>
                 <div class="flex items-center justify-between gap-3">
-                    <h3 class="text-base font-bold text-slate-50">${location.name}</h3>
+                    <h3 class="theme-surface-title text-base font-bold">${location.name}</h3>
                     ${favoriteButtonHtml}
                 </div>
             </div>
