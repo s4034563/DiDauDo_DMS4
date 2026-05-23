@@ -132,6 +132,17 @@ const translations = {
         permissionAllow: 'Allow',
         permissionDeny: 'Not Now',
         openGoogleMaps: 'Open in Google Maps'
+        ,
+        friends: 'Friends',
+        friendRequests: 'Friend Requests',
+        noAcceptedFriends: 'No accepted friends yet.',
+        favoriteLocations: 'Favorite Locations',
+        ratingsTitle: 'Ratings',
+        noFavorites: 'No favorite locations yet.',
+        noRatings: 'No ratings yet.',
+        accept: 'Accept',
+        decline: 'Decline',
+        enterEmail: 'Enter an email address.'
     },
     vi: {
         subtitle: 'Khám phá các địa điểm thú vị xung quanh bạn',
@@ -212,6 +223,17 @@ const translations = {
         permissionAllow: 'Cho phép',
         permissionDeny: 'Không',
         openGoogleMaps: 'Mở trên Google Maps'
+        ,
+        friends: 'Bạn bè',
+        friendRequests: 'Yêu cầu kết bạn',
+        noAcceptedFriends: 'Chưa có bạn bè được chấp nhận.',
+        favoriteLocations: 'Địa điểm yêu thích',
+        ratingsTitle: 'Đánh giá',
+        noFavorites: 'Chưa có địa điểm yêu thích.',
+        noRatings: 'Chưa có đánh giá.',
+        accept: 'Chấp nhận',
+        decline: 'Từ chối',
+        enterEmail: 'Nhập địa chỉ email.'
     }
 };
 
@@ -2426,7 +2448,7 @@ function renderProfileModal(profile) {
 
         <div class="space-y-4">
             <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Friends</p>
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">${t('friends')}</p>
                 <div class="mt-3 space-y-2">
                     ${friends.length > 0 ? friends.map(friend => `
                         <div class="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2">
@@ -2434,7 +2456,7 @@ function renderProfileModal(profile) {
                                 <p class="font-semibold text-white">${friend.name || friend.email}</p>
                                 <p class="text-xs text-slate-400">${friend.email}</p>
                             </div>
-                            <button class="view-friend-btn rounded border border-cyan-400 px-3 py-1 text-xs font-semibold text-cyan-300" data-user-id="${friend._id}">View</button>
+                            <button class="view-friend-btn rounded border border-cyan-400 px-3 py-1 text-xs font-semibold text-cyan-300" data-user-id="${friend._id}">${t('view')}</button>
                         </div>
                     `).join('') : '<p class="text-sm text-slate-400">No accepted friends yet.</p>'}
                 </div>
@@ -2442,14 +2464,14 @@ function renderProfileModal(profile) {
 
             ${isOwnProfile && friendRequests.length > 0 ? `
             <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Friend Requests</p>
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">${t('friendRequests')}</p>
                 <div class="mt-3 space-y-2">
                     ${friendRequests.map(request => `
                         <div class="rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2">
                             <p class="font-semibold text-white">${request.senderEmail}</p>
                             <div class="mt-2 flex gap-2">
-                                <button class="respond-friend-btn rounded bg-emerald-500 px-3 py-1 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">Accept</button>
-                                <button class="respond-friend-btn rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
+                                <button class="respond-friend-btn rounded bg-emerald-500 px-3 py-1 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">${t('accept')}</button>
+                                <button class="respond-friend-btn rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">${t('decline')}</button>
                             </div>
                         </div>
                     `).join('')}
@@ -2458,19 +2480,19 @@ function renderProfileModal(profile) {
             ` : ''}
 
             <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Favorite Locations</p>
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">${t('favoriteLocations')}</p>
                 <div class="mt-3 space-y-2">
                     ${favorites.length > 0 ? favorites.map(location => `
                         <button class="w-full text-left rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 hover:border-cyan-400" data-location-id="${location.id}">
                             <p class="font-semibold text-white">${location.name}</p>
                             <p class="text-xs text-slate-400">${location.address || ''}</p>
                         </button>
-                    `).join('') : '<p class="text-sm text-slate-400">No favorite locations yet.</p>'}
+                    `).join('') : `<p class="text-sm text-slate-400">${t('noFavorites')}</p>`}
                 </div>
             </div>
 
             <div class="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Ratings</p>
+                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">${t('ratingsTitle')}</p>
                 <div class="mt-3 space-y-2">
                     ${ratings.length > 0 ? ratings.map(rating => `
                         <div class="rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2">
@@ -2478,7 +2500,7 @@ function renderProfileModal(profile) {
                             <p class="text-xs text-slate-300">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating)))}</p>
                             ${rating.comment ? `<p class="mt-1 text-sm text-slate-400">${rating.comment}</p>` : ''}
                         </div>
-                    `).join('') : '<p class="text-sm text-slate-400">No ratings yet.</p>'}
+                    `).join('') : `<p class="text-sm text-slate-400">${t('noRatings')}</p>`}
                 </div>
             </div>
         </div>

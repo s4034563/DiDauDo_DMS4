@@ -24,7 +24,14 @@ const translations = {
     useMyLocation: 'Use My Location',
     search: 'Search Places',
     searchPlaceholder: 'Type a location name...',
-    noResults: 'No locations found'
+    noResults: 'No locations found',
+    viewing: 'Viewing',
+    favorites: 'favorites',
+    friends: 'friends',
+    ratings: 'ratings',
+    noFavorites: 'No favorite locations yet.',
+    noRatings: 'No ratings yet.',
+    open: 'Open'
   },
   vi: {
     profile: 'Hồ sơ',
@@ -38,7 +45,14 @@ const translations = {
     useMyLocation: 'Sử dụng vị trí của tôi',
     search: 'Tìm địa điểm',
     searchPlaceholder: 'Gõ tên địa điểm...',
-    noResults: 'Không tìm thấy địa điểm'
+    noResults: 'Không tìm thấy địa điểm',
+    viewing: 'Đang xem',
+    favorites: 'yêu thích',
+    friends: 'bạn bè',
+    ratings: 'lượt đánh giá',
+    noFavorites: 'Chưa có địa điểm yêu thích.',
+    noRatings: 'Chưa có đánh giá.',
+    open: 'Mở'
   }
 };
 
@@ -346,7 +360,7 @@ function renderProfile(profile) {
   if (summary) {
     summary.innerHTML = `
       <div class="theme-surface-panel rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-        <p class="theme-surface-subtitle text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
+        <p class="theme-surface-subtitle text-xs uppercase tracking-[0.24em] text-slate-400">${t('viewing')}</p>
         <div class="mt-3 flex items-center gap-3">
           <img src="${currentUser?.avatarUrl || getProfileAvatarUrl(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover" />
           <div class="min-w-0">
@@ -354,10 +368,10 @@ function renderProfile(profile) {
             <p class="theme-surface-subtitle mt-1 truncate text-sm text-slate-400">${profile.user?.email || ''}</p>
           </div>
         </div>
-        <div class="theme-surface-chip-group mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
-          <span class="theme-surface-chip rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${friends.length} friends</span>
-          <span class="theme-surface-chip rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${favoriteLocations.length} favorites</span>
-          <span class="theme-surface-chip rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${ratings.length} ratings</span>
+          <div class="theme-surface-chip-group mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
+          <span class="theme-surface-chip rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${friends.length} ${t('friends')}</span>
+          <span class="theme-surface-chip rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${favoriteLocations.length} ${t('favorites')}</span>
+          <span class="theme-surface-chip rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${ratings.length} ${t('ratings')}</span>
         </div>
       </div>
     `;
@@ -374,7 +388,7 @@ function renderProfile(profile) {
           <button class="favorite-open-btn theme-surface-action rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${location.id}">Open</button>
         </div>
       </div>
-    `).join('') : '<p class="theme-surface-muted text-slate-400">No favorite locations yet.</p>';
+    `).join('') : `<p class="theme-surface-muted text-slate-400">${t('noFavorites')}</p>`;
   }
 
   if (ratingsList) {
@@ -393,7 +407,7 @@ function renderProfile(profile) {
         ${rating.comment ? `<p class="theme-surface-body mt-2 text-sm text-slate-300">${rating.comment}</p>` : ''}
         <p class="theme-surface-meta mt-2 text-[11px] text-slate-500">${formatTimeAgo(rating.createdAt)}</p>
       </div>
-    `).join('') : '<p class="theme-surface-muted text-slate-400">No ratings yet.</p>';
+    `).join('') : `<p class="theme-surface-muted text-slate-400">${t('noRatings')}</p>`;
   }
 
   document.querySelectorAll('.favorite-open-btn').forEach(button => {
