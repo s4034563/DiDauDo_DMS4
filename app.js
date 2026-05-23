@@ -569,6 +569,7 @@ function getLocationLabelSide(location, displayName) {
 
 function createPinStyles(location, isSelected, resolution) {
     const category = getLocationPinCategory(location);
+    const isCuratorChoice = Boolean(location?.curatorChoice);
     const label = truncateLabel(location.name, 24);
     const labelSide = getLocationLabelSide(location, label);
     const iconName = getLocationPinIcon(location);
@@ -581,14 +582,18 @@ function createPinStyles(location, isSelected, resolution) {
     const labelOffset = labelSide === 'right' ? 28 : -28;
     const labelAlign = labelSide === 'right' ? 'left' : 'right';
     const labelPadding = [6, 10, 6, 10];
-    const selectedStroke = isSelected ? '#ffffff' : 'rgba(255,255,255,0.9)';
-    const labelFill = category.color;
+    const goldFill = '#fbbf24';
+    const iconFill = isCuratorChoice ? '#0f172a' : '#ffffff';
+    const strokeColor = isCuratorChoice
+        ? (isSelected ? '#fef3c7' : '#7c5c00')
+        : (isSelected ? '#ffffff' : 'rgba(255,255,255,0.9)');
+    const labelFill = isCuratorChoice ? goldFill : category.color;
 
     const pinStyle = new ol.style.Style({
         image: new ol.style.Circle({
             radius,
-            fill: new ol.style.Fill({ color: category.color }),
-            stroke: new ol.style.Stroke({ color: selectedStroke, width: strokeWidth })
+            fill: new ol.style.Fill({ color: isCuratorChoice ? goldFill : category.color }),
+            stroke: new ol.style.Stroke({ color: strokeColor, width: strokeWidth })
         })
     });
 
@@ -596,7 +601,7 @@ function createPinStyles(location, isSelected, resolution) {
         text: new ol.style.Text({
             text: iconName,
             font: '400 17px "Material Symbols Rounded"',
-            fill: new ol.style.Fill({ color: '#ffffff' }),
+            fill: new ol.style.Fill({ color: iconFill }),
             textAlign: 'center',
             textBaseline: 'middle',
             offsetY: 0,
@@ -1052,8 +1057,9 @@ function createMarkerLabelImage(location, isSelected) {
     const hasDistance = Boolean(distanceText);
     const width = Math.max(210, Math.min(320, Math.round(Math.max(displayName.length * 10, distanceText.length * 11) + 56)));
     const height = hasDistance ? (isSelected ? 92 : 86) : (isSelected ? 68 : 62);
-    const borderColor = location.curatorChoice ? '#d4af37' : (isSelected ? '#22c55e' : '#e2e8f0');
-    const accentColor = location.curatorChoice ? '#d4af37' : (isSelected ? '#16a34a' : '#c084fc');
+    const curatorGold = '#fbbf24';
+    const borderColor = location.curatorChoice ? curatorGold : (isSelected ? '#22c55e' : '#e2e8f0');
+    const accentColor = location.curatorChoice ? curatorGold : (isSelected ? '#16a34a' : '#c084fc');
     const shadowOpacity = isSelected ? 0.28 : 0.18;
 
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
