@@ -273,6 +273,9 @@ function applyLanguageFromStorage() {
   // Ensure static elements are localized
   currentLanguage = (lang === 'vi' ? 'vi' : 'en');
   applyLanguageToStaticText();
+  if (activeProfile) {
+    try { renderProfile(activeProfile); } catch (e) { /* ignore */ }
+  }
 }
 
 function applyThemeFromStorage() {

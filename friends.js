@@ -94,6 +94,9 @@ function applyLanguageFromStorage() {
   // Apply translations to static text
   currentLanguage = (lang === 'vi' ? 'vi' : 'en');
   applyLanguageToStaticText();
+  if (activeProfile) {
+    try { renderFriendsData(activeProfile); } catch (e) { /* ignore */ }
+  }
 }
 
 function applyThemeFromStorage() {
