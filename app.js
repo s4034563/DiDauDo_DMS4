@@ -300,6 +300,7 @@ function mapServerLocationToAppLocation(location) {
         vibes: assignAIVibes(caption, [...seedVibes, ...visibleVibes]),
         detailedTags: location.detailedTags || [],
         hours: location.hours || undefined,
+        alwaysOpen: Boolean(location.alwaysOpen),
         curatorChoice: Boolean(location.curatorChoice)
     };
 }
