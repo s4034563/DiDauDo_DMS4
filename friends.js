@@ -21,10 +21,62 @@ function getProfileAvatarUrl(user) {
 const languageStorageKey = 'didaudo_language';
 const themeStorageKey = 'didaudo_theme';
 
+// --- Translations (minimal locale map copied from main app) ---
+const translations = {
+  en: {
+    profile: 'Profile',
+    map: 'Map',
+    friends: 'Friends',
+    preferences: 'Preferences',
+    login: 'Login',
+    logout: 'Logout',
+    theme: 'Theme',
+    search: 'Search Places',
+    searchPlaceholder: 'Type a location name...',
+    noResults: 'No locations found'
+  },
+  vi: {
+    profile: 'Hồ sơ',
+    map: 'Bản đồ',
+    friends: 'Bạn bè',
+    preferences: 'Tùy chọn',
+    login: 'Đăng nhập',
+    logout: 'Đăng xuất',
+    theme: 'Giao diện',
+    search: 'Tìm địa điểm',
+    searchPlaceholder: 'Gõ tên địa điểm...',
+    noResults: 'Không tìm thấy địa điểm'
+  }
+};
+
+function t(key) {
+  const dictionary = translations[currentLanguage] || translations.en;
+  return dictionary[key] || translations.en[key] || key;
+}
+
+function applyLanguageToStaticText() {
+  document.documentElement.lang = currentLanguage === 'vi' ? 'vi' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria-label');
+    el.setAttribute('aria-label', t(key));
+  });
+}
+
 function applyLanguageFromStorage() {
   const lang = localStorage.getItem(languageStorageKey) || 'en';
   const el = document.getElementById('desktopLanguageToggleText');
   if (el) el.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
+  // Apply translations to static text
+  currentLanguage = (lang === 'vi' ? 'vi' : 'en');
+  applyLanguageToStaticText();
 }
 
 function applyThemeFromStorage() {
