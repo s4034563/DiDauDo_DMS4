@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="./config.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@10.6.1/ol.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&display=block" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/ol@10.6.1/dist/ol.js"></script>
   <style>
     :root {
@@ -38,46 +39,6 @@
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
       backdrop-filter: blur(16px);
-    }
-
-    .app-shell {
-      position: relative;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-
-    .app-sidebar {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      background: rgba(10, 17, 32, 0.9);
-      border-right: 1px solid rgba(148, 163, 184, 0.14);
-      backdrop-filter: blur(18px);
-    }
-
-    .sidebar-scroll {
-      min-height: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .map-shell {
-      position: relative;
-      min-width: 0;
-      min-height: 100vh;
-    }
-
-    .admin-map-status {
-      position: absolute;
-      top: 24px;
-      left: 24px;
-      z-index: 20;
-      max-width: min(420px, calc(100vw - 48px));
-      border-radius: 18px;
-      border: 1px solid rgba(192, 132, 252, 0.32);
-      background: rgba(15, 23, 42, 0.92);
-      box-shadow: 0 18px 48px rgba(2, 6, 23, 0.45);
-      backdrop-filter: blur(12px);
     }
 
     .tab-btn {
@@ -143,27 +104,33 @@
     }
 
     .marker {
-      width: 36px;
-      height: 36px;
+      --marker-color: #14b8a6;
+      width: 28px;
+      height: 28px;
       border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.95);
+      border: 2px solid rgba(255,255,255,0.92);
       display: grid;
       place-items: center;
-      font-size: 18px;
+      padding: 0;
       color: white;
-      background: linear-gradient(135deg, #14b8a6, #0ea5e9);
-      box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.18), 0 8px 18px rgba(0,0,0,0.35);
+      background: var(--marker-color);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--marker-color) 22%, transparent), 0 8px 18px rgba(0,0,0,0.35);
       cursor: pointer;
       transform: translateY(-50%);
     }
 
+    .marker-icon {
+      font-size: 18px;
+      line-height: 1;
+      font-variation-settings: 'FILL' 1;
+    }
+
     .marker.curator {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      color: #1f1300;
+      width: 32px;
+      height: 32px;
       border-color: rgba(255, 247, 210, 0.98);
-      box-shadow: 0 0 0 8px rgba(251, 191, 36, 0.18), 0 0 28px rgba(251, 191, 36, 0.38), 0 10px 22px rgba(0,0,0,0.38);
+      color: #1f1300;
+      box-shadow: 0 0 0 7px rgba(251, 191, 36, 0.18), 0 0 24px rgba(251, 191, 36, 0.34), 0 10px 22px rgba(0,0,0,0.38);
     }
 
     .marker.selected {
@@ -222,66 +189,11 @@
       box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.18) inset;
     }
 
-    @media (min-width: 1024px) {
-      .app-shell {
-        display: flex;
-      }
-
-      .app-sidebar {
-        width: 420px;
-        min-height: 100vh;
-        box-shadow: 12px 0 40px rgba(0, 0, 0, 0.22);
-      }
-
-      .map-shell {
-        flex: 1;
-      }
-    }
-
-    @media (max-width: 1023px) {
-      .app-sidebar {
-        border-right: none;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-      }
-
-      .map-shell,
-      #map {
-        min-height: 70vh;
-      }
-
-      .admin-map-status {
-        top: 12px;
-        left: 12px;
-        right: 12px;
-        max-width: none;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .app-shell {
-        overflow: visible;
-      }
-
-      .app-sidebar {
-        max-height: 54vh;
-      }
-
-      .sidebar-scroll {
-        max-height: 54vh;
-      }
-
-      .map-shell,
-      #map {
-        min-height: 46vh;
-      }
-    }
-
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="app-sidebar panel flex min-h-screen flex-col p-4 lg:p-5">
-      <div class="sidebar-scroll flex min-h-0 flex-1 flex-col gap-4">
+  <div class="grid min-h-screen lg:grid-cols-[420px_minmax(0,1fr)]">
+    <aside class="panel flex min-h-screen flex-col border-r border-white/10 p-4 lg:p-5">
       <div class="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
         <div>
           <p class="text-xs uppercase tracking-[0.28em] text-cyan-300/90">Admin Panel</p>
@@ -501,14 +413,13 @@
           <p class="text-xs text-slate-400">The new location is saved locally and can be synced into the app data flow.</p>
         </div>
       </div>
-      </div>
     </aside>
 
-    <main class="map-shell">
+    <main class="relative min-h-screen">
       <div id="map"></div>
-      <div class="admin-map-status pointer-events-none px-4 py-3">
+      <div class="pointer-events-none absolute left-4 top-4 z-20 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 shadow-2xl backdrop-blur-md">
         <p class="text-xs uppercase tracking-[0.22em] text-cyan-300/90">Map editor</p>
-        <p id="mapStatus" class="mt-1 text-sm text-slate-200">Click a marker to edit it, or click the map to place a new one.</p>
+        <p id="mapStatus" class="mt-1 text-sm text-slate-300">Click a marker to edit it, or click the map to place a new one.</p>
       </div>
     </main>
   </div>
@@ -583,6 +494,36 @@
       'Quiet'
     ];
     const ACTIVITY_TAG_PREFIX = 'activity:';
+    const markerCategoryDefinitions = [
+      { activities: ['Sports', 'Fitness'], color: '#3b82f6', icons: ['sports_soccer', 'fitness_center'] },
+      { activities: ['Music', 'Nightlife'], color: '#a855f7', icons: ['music_note', 'sports_bar'] },
+      { activities: ['Art', 'Photography'], color: '#ec4899', icons: ['palette', 'photo_camera'] },
+      { activities: ['Shopping', 'Markets'], color: '#f97316', icons: ['shopping_bag', 'storefront'] },
+      { activities: ['Dining', 'Cafes'], color: '#ef4444', icons: ['restaurant', 'local_cafe'] },
+      { activities: ['Hiking', 'Parks'], color: '#22c55e', icons: ['park', 'hiking'] },
+      { activities: ['Events', 'Festivals'], color: '#eab308', icons: ['event', 'festival'] },
+      { activities: ['Gaming', 'Arcades'], color: '#14b8a6', icons: ['sports_esports', 'stadia_controller'] },
+      { activities: ['Workspace'], color: '#6366f1', icons: ['computer'] }
+    ];
+    const markerActivityIconMap = {
+      Sports: ['sports_soccer'],
+      Fitness: ['fitness_center'],
+      Music: ['music_note'],
+      Nightlife: ['sports_bar'],
+      Art: ['palette'],
+      Photography: ['photo_camera'],
+      Shopping: ['shopping_bag'],
+      Markets: ['storefront'],
+      Dining: ['restaurant'],
+      Cafes: ['local_cafe'],
+      Hiking: ['hiking'],
+      Parks: ['park'],
+      Events: ['event'],
+      Festivals: ['festival'],
+      Gaming: ['sports_esports'],
+      Arcades: ['stadia_controller'],
+      Workspace: ['computer']
+    };
     const state = {
       locations: [],
       selectedId: null,
@@ -693,6 +634,36 @@
 
     function getVisibleVibeTags(tags) {
       return (Array.isArray(tags) ? tags : []).filter(tag => !isActivityMetaTag(tag));
+    }
+
+    function getMarkerActivities(location) {
+      return getPersistedActivities(location);
+    }
+
+    function getMarkerCategory(location) {
+      const activities = getMarkerActivities(location);
+      for (const definition of markerCategoryDefinitions) {
+        if (activities.some(activity => definition.activities.includes(activity))) {
+          return definition;
+        }
+      }
+      return markerCategoryDefinitions[0];
+    }
+
+    function getMarkerIcon(location) {
+      const activities = getMarkerActivities(location);
+      const icons = activities.flatMap(activity => markerActivityIconMap[activity] || []);
+      const uniqueIcons = [...new Set(icons)];
+      if (uniqueIcons.length > 0) {
+        return uniqueIcons[Math.abs(String(location.id || '').split('').reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0)) % uniqueIcons.length];
+      }
+
+      const category = getMarkerCategory(location);
+      return category.icons[0] || 'place';
+    }
+
+    function getMarkerColor(location) {
+      return location.curatorChoice ? '#fbbf24' : getMarkerCategory(location).color;
     }
 
     function getSelectedTags(container) {
@@ -1064,7 +1035,8 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = getMarkerClass(location);
-      button.innerHTML = location.curatorChoice ? '★' : '•';
+      button.style.setProperty('--marker-color', getMarkerColor(location));
+      button.innerHTML = `<span class="material-symbols-rounded marker-icon" aria-hidden="true">${getMarkerIcon(location)}</span>`;
       button.title = location.name;
       button.setAttribute('aria-label', location.name);
 
