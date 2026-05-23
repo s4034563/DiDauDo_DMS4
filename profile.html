@@ -236,6 +236,13 @@
             .ui-checkbox { transition: none !important; animation: none !important; }
         }
 
+        /* Disable hover lift for container cards inside panels/content areas; keep buttons interactive */
+        .panel .theme-surface-card:hover,
+        .content-wrap .theme-surface-card:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
         .material-symbols-rounded {
             font-family: 'Material Symbols Rounded';
             font-weight: normal;
