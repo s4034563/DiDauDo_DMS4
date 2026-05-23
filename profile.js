@@ -289,19 +289,19 @@ function renderProfile(profile) {
 
   if (summary) {
     summary.innerHTML = `
-      <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-        <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
+      <div class="theme-surface-panel rounded-2xl border border-white/10 bg-slate-950/55 p-4">
+        <p class="theme-surface-subtitle text-xs uppercase tracking-[0.24em] text-slate-400">Viewing</p>
         <div class="mt-3 flex items-center gap-3">
           <img src="${currentUser?.avatarUrl || getProfileAvatarUrl(profile.user)}" alt="${profile.user?.name || profile.user?.email || 'Profile'} picture" class="h-14 w-14 rounded-full border border-white/10 object-cover" />
           <div class="min-w-0">
-            <h2 class="text-2xl font-black text-white">${profile.user?.name || profile.user?.email || 'Profile'}</h2>
-            <p class="mt-1 truncate text-sm text-slate-400">${profile.user?.email || ''}</p>
+            <h2 class="theme-surface-title text-2xl font-black text-white">${profile.user?.name || profile.user?.email || 'Profile'}</h2>
+            <p class="theme-surface-subtitle mt-1 truncate text-sm text-slate-400">${profile.user?.email || ''}</p>
           </div>
         </div>
-        <div class="mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
-          <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${friends.length} friends</span>
-          <span class="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${favoriteLocations.length} favorites</span>
-          <span class="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${ratings.length} ratings</span>
+        <div class="theme-surface-chip-group mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
+          <span class="theme-surface-chip rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1">${friends.length} friends</span>
+          <span class="theme-surface-chip rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1">${favoriteLocations.length} favorites</span>
+          <span class="theme-surface-chip rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1">${ratings.length} ratings</span>
         </div>
       </div>
     `;
@@ -309,35 +309,35 @@ function renderProfile(profile) {
 
   if (favoritesList) {
     favoritesList.innerHTML = favoriteLocations.length > 0 ? favoriteLocations.map(location => `
-      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+      <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-900/60 p-3">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-semibold text-white">${location.name}</p>
-            <p class="text-xs text-slate-400">${location.address || ''}</p>
+            <p class="theme-surface-title font-semibold text-white">${location.name}</p>
+            <p class="theme-surface-subtitle text-xs text-slate-400">${location.address || ''}</p>
           </div>
-          <button class="favorite-open-btn rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${location.id}">Open</button>
+          <button class="favorite-open-btn theme-surface-action rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${location.id}">Open</button>
         </div>
       </div>
-    `).join('') : '<p class="text-slate-400">No favorite locations yet.</p>';
+    `).join('') : '<p class="theme-surface-muted text-slate-400">No favorite locations yet.</p>';
   }
 
   if (ratingsList) {
     ratingsList.innerHTML = ratings.length > 0 ? ratings.map(rating => `
-      <div class="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
+      <div class="theme-surface-panel rounded-2xl border border-white/10 bg-slate-950/55 p-4">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <p class="font-semibold text-white">${rating.locationName || locationNameById.get(String(rating.locationId)) || rating.locationId}</p>
-            <p class="text-xs text-slate-400">${rating.locationAddress || ''}</p>
+            <p class="theme-surface-title font-semibold text-white">${rating.locationName || locationNameById.get(String(rating.locationId)) || rating.locationId}</p>
+            <p class="theme-surface-subtitle text-xs text-slate-400">${rating.locationAddress || ''}</p>
           </div>
           <div class="flex flex-col items-end gap-2">
-            <span class="text-xs text-cyan-200">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating || 0)))}</span>
-            <button class="rated-place-open-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${rating.locationId}">Open</button>
+            <span class="theme-surface-accent text-xs text-cyan-200">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating || 0)))}</span>
+            <button class="rated-place-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${rating.locationId}">Open</button>
           </div>
         </div>
-        ${rating.comment ? `<p class="mt-2 text-sm text-slate-300">${rating.comment}</p>` : ''}
-        <p class="mt-2 text-[11px] text-slate-500">${formatTimeAgo(rating.createdAt)}</p>
+        ${rating.comment ? `<p class="theme-surface-body mt-2 text-sm text-slate-300">${rating.comment}</p>` : ''}
+        <p class="theme-surface-meta mt-2 text-[11px] text-slate-500">${formatTimeAgo(rating.createdAt)}</p>
       </div>
-    `).join('') : '<p class="text-slate-400">No ratings yet.</p>';
+    `).join('') : '<p class="theme-surface-muted text-slate-400">No ratings yet.</p>';
   }
 
   document.querySelectorAll('.favorite-open-btn').forEach(button => {

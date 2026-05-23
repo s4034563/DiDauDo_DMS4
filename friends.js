@@ -289,52 +289,52 @@ function renderFriendsData(profile) {
 
   if (friendsList) {
     friendsList.innerHTML = friends.length > 0 ? friends.map(friend => `
-      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+      <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-900/60 p-3">
         <div class="flex items-start justify-between gap-3">
           <div class="flex min-w-0 items-center gap-3">
             <img src="${getProfileAvatarUrl(friend)}" alt="${friend.name || friend.email || 'Friend'} picture" class="h-10 w-10 rounded-full border border-white/10 object-cover" />
             <div class="min-w-0">
-              <p class="truncate font-semibold text-white">${friend.name || friend.email}</p>
-              <p class="truncate text-xs text-slate-400">${friend.email}</p>
-              <p class="mt-1 text-[11px] text-slate-500">ID: ${friend._id}</p>
+              <p class="theme-surface-title truncate font-semibold text-white">${friend.name || friend.email}</p>
+              <p class="theme-surface-subtitle truncate text-xs text-slate-400">${friend.email}</p>
+              <p class="theme-surface-meta mt-1 text-[11px] text-slate-500">ID: ${friend._id}</p>
             </div>
           </div>
-          <button class="friend-view-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-user-id="${friend._id}">View profile</button>
+          <button class="friend-view-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-user-id="${friend._id}">View profile</button>
         </div>
       </div>
-    `).join('') : '<p class="text-slate-400">No friends yet.</p>';
+    `).join('') : '<p class="theme-surface-muted text-slate-400">No friends yet.</p>';
   }
 
   if (requestsList) {
     const incomingHtml = incoming.map(request => `
-      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
-        <p class="font-semibold text-white">${request.senderEmail}</p>
-        <p class="text-xs text-slate-400">Incoming request</p>
+      <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-900/60 p-3">
+        <p class="theme-surface-title font-semibold text-white">${request.senderEmail}</p>
+        <p class="theme-surface-subtitle text-xs text-slate-400">Incoming request</p>
         <div class="mt-3 flex gap-2">
           <button class="request-action-btn rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-900" data-request-id="${request._id}" data-action="accept">Accept</button>
-          <button class="request-action-btn rounded-xl bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
+          <button class="request-action-btn theme-surface-action rounded-xl bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200" data-request-id="${request._id}" data-action="decline">Decline</button>
         </div>
       </div>
     `).join('');
 
     const outgoingHtml = outgoing.map(request => `
-      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
-        <p class="font-semibold text-white">${request.receiverEmail}</p>
-        <p class="text-xs text-slate-400">Outgoing request</p>
+      <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-900/60 p-3">
+        <p class="theme-surface-title font-semibold text-white">${request.receiverEmail}</p>
+        <p class="theme-surface-subtitle text-xs text-slate-400">Outgoing request</p>
       </div>
     `).join('');
 
-    requestsList.innerHTML = (incomingHtml + outgoingHtml) || '<p class="text-slate-400">No pending requests.</p>';
+    requestsList.innerHTML = (incomingHtml + outgoingHtml) || '<p class="theme-surface-muted text-slate-400">No pending requests.</p>';
   }
 
   if (compareFriendPicker) {
     compareFriendPicker.innerHTML = friends.length > 0 ? friends.slice(0, 12).map(friend => `
-      <label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+      <label class="theme-surface-card flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
         <input type="checkbox" class="compare-friend-checkbox ui-checkbox-input" value="${friend._id}" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
         <span class="ui-checkbox" aria-hidden="true"></span>
-        <span>${friend.name || friend.email}</span>
+        <span class="theme-surface-title">${friend.name || friend.email}</span>
       </label>
-    `).join('') : '<p class="text-slate-400">Add friends to compare favorites.</p>';
+    `).join('') : '<p class="theme-surface-muted text-slate-400">Add friends to compare favorites.</p>';
   }
 
   document.querySelectorAll('.friend-view-btn').forEach(button => {
@@ -466,20 +466,20 @@ async function compareFavorites(friendIds) {
 
     const sharedLocations = (activeFavorites || []).filter(location => sharedIds?.has(String(location.id)));
     const sharedLocationsHtml = sharedLocations.length > 0 ? sharedLocations.map(location => `
-      <div class="rounded-xl border border-white/10 bg-slate-900/60 p-3">
+      <div class="theme-surface-panel rounded-2xl border border-white/10 bg-slate-950/60 p-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-semibold text-white">${location.name}</p>
-            <p class="text-xs text-slate-400">${location.address || ''}</p>
+            <p class="theme-surface-title font-semibold text-white">${location.name}</p>
+            <p class="theme-surface-subtitle text-xs text-slate-400">${location.address || ''}</p>
           </div>
-          <button class="compare-location-open-btn rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${location.id}">Open</button>
+          <button class="compare-location-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${location.id}">Open</button>
         </div>
       </div>
-    `).join('') : '<p class="text-slate-400">No shared favorites found.</p>';
+    `).join('') : '<p class="theme-surface-muted text-slate-400">No shared favorites found.</p>';
     result.innerHTML = `
       <div class="space-y-3">
         <div>
-          <p class="text-xs uppercase tracking-[0.18em] text-slate-500">Shared by all selected</p>
+          <p class="theme-surface-meta text-xs uppercase tracking-[0.18em] text-slate-500">Shared by all selected</p>
           <div class="mt-2 space-y-2">${sharedLocationsHtml}</div>
         </div>
       </div>
