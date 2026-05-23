@@ -48,6 +48,11 @@ const translations = {
     noResults: 'Không tìm thấy địa điểm'
   }
 };
+// add view/open keys
+translations.en.view = 'View';
+translations.en.open = 'Open';
+translations.vi.view = 'Xem';
+translations.vi.open = 'Mở';
 
 function t(key) {
   const dictionary = translations[currentLanguage] || translations.en;
@@ -351,7 +356,7 @@ function renderFriendsData(profile) {
               <p class="theme-surface-meta mt-1 text-[11px] text-slate-500">ID: ${friend._id}</p>
             </div>
           </div>
-          <button class="friend-view-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-user-id="${friend._id}">View profile</button>
+          <button class="friend-view-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-user-id="${friend._id}">${t('view')} ${t('profile')}</button>
         </div>
       </div>
     `).join('') : '<p class="theme-surface-muted text-slate-400">No friends yet.</p>';
@@ -430,7 +435,7 @@ function renderFriendsData(profile) {
                         <p class="font-semibold text-white">${loc.name}</p>
                         <p class="text-xs text-slate-400">${loc.address||''}</p>
                       </div>
-                      <button class="open-friend-location-btn rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${loc.id}">Open</button>
+                      <button class="open-friend-location-btn rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${loc.id}">${t('open')}</button>
                     </div>
                   </div>
                 `).join('')}
@@ -524,7 +529,7 @@ async function compareFavorites(friendIds) {
             <p class="theme-surface-title font-semibold text-white">${location.name}</p>
             <p class="theme-surface-subtitle text-xs text-slate-400">${location.address || ''}</p>
           </div>
-          <button class="compare-location-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${location.id}">Open</button>
+          <button class="compare-location-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${location.id}">${t('open')}</button>
         </div>
       </div>
     `).join('') : '<p class="theme-surface-muted text-slate-400">No shared favorites found.</p>';
