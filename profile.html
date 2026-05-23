@@ -236,6 +236,17 @@
             .ui-checkbox { transition: none !important; animation: none !important; }
         }
 
+        /* Ensure action buttons (Open) have a clear hover/active affordance */
+        button.theme-surface-action:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 10px 28px rgba(2,6,23,0.12) !important;
+        }
+
+        button.theme-surface-action:active {
+            transform: translateY(1px) scale(0.995) !important;
+            box-shadow: 0 6px 18px rgba(2,6,23,0.08) !important;
+        }
+
         /* Disable hover lift for container cards inside panels/content areas; keep buttons interactive */
         .panel .theme-surface-card:hover,
         .content-wrap .theme-surface-card:hover {
