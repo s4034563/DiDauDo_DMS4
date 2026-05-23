@@ -75,6 +75,8 @@ const translations = {
         musicNightlife: 'Music & Nightlife',
         music: 'Music',
         nightlife: 'Nightlife',
+        musicBox: 'Music Box',
+        homestay: 'Homestay',
         artCulture: 'Art & Culture',
         art: 'Art',
         photography: 'Museum',
@@ -166,6 +168,8 @@ const translations = {
         musicNightlife: 'Âm nhạc & Giải trí đêm',
         music: 'Âm nhạc',
         nightlife: 'Giải trí đêm',
+        musicBox: 'Music Box',
+        homestay: 'Homestay',
         artCulture: 'Nghệ thuật & Văn hóa',
         art: 'Nghệ thuật',
         photography: 'Bảo tàng',
@@ -421,7 +425,8 @@ function getLocalizedVibe(vibe) {
 
 const locationPinCategoryDefinitions = [
     { name: 'Sports & Recreation', activities: ['Sports', 'Fitness'], color: '#3b82f6', icons: ['sports_soccer', 'fitness_center'] },
-    { name: 'Music & Nightlife', activities: ['Music', 'Nightlife'], color: '#a855f7', icons: ['music_note', 'sports_bar'] },
+    { name: 'Music & Nightlife', activities: ['Music', 'Nightlife', 'Music Box'], color: '#a855f7', icons: ['music_note', 'sports_bar', 'radio'] },
+    { name: 'Homestay', activities: ['Homestay'], color: '#f59e0b', icons: ['cottage', 'home'] },
     { name: 'Art & Culture', activities: ['Art', 'Photography'], color: '#ec4899', icons: ['palette', 'photo_camera'] },
     { name: 'Shopping & Social', activities: ['Shopping', 'Markets'], color: '#f97316', icons: ['shopping_bag', 'storefront'] },
     { name: 'Dining & Social', activities: ['Dining', 'Cafes'], color: '#ef4444', icons: ['restaurant', 'local_cafe'] },
@@ -436,6 +441,7 @@ const locationActivityIconMap = {
     Fitness: ['fitness_center'],
     Music: ['music_note'],
     Nightlife: ['sports_bar'],
+    'Music Box': ['radio'],
     Art: ['palette'],
     Photography: ['photo_camera'],
     Shopping: ['shopping_bag'],
@@ -448,6 +454,7 @@ const locationActivityIconMap = {
     Festivals: ['festival'],
     Gaming: ['sports_esports'],
     Arcades: ['stadia_controller'],
+    Homestay: ['cottage'],
     Workspace: ['computer'],
 };
 
