@@ -9,6 +9,7 @@ let currentUser = null;
 let activeProfile = null;
 let friendProfileCache = new Map();
 let friendProfileCacheLoad = Promise.resolve();
+let currentLanguage = 'en';
 
 const desktopNavStorageKey = 'didaudo_desktop_nav_collapsed';
 
@@ -31,6 +32,10 @@ const translations = {
     login: 'Login',
     logout: 'Logout',
     theme: 'Theme',
+    language: 'Language',
+    openNavigation: 'Open navigation',
+    closeNavigation: 'Close navigation',
+    signInContinue: 'Sign in to continue',
     search: 'Search Places',
     searchPlaceholder: 'Type a location name...',
     noResults: 'No locations found'
@@ -43,6 +48,10 @@ const translations = {
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
     theme: 'Giao diện',
+    language: 'Ngôn ngữ',
+    openNavigation: 'Mở điều hướng',
+    closeNavigation: 'Đóng điều hướng',
+    signInContinue: 'Đăng nhập để tiếp tục',
     search: 'Tìm địa điểm',
     searchPlaceholder: 'Gõ tên địa điểm...',
     noResults: 'Không tìm thấy địa điểm'
@@ -90,13 +99,16 @@ function applyLanguageToStaticText() {
 function applyLanguageFromStorage() {
   const lang = localStorage.getItem(languageStorageKey) || 'en';
   const el = document.getElementById('desktopLanguageToggleText');
+  const mobileEl = document.getElementById('mobileLanguageToggleText');
   if (el) el.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
+  if (mobileEl) mobileEl.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
   // Apply translations to static text
   currentLanguage = (lang === 'vi' ? 'vi' : 'en');
   applyLanguageToStaticText();
   if (activeProfile) {
     try { renderFriendsData(activeProfile); } catch (e) { /* ignore */ }
   }
+  updateMobileNavUI();
 }
 
 function applyThemeFromStorage() {
@@ -104,7 +116,10 @@ function applyThemeFromStorage() {
   if (theme === 'light') document.body.classList.add('theme-light');
   else document.body.classList.remove('theme-light');
   const el = document.getElementById('themeToggleText');
+  const mobileEl = document.getElementById('mobileThemeToggleText');
   if (el) el.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+  if (mobileEl) mobileEl.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+  updateMobileNavUI();
 }
 
 function normalizeUserSession(user) {
@@ -163,6 +178,55 @@ function applyDesktopNavState(collapsed) {
     navToggle.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
   }
   localStorage.setItem(desktopNavStorageKey, String(Boolean(collapsed)));
+}
+
+function setMobileNavState(isOpen = false) {
+  document.body.classList.toggle('mobile-nav-open', Boolean(isOpen));
+  const tray = document.getElementById('mobileNavTray');
+  const backdrop = document.getElementById('mobileNavBackdrop');
+  if (tray) {
+    tray.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  }
+  if (backdrop) {
+    backdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  }
+}
+
+function updateMobileNavUI() {
+  const mobileProfileButton = document.getElementById('mobileProfileButton');
+  const mobileUserAvatar = document.getElementById('mobileUserAvatar');
+  const mobileUserName = document.getElementById('mobileUserName');
+  const mobileUserStatus = document.getElementById('mobileUserStatus');
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  const mobileNavBtn = document.getElementById('mobileNavBtn');
+  const mobileNavCloseBtn = document.getElementById('mobileNavCloseBtn');
+  const mobileLanguageText = document.getElementById('mobileLanguageToggleText');
+  const mobileThemeText = document.getElementById('mobileThemeToggleText');
+
+  if (mobileNavBtn) mobileNavBtn.title = t('openNavigation');
+  if (mobileNavCloseBtn) mobileNavCloseBtn.title = t('closeNavigation');
+  if (mobileLanguageText) mobileLanguageText.textContent = localStorage.getItem(languageStorageKey) === 'vi' ? 'VN' : 'EN';
+  if (mobileThemeText) mobileThemeText.textContent = localStorage.getItem(themeStorageKey) === 'light' ? 'Light mode' : 'Dark mode';
+
+  if (currentUser) {
+    if (mobileProfileButton) {
+      mobileProfileButton.setAttribute('aria-label', `${t('profile')}: ${currentUser.name || currentUser.email || t('profile')}`);
+      mobileProfileButton.title = currentUser.name || currentUser.email || t('profile');
+    }
+    if (mobileUserAvatar) mobileUserAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
+    if (mobileUserName) mobileUserName.textContent = currentUser.name || currentUser.email || 'Guest';
+    if (mobileUserStatus) mobileUserStatus.textContent = currentUser.email || 'Signed in';
+    if (mobileLogoutBtn) mobileLogoutBtn.classList.remove('hidden');
+  } else {
+    if (mobileProfileButton) {
+      mobileProfileButton.setAttribute('aria-label', t('signInContinue'));
+      mobileProfileButton.title = t('signInContinue');
+    }
+    if (mobileUserAvatar) mobileUserAvatar.src = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
+    if (mobileUserName) mobileUserName.textContent = 'Guest';
+    if (mobileUserStatus) mobileUserStatus.textContent = 'Sign in to continue';
+    if (mobileLogoutBtn) mobileLogoutBtn.classList.add('hidden');
+  }
 }
 
 function toggleDesktopNav() {
@@ -289,6 +353,7 @@ function updateAuthUI() {
     if (userName) userName.textContent = 'Guest';
     if (userStatus) userStatus.textContent = 'Sign in to continue';
   }
+  updateMobileNavUI();
 }
 
 function handleLogout() {
@@ -600,6 +665,43 @@ function bindEvents() {
   });
   profileNavBtn?.addEventListener('click', () => {
     window.location.href = './profile.html';
+  });
+  document.getElementById('mobileNavBtn')?.addEventListener('click', () => setMobileNavState(!document.body.classList.contains('mobile-nav-open')));
+  document.getElementById('mobileNavCloseBtn')?.addEventListener('click', () => setMobileNavState(false));
+  document.getElementById('mobileNavBackdrop')?.addEventListener('click', () => setMobileNavState(false));
+  document.getElementById('mobileProfileButton')?.addEventListener('click', () => {
+    setMobileNavState(false);
+    if (!currentUser) {
+      openLoginModal('Sign in to view your profile.');
+      return;
+    }
+    window.location.href = './profile.html';
+  });
+  document.getElementById('mobileMapNavBtn')?.addEventListener('click', () => {
+    setMobileNavState(false);
+    window.location.href = './index.html';
+  });
+  document.getElementById('mobileFriendsNavBtn')?.addEventListener('click', () => {
+    setMobileNavState(false);
+    window.location.href = './friends.html';
+  });
+  document.getElementById('mobileThemeToggleBtn')?.addEventListener('click', () => {
+    const key = 'didaudo_theme';
+    const current = localStorage.getItem(key) || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(key, next);
+    applyThemeFromStorage();
+  });
+  document.getElementById('mobileLanguageToggleBtn')?.addEventListener('click', () => {
+    const key = 'didaudo_language';
+    const current = localStorage.getItem(key) || 'en';
+    const next = current === 'en' ? 'vi' : 'en';
+    localStorage.setItem(key, next);
+    applyLanguageFromStorage();
+  });
+  document.getElementById('mobileLogoutBtn')?.addEventListener('click', () => {
+    handleLogout();
+    setMobileNavState(false);
   });
   desktopNavToggle?.addEventListener('click', toggleDesktopNav);
 

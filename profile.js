@@ -9,6 +9,7 @@ let currentUser = null;
 let profileUserId = null;
 let activeProfile = null;
 let locationNameById = new Map();
+let currentLanguage = 'en';
 
 // --- Translations (kept in sync with main app.js) ---
 const translations = {
@@ -18,6 +19,9 @@ const translations = {
     logout: 'Logout',
     preferences: 'Preferences',
     theme: 'Theme',
+    language: 'Language',
+    openNavigation: 'Open navigation',
+    closeNavigation: 'Close navigation',
     signInContinue: 'Sign in to continue',
     guest: 'Guest',
     filters: 'Filters',
@@ -39,6 +43,9 @@ const translations = {
     logout: 'Đăng xuất',
     preferences: 'Tùy chọn',
     theme: 'Giao diện',
+    language: 'Ngôn ngữ',
+    openNavigation: 'Mở điều hướng',
+    closeNavigation: 'Đóng điều hướng',
     signInContinue: 'Đăng nhập để tiếp tục',
     guest: 'Khách',
     filters: 'Bộ lọc',
@@ -126,6 +133,51 @@ function toggleDesktopNav() {
   applyDesktopNavState(!document.body.classList.contains('desktop-nav-collapsed'));
 }
 
+function setMobileNavState(isOpen = false) {
+  document.body.classList.toggle('mobile-nav-open', Boolean(isOpen));
+  const tray = document.getElementById('mobileNavTray');
+  if (tray) {
+    tray.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  }
+}
+
+function updateMobileNavUI() {
+  const mobileProfileButton = document.getElementById('mobileProfileButton');
+  const mobileUserAvatar = document.getElementById('mobileUserAvatar');
+  const mobileUserName = document.getElementById('mobileUserName');
+  const mobileUserStatus = document.getElementById('mobileUserStatus');
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  const mobileNavBtn = document.getElementById('mobileNavBtn');
+  const mobileNavCloseBtn = document.getElementById('mobileNavCloseBtn');
+  const mobileLanguageText = document.getElementById('mobileLanguageToggleText');
+  const mobileThemeText = document.getElementById('mobileThemeToggleText');
+
+  if (mobileNavBtn) mobileNavBtn.title = t('openNavigation');
+  if (mobileNavCloseBtn) mobileNavCloseBtn.title = t('closeNavigation');
+  if (mobileLanguageText) mobileLanguageText.textContent = localStorage.getItem(languageStorageKey) === 'vi' ? 'VN' : 'EN';
+  if (mobileThemeText) mobileThemeText.textContent = localStorage.getItem(themeStorageKey) === 'light' ? 'Light mode' : 'Dark mode';
+
+  if (currentUser) {
+    if (mobileProfileButton) {
+      mobileProfileButton.setAttribute('aria-label', `${t('profile')}: ${currentUser.name || currentUser.email || t('profile')}`);
+      mobileProfileButton.title = currentUser.name || currentUser.email || t('profile');
+    }
+    if (mobileUserAvatar) mobileUserAvatar.src = currentUser.avatarUrl || getProfileAvatarUrl(currentUser);
+    if (mobileUserName) mobileUserName.textContent = currentUser.name || currentUser.email || 'Guest';
+    if (mobileUserStatus) mobileUserStatus.textContent = currentUser.email || 'Signed in';
+    if (mobileLogoutBtn) mobileLogoutBtn.classList.remove('hidden');
+  } else {
+    if (mobileProfileButton) {
+      mobileProfileButton.setAttribute('aria-label', t('signInContinue'));
+      mobileProfileButton.title = t('signInContinue');
+    }
+    if (mobileUserAvatar) mobileUserAvatar.src = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png';
+    if (mobileUserName) mobileUserName.textContent = 'Guest';
+    if (mobileUserStatus) mobileUserStatus.textContent = 'Sign in to continue';
+    if (mobileLogoutBtn) mobileLogoutBtn.classList.add('hidden');
+  }
+}
+
 function updateAuthUI() {
   const loginBtn = document.getElementById('desktopLoginBtn');
   const logoutBtn = document.getElementById('desktopLogoutBtn');
@@ -152,6 +204,7 @@ function updateAuthUI() {
     if (userName) userName.textContent = 'Guest';
     if (userStatus) userStatus.textContent = 'Sign in to continue';
   }
+  updateMobileNavUI();
 }
 
 function openLoginModal(promptText = '') {
@@ -269,13 +322,16 @@ const themeStorageKey = 'didaudo_theme';
 function applyLanguageFromStorage() {
   const lang = localStorage.getItem(languageStorageKey) || 'en';
   const el = document.getElementById('desktopLanguageToggleText');
+  const mobileEl = document.getElementById('mobileLanguageToggleText');
   if (el) el.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
+  if (mobileEl) mobileEl.textContent = (String(lang || 'en').toUpperCase() === 'VI' || lang === 'vi') ? 'VN' : 'EN';
   // Ensure static elements are localized
   currentLanguage = (lang === 'vi' ? 'vi' : 'en');
   applyLanguageToStaticText();
   if (activeProfile) {
     try { renderProfile(activeProfile); } catch (e) { /* ignore */ }
   }
+  updateMobileNavUI();
 }
 
 function applyThemeFromStorage() {
@@ -283,7 +339,10 @@ function applyThemeFromStorage() {
   if (theme === 'light') document.body.classList.add('theme-light');
   else document.body.classList.remove('theme-light');
   const el = document.getElementById('themeToggleText');
+  const mobileEl = document.getElementById('mobileThemeToggleText');
   if (el) el.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+  if (mobileEl) mobileEl.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+  updateMobileNavUI();
 }
 
 function setProfileUserId(nextUserId) {
@@ -435,6 +494,14 @@ function bindEvents() {
   const mapNavBtn = document.getElementById('mapNavBtn');
   const friendsNavBtn = document.getElementById('friendsNavBtn');
   const desktopNavToggle = document.getElementById('desktopNavToggle');
+  const mobileNavBtn = document.getElementById('mobileNavBtn');
+  const mobileNavCloseBtn = document.getElementById('mobileNavCloseBtn');
+  const mobileProfileButton = document.getElementById('mobileProfileButton');
+  const mobileMapNavBtn = document.getElementById('mobileMapNavBtn');
+  const mobileFriendsNavBtn = document.getElementById('mobileFriendsNavBtn');
+  const mobileThemeToggleBtn = document.getElementById('mobileThemeToggleBtn');
+  const mobileLanguageToggleBtn = document.getElementById('mobileLanguageToggleBtn');
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
 
   desktopLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage your profile.'));
   signedOutLoginBtn?.addEventListener('click', () => openLoginModal('Sign in to manage your profile.'));
@@ -455,6 +522,45 @@ function bindEvents() {
   });
   friendsNavBtn?.addEventListener('click', () => {
     window.location.href = './friends.html';
+  });
+  mobileNavBtn?.addEventListener('click', () => setMobileNavState(!document.body.classList.contains('mobile-nav-open')));
+  mobileNavCloseBtn?.addEventListener('click', () => setMobileNavState(false));
+  mobileProfileButton?.addEventListener('click', () => {
+    setMobileNavState(false);
+    if (!currentUser) {
+      openLoginModal('Sign in to view your profile.');
+      return;
+    }
+    setProfileUserId(currentUser.userId);
+    void loadProfile(currentUser.userId);
+  });
+  mobileMapNavBtn?.addEventListener('click', () => {
+    setMobileNavState(false);
+    window.location.href = './index.html';
+  });
+  mobileFriendsNavBtn?.addEventListener('click', () => {
+    setMobileNavState(false);
+    window.location.href = './friends.html';
+  });
+  mobileThemeToggleBtn?.addEventListener('click', () => {
+    const key = 'didaudo_theme';
+    const current = localStorage.getItem(key) || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(key, next);
+    applyThemeFromStorage();
+    updateMobileNavUI();
+  });
+  mobileLanguageToggleBtn?.addEventListener('click', () => {
+    const key = 'didaudo_language';
+    const current = localStorage.getItem(key) || 'en';
+    const next = current === 'en' ? 'vi' : 'en';
+    localStorage.setItem(key, next);
+    applyLanguageFromStorage();
+    updateMobileNavUI();
+  });
+  mobileLogoutBtn?.addEventListener('click', () => {
+    handleLogout();
+    setMobileNavState(false);
   });
   desktopNavToggle?.addEventListener('click', toggleDesktopNav);
 
