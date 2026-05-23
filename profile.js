@@ -141,15 +141,15 @@ function setProfileNavActive() {
   const mobileMapNavBtn = document.getElementById('mobileMapNavBtn');
   const mobileFriendsNavBtn = document.getElementById('mobileFriendsNavBtn');
 
-  desktopProfileButton?.classList.add('active');
-  mobileProfileButton?.classList.add('active');
   mapNavBtn?.classList.remove('active');
   friendsNavBtn?.classList.remove('active');
   mobileMapNavBtn?.classList.remove('active');
   mobileFriendsNavBtn?.classList.remove('active');
 
-  desktopProfileButton?.setAttribute('aria-current', 'page');
-  mobileProfileButton?.setAttribute('aria-current', 'page');
+  desktopProfileButton?.classList.remove('active');
+  mobileProfileButton?.classList.remove('active');
+  desktopProfileButton?.removeAttribute('aria-current');
+  mobileProfileButton?.removeAttribute('aria-current');
   mapNavBtn?.removeAttribute('aria-current');
   friendsNavBtn?.removeAttribute('aria-current');
   mobileMapNavBtn?.removeAttribute('aria-current');
@@ -168,6 +168,7 @@ function setMobileNavState(isOpen = false) {
 
 function updateMobileNavUI() {
   const mobileProfileButton = document.getElementById('mobileProfileButton');
+  const mobileProfileRow = document.querySelector('.mobile-nav-profile-row');
   const mobileUserAvatar = document.getElementById('mobileUserAvatar');
   const mobileUserName = document.getElementById('mobileUserName');
   const mobileUserStatus = document.getElementById('mobileUserStatus');
@@ -181,6 +182,15 @@ function updateMobileNavUI() {
   if (mobileNavCloseBtn) mobileNavCloseBtn.title = t('closeNavigation');
   if (mobileLanguageText) mobileLanguageText.textContent = localStorage.getItem(languageStorageKey) === 'vi' ? 'VN' : 'EN';
   if (mobileThemeText) mobileThemeText.textContent = localStorage.getItem(themeStorageKey) === 'light' ? 'Light mode' : 'Dark mode';
+  if (mobileProfileRow) {
+    mobileProfileRow.style.display = 'grid';
+    mobileProfileRow.style.gridTemplateColumns = 'minmax(0, 1fr) auto';
+    mobileProfileRow.style.alignItems = 'stretch';
+    mobileProfileRow.style.gap = '10px';
+  }
+  if (mobileProfileButton) {
+    mobileProfileButton.style.minWidth = '0';
+  }
 
   if (currentUser) {
     if (mobileProfileButton) {
@@ -195,6 +205,10 @@ function updateMobileNavUI() {
       mobileAuthBtn.classList.add('logout');
       mobileAuthBtn.textContent = t('logout');
       mobileAuthBtn.setAttribute('aria-label', t('logout'));
+      mobileAuthBtn.style.width = '96px';
+      mobileAuthBtn.style.minWidth = '96px';
+      mobileAuthBtn.style.maxWidth = '96px';
+      mobileAuthBtn.style.flex = '0 0 auto';
       mobileAuthBtn.style.setProperty('border-color', 'rgba(248, 113, 113, 0.55)', 'important');
       mobileAuthBtn.style.setProperty('background-color', 'rgba(127, 29, 29, 0.22)', 'important');
       mobileAuthBtn.style.setProperty('color', '#f87171', 'important');
@@ -212,6 +226,10 @@ function updateMobileNavUI() {
       mobileAuthBtn.classList.add('login');
       mobileAuthBtn.textContent = t('login');
       mobileAuthBtn.setAttribute('aria-label', t('login'));
+      mobileAuthBtn.style.width = '96px';
+      mobileAuthBtn.style.minWidth = '96px';
+      mobileAuthBtn.style.maxWidth = '96px';
+      mobileAuthBtn.style.flex = '0 0 auto';
       mobileAuthBtn.style.setProperty('border-color', 'rgba(192, 132, 252, 0.35)', 'important');
       mobileAuthBtn.style.setProperty('background-color', 'rgba(15, 23, 42, 0.6)', 'important');
       mobileAuthBtn.style.setProperty('color', '#c084fc', 'important');
@@ -673,7 +691,6 @@ window.addEventListener('load', async () => {
   updateAuthUI();
   bindEvents();
   applyDesktopNavState(getStoredDesktopNavState());
-  setProfileNavActive();
   applyLanguageFromStorage();
   applyThemeFromStorage();
   await loadLocationDirectory();

@@ -548,11 +548,6 @@
             border-color: rgba(192, 132, 252, 0.22);
         }
 
-        .desktop-nav-profile.active {
-            background: rgba(192, 132, 252, 0.12);
-            border-color: rgba(192, 132, 252, 0.22);
-        }
-
         .desktop-nav-item-icon {
             width: 28px;
             height: 28px;
@@ -867,7 +862,8 @@
             }
 
             .mobile-nav-profile-row {
-                display: flex;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
                 align-items: stretch;
                 gap: 10px;
                 padding: 12px;
@@ -881,7 +877,7 @@
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                flex: 1 1 auto;
+                min-width: 0;
                 padding: 0;
                 border: none;
                 background: transparent;
@@ -917,6 +913,9 @@
             .mobile-nav-subtitle {
                 font-size: 12px;
                 color: rgba(226, 232, 240, 0.72);
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
             }
 
             .mobile-nav-auth {
@@ -969,11 +968,6 @@
             }
 
             .mobile-nav-link.active {
-                background: rgba(192, 132, 252, 0.16);
-                border-color: rgba(192, 132, 252, 0.3);
-            }
-
-            .mobile-nav-profile.active {
                 background: rgba(192, 132, 252, 0.16);
                 border-color: rgba(192, 132, 252, 0.3);
             }
