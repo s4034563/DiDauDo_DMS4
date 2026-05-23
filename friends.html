@@ -915,7 +915,9 @@
             }
 
             .mobile-nav-auth {
-                min-width: 88px;
+                width: 96px;
+                min-width: 96px;
+                flex: 0 0 auto;
                 border-radius: 999px;
                 border: 1px solid rgba(192, 132, 252, 0.2);
                 background: rgba(15, 23, 42, 0.6);
@@ -926,6 +928,13 @@
                 align-self: center;
                 white-space: nowrap;
                 margin-left: auto;
+            }
+
+            .mobile-nav-auth.desktop-nav-auth-btn {
+                width: 96px;
+                min-width: 96px;
+                max-width: 96px;
+                flex: 0 0 96px;
             }
 
             .mobile-nav-auth.login {
