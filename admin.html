@@ -139,6 +139,45 @@
       box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
     }
 
+    /* Micro-interactions: subtle transitions and hover/active states */
+    :root {
+      --ui-duration: 180ms;
+      --ui-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    button,
+    .theme-surface-action,
+    .theme-surface-chip,
+    .theme-surface-card,
+    .location-card,
+    .right-info-panel,
+    .favorite-btn,
+    input,
+    textarea,
+    .ui-checkbox {
+      transition: background-color var(--ui-duration) var(--ui-ease),
+                  color var(--ui-duration) var(--ui-ease),
+                  border-color var(--ui-duration) var(--ui-ease),
+                  box-shadow calc(var(--ui-duration) * 1.2) var(--ui-ease),
+                  transform calc(var(--ui-duration) * 1.2) var(--ui-ease);
+    }
+
+    .theme-surface-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
+    .theme-surface-action:active { transform: translateY(1px) scale(0.995); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+
+    @media (prefers-reduced-motion: reduce) {
+      button,
+      .theme-surface-action,
+      .theme-surface-chip,
+      .theme-surface-card,
+      .location-card,
+      .right-info-panel,
+      .favorite-btn,
+      input,
+      textarea,
+      .ui-checkbox { transition: none !important; animation: none !important; }
+    }
+
     .soft-btn {
       border: 1px solid rgba(148, 163, 184, 0.18);
       background: rgba(15, 23, 42, 0.76);
