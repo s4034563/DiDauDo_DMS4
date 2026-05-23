@@ -535,11 +535,20 @@
             height: 0;
         }
 
+        .ui-checkbox-input {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+        }
+
         .ui-checkbox {
+            -webkit-appearance: none;
             appearance: none;
             width: 1rem;
             height: 1rem;
-            border-radius: 0.35rem;
+            border-radius: 0 !important;
             border: 1.5px solid rgba(148, 163, 184, 0.6);
             background: rgba(15, 23, 42, 0.72);
             display: inline-grid;
@@ -550,27 +559,36 @@
         }
 
         .ui-checkbox::before {
-            content: '';
-            width: 0.56rem;
-            height: 0.56rem;
-            border-radius: 0.2rem;
+            content: '✓';
+            color: #ffffff;
+            font-size: 0.82rem;
+            line-height: 1;
+            font-weight: 900;
             transform: scale(0);
-            background: linear-gradient(135deg, #22d3ee, #7c3aed);
-            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
             transition: transform 140ms ease;
         }
 
-        .ui-checkbox:checked {
-            border-color: rgba(34, 211, 238, 0.95);
-            background: rgba(34, 211, 238, 0.16);
-            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
+        .ui-checkbox-input:checked + .ui-checkbox {
+            border-color: #7c3aed !important;
+            background: #7c3aed !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
         }
 
-        .ui-checkbox:checked::before {
-            transform: scale(1);
+        .ui-checkbox.checked {
+            border-color: #7c3aed !important;
+            background: #7c3aed !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
         }
 
-        .ui-checkbox:focus-visible {
+        .ui-checkbox-input:checked + .ui-checkbox::before {
+            transform: scale(1) !important;
+        }
+
+        .ui-checkbox.checked::before {
+            transform: scale(1) !important;
+        }
+
+        .ui-checkbox-input:focus-visible + .ui-checkbox {
             outline: 2px solid rgba(34, 211, 238, 0.7);
             outline-offset: 2px;
         }
@@ -580,15 +598,10 @@
             background: rgba(255, 255, 255, 0.92);
         }
 
-        body.theme-light .ui-checkbox:checked {
-            border-color: rgba(124, 58, 237, 0.9);
-            background: rgba(124, 58, 237, 0.14);
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
-        }
-
-        body.theme-light .ui-checkbox::before {
-            background: linear-gradient(135deg, #7c3aed, #22d3ee);
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
+        body.theme-light .ui-checkbox-input:checked + .ui-checkbox {
+            border-color: #7c3aed !important;
+            background: #7c3aed !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18) !important;
         }
 
         .slider {
@@ -1819,7 +1832,8 @@
                 <!-- Curator's Choice Filter -->
                 <div>
                     <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" id="curatorChoiceCheckbox" class="ui-checkbox">
+                        <input type="checkbox" id="curatorChoiceCheckbox" class="ui-checkbox-input" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)">
+                        <span class="ui-checkbox" aria-hidden="true"></span>
                         <span class="text-sm font-semibold neon-text" data-icon="star">Curator's Picks</span>
                     </label>
                 </div>

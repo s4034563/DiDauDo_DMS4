@@ -1782,6 +1782,26 @@ if (curatorChoiceCheckbox) {
     });
 }
 
+function syncUiCheckboxes(root = document) {
+    root.querySelectorAll('.ui-checkbox-input').forEach(input => {
+        const box = input.nextElementSibling;
+        if (!box || !box.classList.contains('ui-checkbox')) return;
+
+        const apply = () => box.classList.toggle('checked', input.checked);
+        apply();
+
+        if (!input.dataset.uiCheckboxSyncBound) {
+            input.addEventListener('change', apply);
+            input.dataset.uiCheckboxSyncBound = '1';
+        }
+    });
+}
+
+const uiCheckboxObserver = new MutationObserver(() => syncUiCheckboxes());
+uiCheckboxObserver.observe(document.body, { childList: true, subtree: true });
+syncUiCheckboxes();
+setInterval(syncUiCheckboxes, 250);
+
 // Social momentum controls removed
 
 // Clear filters
@@ -2376,7 +2396,8 @@ function renderProfileModal(profile) {
                 <div class="space-y-2">
                     ${friends.length > 0 ? friends.slice(0, 3).map(friend => `
                         <label class="flex items-center gap-2 text-sm text-slate-200">
-                            <input type="checkbox" class="friend-compare-checkbox ui-checkbox" value="${friend._id}" />
+                            <input type="checkbox" class="friend-compare-checkbox ui-checkbox-input" value="${friend._id}" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
+                            <span class="ui-checkbox" aria-hidden="true"></span>
                             <span>${friend.name || friend.email}</span>
                         </label>
                     `).join('') : '<p class="text-sm text-slate-400">No friends yet.</p>'}

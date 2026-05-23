@@ -40,6 +40,26 @@ function normalizeUserSession(user) {
   return { ...user, avatarUrl: user.avatarUrl || getProfileAvatarUrl(user) };
 }
 
+function syncUiCheckboxes(root = document) {
+  root.querySelectorAll('.ui-checkbox-input').forEach(input => {
+    const box = input.nextElementSibling;
+    if (!box || !box.classList.contains('ui-checkbox')) return;
+
+    const apply = () => box.classList.toggle('checked', input.checked);
+    apply();
+
+    if (!input.dataset.uiCheckboxSyncBound) {
+      input.addEventListener('change', apply);
+      input.dataset.uiCheckboxSyncBound = '1';
+    }
+  });
+}
+
+const uiCheckboxObserver = new MutationObserver(() => syncUiCheckboxes());
+uiCheckboxObserver.observe(document.body, { childList: true, subtree: true });
+syncUiCheckboxes();
+setInterval(syncUiCheckboxes, 250);
+
 function loadUserSession() {
   const stored = localStorage.getItem('didaudo_user_session');
   if (!stored) return;
@@ -310,7 +330,8 @@ function renderFriendsData(profile) {
   if (compareFriendPicker) {
     compareFriendPicker.innerHTML = friends.length > 0 ? friends.slice(0, 12).map(friend => `
       <label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
-        <input type="checkbox" class="compare-friend-checkbox ui-checkbox" value="${friend._id}" />
+        <input type="checkbox" class="compare-friend-checkbox ui-checkbox-input" value="${friend._id}" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
+        <span class="ui-checkbox" aria-hidden="true"></span>
         <span>${friend.name || friend.email}</span>
       </label>
     `).join('') : '<p class="text-slate-400">Add friends to compare favorites.</p>';
