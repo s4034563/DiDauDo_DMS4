@@ -137,6 +137,8 @@ function setMobileNavState(isOpen = false) {
   document.body.classList.toggle('mobile-nav-open', Boolean(isOpen));
   const tray = document.getElementById('mobileNavTray');
   if (tray) {
+    tray.style.setProperty('top', 'calc(env(safe-area-inset-top, 0px) + 132px)', 'important');
+    tray.style.setProperty('max-height', 'calc(100dvh - 154px)', 'important');
     tray.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
   }
 }
@@ -166,8 +168,13 @@ function updateMobileNavUI() {
     if (mobileUserName) mobileUserName.textContent = currentUser.name || currentUser.email || 'Guest';
     if (mobileUserStatus) mobileUserStatus.textContent = currentUser.email || 'Signed in';
     if (mobileAuthBtn) {
+      mobileAuthBtn.classList.remove('login');
+      mobileAuthBtn.classList.add('logout');
       mobileAuthBtn.textContent = t('logout');
       mobileAuthBtn.setAttribute('aria-label', t('logout'));
+      mobileAuthBtn.style.setProperty('border-color', 'rgba(248, 113, 113, 0.55)', 'important');
+      mobileAuthBtn.style.setProperty('background-color', 'rgba(127, 29, 29, 0.22)', 'important');
+      mobileAuthBtn.style.setProperty('color', '#f87171', 'important');
     }
   } else {
     if (mobileProfileButton) {
@@ -178,8 +185,13 @@ function updateMobileNavUI() {
     if (mobileUserName) mobileUserName.textContent = 'Guest';
     if (mobileUserStatus) mobileUserStatus.textContent = 'Sign in to continue';
     if (mobileAuthBtn) {
+      mobileAuthBtn.classList.remove('logout');
+      mobileAuthBtn.classList.add('login');
       mobileAuthBtn.textContent = t('login');
       mobileAuthBtn.setAttribute('aria-label', t('login'));
+      mobileAuthBtn.style.setProperty('border-color', 'rgba(192, 132, 252, 0.35)', 'important');
+      mobileAuthBtn.style.setProperty('background-color', 'rgba(15, 23, 42, 0.6)', 'important');
+      mobileAuthBtn.style.setProperty('color', '#c084fc', 'important');
     }
   }
 }
