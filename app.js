@@ -838,6 +838,11 @@ function getFilteredLocations() {
             ? Array.from(subContainer.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value)
             : [];
 
+        if (!subContainer) {
+            selectedActivities.push(categoryCheckbox.value);
+            return;
+        }
+
         if (checkedSubcategories.length > 0) {
             selectedActivities.push(...checkedSubcategories);
             return;
