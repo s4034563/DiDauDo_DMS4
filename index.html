@@ -136,6 +136,75 @@
             color: #e2e8f0;
         }
 
+        body.theme-light .panel,
+        body.theme-light .field,
+        body.theme-light .primary-btn {
+            color: #0f172a;
+        }
+
+        body.theme-light .panel {
+            background: rgba(255, 255, 255, 0.88);
+            border-color: rgba(15, 23, 42, 0.08);
+        }
+
+        body.theme-light .field {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(15, 23, 42, 0.1);
+            color: #0f172a;
+        }
+
+        body.theme-light .field::placeholder {
+            color: #64748b;
+        }
+
+        body.theme-light .primary-btn {
+            color: #2e1065;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            box-shadow: 0 24px 60px rgba(2, 6, 23, 0.4);
+        }
+
+        .field {
+            width: 100%;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(51, 65, 85, 0.95);
+            background: rgba(15, 23, 42, 0.92);
+            padding: 0.9rem 1rem;
+            color: #e2e8f0;
+            transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+        }
+
+        .field::placeholder {
+            color: #64748b;
+        }
+
+        .field:focus {
+            border-color: rgba(192, 132, 252, 0.85);
+            box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.12);
+            outline: none;
+        }
+
+        .primary-btn {
+            border: none;
+            background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+            color: #0f172a;
+            font-weight: 800;
+            transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+        }
+
+        .primary-btn:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+
+        .primary-btn:active {
+            transform: translateY(0);
+        }
+
         .glassmorphic {
             background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(10px);
@@ -2398,55 +2467,53 @@
     </div>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" style="display:none;">
-        <div class="bg-slate-900 rounded-lg p-8 w-full max-w-md mx-4 border border-neon-purple border-opacity-40">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold neon-text">Welcome</h2>
-                <button id="loginModalClose" type="button" class="text-2xl text-slate-400 hover:text-white icon-only" data-icon="close"></button>
+    <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 px-4">
+        <div class="panel w-full max-w-md rounded-3xl p-6">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Welcome</h2>
+                    <p id="loginPrompt" class="mt-2 hidden rounded-xl border border-cyan-400/30 bg-cyan-950/30 px-3 py-2 text-sm text-cyan-100"></p>
+                </div>
+                <button id="loginModalClose" class="text-2xl leading-none text-slate-400 hover:text-white">×</button>
             </div>
 
-            <!-- Tab Selection -->
-            <div class="flex gap-4 mb-6 border-b border-slate-700">
-                <button id="loginTabBtn" class="py-2 px-4 font-semibold text-neon-purple border-b-2 border-neon-purple">Login</button>
-                <button id="signupTabBtn" class="py-2 px-4 font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-300">Sign Up</button>
+            <div class="mt-5 flex gap-2 rounded-2xl border border-white/10 bg-slate-950/40 p-1">
+                <button id="loginTabBtn" class="flex-1 rounded-xl bg-violet-500 px-3 py-2 text-sm font-bold text-slate-900">Login</button>
+                <button id="signupTabBtn" class="flex-1 rounded-xl px-3 py-2 text-sm font-bold text-slate-400">Sign up</button>
             </div>
 
-            <div id="loginPrompt" class="hidden mb-4 rounded border border-cyan-400/40 bg-cyan-950/30 px-3 py-2 text-sm text-cyan-100"></div>
-
-            <!-- Login Form -->
-            <form id="loginForm" class="space-y-4">
+            <form id="loginForm" class="mt-5 space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-300 mb-2">Email</label>
-                    <input type="email" id="loginEmail" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="your@email.com">
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Email</label>
+                    <input id="loginEmail" type="email" class="field" placeholder="your@email.com" required />
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-300 mb-2">Password</label>
-                    <input type="password" id="loginPassword" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="••••••••">
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Password</label>
+                    <input id="loginPassword" type="password" class="field" placeholder="••••••••" required />
                 </div>
-                <div id="loginError" class="text-red-400 text-sm hidden"></div>
-                <button type="submit" class="w-full py-2 rounded bg-neon-purple text-slate-900 font-semibold hover:bg-purple-600 transition">Login</button>
+                <div id="loginError" class="hidden text-sm text-red-300"></div>
+                <button class="primary-btn w-full rounded-xl px-4 py-3 text-sm" type="submit">Login</button>
             </form>
 
-            <!-- Signup Form -->
-            <form id="signupForm" class="space-y-4" style="display:none;">
+            <form id="signupForm" class="mt-5 hidden space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-300 mb-2">Email</label>
-                    <input type="email" id="signupEmail" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="your@email.com">
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Email</label>
+                    <input id="signupEmail" type="email" class="field" placeholder="your@email.com" required />
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-300 mb-2">Name</label>
-                    <input type="text" id="signupName" class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="Your name">
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Name</label>
+                    <input id="signupName" type="text" class="field" placeholder="Your name" />
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-300 mb-2">Password</label>
-                    <input type="password" id="signupPassword" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="••••••••">
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Password</label>
+                    <input id="signupPassword" type="password" class="field" placeholder="••••••••" required />
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-300 mb-2">Confirm Password</label>
-                    <input type="password" id="signupPasswordConfirm" required class="w-full px-4 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-neon-purple" placeholder="••••••••">
+                    <label class="mb-2 block text-sm font-semibold text-slate-300">Confirm password</label>
+                    <input id="signupPasswordConfirm" type="password" class="field" placeholder="••••••••" required />
                 </div>
-                <div id="signupError" class="text-red-400 text-sm hidden"></div>
-                <button type="submit" class="w-full py-2 rounded bg-neon-purple text-slate-900 font-semibold hover:bg-purple-600 transition">Create Account</button>
+                <div id="signupError" class="hidden text-sm text-red-300"></div>
+                <button class="primary-btn w-full rounded-xl px-4 py-3 text-sm" type="submit">Create account</button>
             </form>
         </div>
     </div>

@@ -2379,7 +2379,10 @@ function updateAuthUI() {
 function openLoginModal(promptText = '') {
     const modal = document.getElementById('loginModal');
     const prompt = document.getElementById('loginPrompt');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
     if (prompt) {
         const safePromptText = typeof promptText === 'string' ? promptText : '';
         const hasPrompt = Boolean(String(safePromptText || '').trim());
@@ -2392,7 +2395,10 @@ function openLoginModal(promptText = '') {
 function closeLoginModal() {
     const modal = document.getElementById('loginModal');
     const prompt = document.getElementById('loginPrompt');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
     if (prompt) {
         prompt.textContent = '';
         prompt.classList.add('hidden');
@@ -2420,26 +2426,26 @@ function switchAuthTab(isSignup) {
     const signupTabBtn = document.getElementById('signupTabBtn');
 
     if (isSignup) {
-        if (loginForm) loginForm.style.display = 'none';
-        if (signupForm) signupForm.style.display = 'block';
+        if (loginForm) loginForm.classList.add('hidden');
+        if (signupForm) signupForm.classList.remove('hidden');
         if (loginTabBtn) {
-            loginTabBtn.classList.remove('text-neon-purple', 'border-neon-purple');
-            loginTabBtn.classList.add('text-slate-400', 'border-transparent');
+            loginTabBtn.classList.remove('bg-violet-500', 'text-slate-900');
+            loginTabBtn.classList.add('text-slate-400');
         }
         if (signupTabBtn) {
-            signupTabBtn.classList.remove('text-slate-400', 'border-transparent');
-            signupTabBtn.classList.add('text-neon-purple', 'border-neon-purple');
+            signupTabBtn.classList.add('bg-violet-500', 'text-slate-900');
+            signupTabBtn.classList.remove('text-slate-400');
         }
     } else {
-        if (loginForm) loginForm.style.display = 'block';
-        if (signupForm) signupForm.style.display = 'none';
+        if (loginForm) loginForm.classList.remove('hidden');
+        if (signupForm) signupForm.classList.add('hidden');
         if (loginTabBtn) {
-            loginTabBtn.classList.remove('text-slate-400', 'border-transparent');
-            loginTabBtn.classList.add('text-neon-purple', 'border-neon-purple');
+            loginTabBtn.classList.add('bg-violet-500', 'text-slate-900');
+            loginTabBtn.classList.remove('text-slate-400');
         }
         if (signupTabBtn) {
-            signupTabBtn.classList.remove('text-neon-purple', 'border-neon-purple');
-            signupTabBtn.classList.add('text-slate-400', 'border-transparent');
+            signupTabBtn.classList.remove('bg-violet-500', 'text-slate-900');
+            signupTabBtn.classList.add('text-slate-400');
         }
     }
 }
