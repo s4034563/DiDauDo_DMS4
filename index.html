@@ -149,18 +149,86 @@
         }
 
         .neon-text {
-            -webkit-appearance: auto;
-            appearance: auto;
-            width: 1rem;
-            height: 1rem;
-            accent-color: #7c3aed;
-            border-radius: 0 !important;
-            cursor: pointer;
-            flex: 0 0 auto;
+            color: #c084fc;
+        }
+
+        .neon-cyan {
+            color: #06b6d4;
         }
 
         .pulse-glow {
-            display: none !important;
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(192, 132, 252, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(192, 132, 252, 0);
+            }
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .ol-viewport {
+            outline: none;
+        }
+
+        .right-info-panel {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: min(360px, calc(100vw - 2rem));
+            max-height: calc(100vh - 48px);
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(192, 132, 252, 0.45);
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transform: translateX(120%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 9;
+        }
+
+        .right-info-panel.visible {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .right-info-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        .right-info-panel-close {
+            border: none;
+            background: transparent;
+            color: #cbd5e1;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .right-info-panel-content {
+            padding: 14px;
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+        }
+
+        .right-info-panel-content::-webkit-scrollbar {
             width: 6px;
         }
 
@@ -468,14 +536,11 @@
         }
 
         .ui-checkbox-input {
-            -webkit-appearance: auto;
-            appearance: auto;
-            width: 1rem;
-            height: 1rem;
-            accent-color: #7c3aed;
-            border-radius: 0 !important;
-            cursor: pointer;
-            flex: 0 0 auto;
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
         }
 
         .ui-checkbox {
@@ -1768,7 +1833,7 @@
                 <div>
                     <label class="flex items-center gap-3 cursor-pointer">
                         <input type="checkbox" id="curatorChoiceCheckbox" class="ui-checkbox-input" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)">
-                        <span class="ui-checkbox" aria-hidden="true" onclick="const input=this.previousElementSibling; if(input){input.checked=!input.checked; this.classList.toggle('checked', input.checked); input.dispatchEvent(new Event('change', { bubbles: true }));}"></span>
+                        <span class="ui-checkbox" aria-hidden="true"></span>
                         <span class="text-sm font-semibold neon-text" data-icon="star">Curator's Picks</span>
                     </label>
                 </div>

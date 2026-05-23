@@ -55,30 +55,10 @@ function syncUiCheckboxes(root = document) {
   });
 }
 
-function bindUiCheckboxBoxes(root = document) {
-  root.querySelectorAll('.ui-checkbox').forEach(box => {
-    if (box.dataset.uiCheckboxBoxBound) return;
-    const input = box.previousElementSibling;
-    if (!input || !input.classList || !input.classList.contains('ui-checkbox-input')) return;
-
-    box.addEventListener('click', event => {
-      event.preventDefault();
-      input.checked = !input.checked;
-      box.classList.toggle('checked', input.checked);
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-
-    box.dataset.uiCheckboxBoxBound = '1';
-    box.classList.toggle('checked', input.checked);
-  });
-}
-
 const uiCheckboxObserver = new MutationObserver(() => syncUiCheckboxes());
 uiCheckboxObserver.observe(document.body, { childList: true, subtree: true });
 syncUiCheckboxes();
-bindUiCheckboxBoxes();
 setInterval(syncUiCheckboxes, 250);
-setInterval(bindUiCheckboxBoxes, 250);
 
 function loadUserSession() {
   const stored = localStorage.getItem('didaudo_user_session');
@@ -351,7 +331,7 @@ function renderFriendsData(profile) {
     compareFriendPicker.innerHTML = friends.length > 0 ? friends.slice(0, 12).map(friend => `
       <label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
         <input type="checkbox" class="compare-friend-checkbox ui-checkbox-input" value="${friend._id}" onchange="this.nextElementSibling?.classList.toggle('checked', this.checked)" />
-        <span class="ui-checkbox" aria-hidden="true" onclick="const input=this.previousElementSibling; if(input){input.checked=!input.checked; this.classList.toggle('checked', input.checked); input.dispatchEvent(new Event('change', { bubbles: true }));}"></span>
+        <span class="ui-checkbox" aria-hidden="true"></span>
         <span>${friend.name || friend.email}</span>
       </label>
     `).join('') : '<p class="text-slate-400">Add friends to compare favorites.</p>';
