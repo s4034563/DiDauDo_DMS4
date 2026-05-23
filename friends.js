@@ -122,6 +122,23 @@ function applyThemeFromStorage() {
   updateMobileNavUI();
 }
 
+function setFriendsNavActive() {
+  const mapNavBtn = document.getElementById('mapNavBtn');
+  const friendsNavBtn = document.getElementById('friendsNavBtn');
+  const mobileMapNavBtn = document.getElementById('mobileMapNavBtn');
+  const mobileFriendsNavBtn = document.getElementById('mobileFriendsNavBtn');
+
+  mapNavBtn?.classList.remove('active');
+  mobileMapNavBtn?.classList.remove('active');
+  friendsNavBtn?.classList.add('active');
+  mobileFriendsNavBtn?.classList.add('active');
+
+  friendsNavBtn?.setAttribute('aria-current', 'page');
+  mobileFriendsNavBtn?.setAttribute('aria-current', 'page');
+  mapNavBtn?.removeAttribute('aria-current');
+  mobileMapNavBtn?.removeAttribute('aria-current');
+}
+
 function normalizeUserSession(user) {
   if (!user) return null;
   return { ...user, avatarUrl: user.avatarUrl || getProfileAvatarUrl(user) };
@@ -834,13 +851,12 @@ window.addEventListener('load', async () => {
   updateAuthUI();
   bindEvents();
   applyDesktopNavState(getStoredDesktopNavState());
+  setFriendsNavActive();
   applyLanguageFromStorage();
   applyThemeFromStorage();
 
   if (!currentUser) {
     renderSignedOutState();
-    openLoginModal('You need to be signed in to use friends and compare locations.');
-    switchAuthTab(false);
     return;
   }
 
