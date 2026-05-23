@@ -1704,6 +1704,19 @@
                 animation: none !important;
             }
         }
+
+        /* Exceptions: disable hover lift for location-details container cards and the share textarea */
+        .right-info-panel .theme-surface-card:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        textarea.theme-surface-card:hover,
+        textarea.theme-surface-card:focus {
+            transform: none !important;
+            /* keep a subtle focus ring but remove lift */
+            box-shadow: 0 6px 18px rgba(2,6,23,0.06) !important;
+        }
     </style>
 </head>
 <body class="overflow-hidden">
