@@ -385,7 +385,7 @@ function renderProfile(profile) {
             <p class="theme-surface-title font-semibold text-white">${location.name}</p>
             <p class="theme-surface-subtitle text-xs text-slate-400">${location.address || ''}</p>
           </div>
-          <button class="favorite-open-btn theme-surface-action rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${location.id}">Open</button>
+          <button class="favorite-open-btn theme-surface-action rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200" data-location-id="${location.id}">${t('open')}</button>
         </div>
       </div>
     `).join('') : `<p class="theme-surface-muted text-slate-400">${t('noFavorites')}</p>`;
@@ -401,7 +401,7 @@ function renderProfile(profile) {
           </div>
           <div class="flex flex-col items-end gap-2">
             <span class="theme-surface-accent text-xs text-cyan-200">${'⭐'.repeat(Math.max(1, Math.min(5, rating.rating || 0)))}</span>
-            <button class="rated-place-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${rating.locationId}">Open</button>
+            <button class="rated-place-open-btn theme-surface-action rounded-xl border border-cyan-400 px-3 py-2 text-xs font-semibold text-cyan-200" data-location-id="${rating.locationId}">${t('open')}</button>
           </div>
         </div>
         ${rating.comment ? `<p class="theme-surface-body mt-2 text-sm text-slate-300">${rating.comment}</p>` : ''}
