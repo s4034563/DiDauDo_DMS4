@@ -3291,7 +3291,7 @@ window.addEventListener('load', () => {
                 openLoginModal('Sign in to view your friends.');
                 return;
             }
-            window.location.href = './profile.html';
+            window.location.href = './friends.html';
         });
     }
     if (profileButton) {
@@ -3339,7 +3339,7 @@ window.addEventListener('load', () => {
                 openLoginModal('Sign in to view your friends.');
                 return;
             }
-            window.location.href = './profile.html';
+            window.location.href = './friends.html';
         });
     }
     if (mobileThemeToggleBtn) mobileThemeToggleBtn.addEventListener('click', toggleTheme);
