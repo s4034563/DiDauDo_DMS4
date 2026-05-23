@@ -2376,7 +2376,7 @@ function renderProfileModal(profile) {
                 <div class="space-y-2">
                     ${friends.length > 0 ? friends.slice(0, 3).map(friend => `
                         <label class="flex items-center gap-2 text-sm text-slate-200">
-                            <input type="checkbox" class="friend-compare-checkbox h-4 w-4" value="${friend._id}" />
+                            <input type="checkbox" class="friend-compare-checkbox ui-checkbox" value="${friend._id}" />
                             <span>${friend.name || friend.email}</span>
                         </label>
                     `).join('') : '<p class="text-sm text-slate-400">No friends yet.</p>'}

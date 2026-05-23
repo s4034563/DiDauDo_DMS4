@@ -310,7 +310,7 @@ function renderFriendsData(profile) {
   if (compareFriendPicker) {
     compareFriendPicker.innerHTML = friends.length > 0 ? friends.slice(0, 12).map(friend => `
       <label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
-        <input type="checkbox" class="compare-friend-checkbox h-4 w-4" value="${friend._id}" />
+        <input type="checkbox" class="compare-friend-checkbox ui-checkbox" value="${friend._id}" />
         <span>${friend.name || friend.email}</span>
       </label>
     `).join('') : '<p class="text-slate-400">Add friends to compare favorites.</p>';
