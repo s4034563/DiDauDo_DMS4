@@ -1499,7 +1499,7 @@ function showInfoWindow(location, markerElement) {
             <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3" id="hoursBlock-${location.id}">
                 <div id="hoursSummary-${location.id}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
                     <div>
-                        <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Hours</p>
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-slate-400">${t('hours')}</p>
                         <p class="mt-1 text-sm text-slate-200">${hoursDisplay}</p>
                         ${nextOpening}
                     </div>
