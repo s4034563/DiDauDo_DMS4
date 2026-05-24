@@ -151,6 +151,9 @@ const translations = {
         openGoogleMaps: 'Open in Google Maps',
         copyAddress: 'Copy address',
         copied: 'Copied!',
+        address: 'Address',
+        hours: 'Hours',
+        details: 'Details',
         openNavigation: 'Open navigation',
         closeNavigation: 'Close navigation',
         friends: 'Friends',
@@ -261,6 +264,9 @@ const translations = {
         openGoogleMaps: 'Mở trên Google Maps',
         copyAddress: 'Sao chép địa chỉ',
         copied: 'Đã sao chép!',
+        address: 'Địa chỉ',
+        hours: 'Giờ mở cửa',
+        details: 'Chi tiết',
         openNavigation: 'Mở điều hướng',
         closeNavigation: 'Đóng điều hướng',
         friends: 'Bạn bè',
@@ -1538,7 +1544,7 @@ function showInfoWindow(location, markerElement) {
 
             ${location.address ? `
             <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3" id="addressBlock-${location.id}">
-                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Address</p>
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">${t('address')}</p>
                 <div class="flex items-start justify-between gap-3">
                     <p class="theme-surface-title mt-1 text-sm text-slate-200" id="addressText-${location.id}">${location.address}</p>
                     <button id="copyAddressBtn-${location.id}" type="button" class="ml-3 p-2 rounded hover:bg-white/5" aria-label="${t('copyAddress')}" title="${t('copyAddress')}">
