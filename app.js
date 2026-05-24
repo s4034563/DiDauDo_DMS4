@@ -154,6 +154,9 @@ const translations = {
         address: 'Address',
         hours: 'Hours',
         details: 'Details',
+        opensAt: 'Opens',
+        closedToday: 'Closed today',
+        closed: 'Closed',
         openNavigation: 'Open navigation',
         closeNavigation: 'Close navigation',
         friends: 'Friends',
@@ -267,6 +270,9 @@ const translations = {
         address: 'Địa chỉ',
         hours: 'Giờ mở cửa',
         details: 'Chi tiết',
+        opensAt: 'Mở',
+        closedToday: 'Đóng hôm nay',
+        closed: 'Đóng',
         openNavigation: 'Mở điều hướng',
         closeNavigation: 'Đóng điều hướng',
         friends: 'Bạn bè',
@@ -1451,7 +1457,7 @@ function showInfoWindow(location, markerElement) {
     // Build detailed weekly hours HTML and interactive summary
     const detailedTagsHtml = location.detailedTags && location.detailedTags.length > 0 ? `
         <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3">
-            <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2">Details</p>
+            <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400 mb-2">${t('details')}</p>
             <div class="flex flex-wrap gap-2">
                 ${location.detailedTags.map(tag => {
                     const color = detailedTagColors[location.type] || '#c084fc';
@@ -1478,7 +1484,7 @@ function showInfoWindow(location, markerElement) {
                 <div style="display:flex;flex-direction:column;gap:6px;">
                     ${days.map((day, idx) => {
                         const h = location.hours[day];
-                        const line = h && h.open && h.close ? `${formatTimeTo12Hour(h.open)} - ${formatTimeTo12Hour(h.close)}` : 'Closed';
+                        const line = h && h.open && h.close ? `${formatTimeTo12Hour(h.open)} - ${formatTimeTo12Hour(h.close)}` : t('closed');
                         return `<div style="display:flex;justify-content:space-between;font-size:13px;color:#cbd5e1"><span>${dayLabels[idx]}</span><span>${line}</span></div>`;
                     }).join('')}
                 </div>
@@ -2987,10 +2993,10 @@ function getHoursStatusData(source) {
     if (!todayHours) {
         const nextOpening = getNextOpening(hoursObj);
         return {
-            summaryText: `🔴 ${t('closedNow')} • Closed today`,
+            summaryText: `🔴 ${t('closedNow')} • ${t('closedToday')}`,
             statusLabel: t('closedNow'),
             statusClass: 'closed',
-            nextOpening: nextOpening ? `Opens ${nextOpening}` : ''
+            nextOpening: nextOpening ? `${t('opensAt')} ${nextOpening}` : ''
         };
     }
 
@@ -3035,7 +3041,7 @@ function getHoursStatusData(source) {
         summaryText: `🔴 ${t('closedNow')} • ${rangeText}`,
         statusLabel: t('closedNow'),
         statusClass: 'closed',
-        nextOpening: nextOpening ? `Opens ${nextOpening}` : ''
+        nextOpening: nextOpening ? `${t('opensAt')} ${nextOpening}` : ''
     };
 }
 
