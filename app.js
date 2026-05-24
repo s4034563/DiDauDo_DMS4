@@ -268,7 +268,7 @@ const translations = {
         copyAddress: 'Sao chép địa chỉ',
         copied: 'Đã sao chép!',
         address: 'Địa chỉ',
-        hours: 'Giờ mở cửa',
+        hours: 'Giờ Hoạt Động',
         details: 'Chi tiết',
         opensAt: 'Mở',
         closedToday: 'Đóng hôm nay',
