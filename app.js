@@ -115,6 +115,15 @@ const translations = {
         clearFilters: 'Clear All Filters',
         curatorPicks: 'Curator\'s Picks',
         curatorChoice: 'Curator\'s Choice',
+        communityRatings: 'Community Ratings',
+        loadingRatings: 'Loading ratings...',
+        recentReviews: 'Recent Reviews',
+        yourRating: 'Your Rating',
+        shareYourExperience: 'Share your experience...',
+        submitRating: 'Submit Rating',
+        saveToFavorites: 'Save to favorites',
+        signInToSaveFavorites: 'Sign in to save favorites',
+        needSignInToSaveFavorites: 'You need to be signed in to save favorites.',
         locationDetails: 'Location Details',
         closeDetails: 'Close details',
         clickMarkerHint: 'Click a marker to view details.',
@@ -216,6 +225,15 @@ const translations = {
         clearFilters: 'Xóa tất cả bộ lọc',
         curatorPicks: 'Lựa chọn của người quản lý',
         curatorChoice: 'Lựa chọn của người quản lý',
+        communityRatings: 'Đánh giá cộng đồng',
+        loadingRatings: 'Đang tải đánh giá...',
+        recentReviews: 'Đánh giá gần đây',
+        yourRating: 'Đánh giá của bạn',
+        shareYourExperience: 'Chia sẻ trải nghiệm của bạn...',
+        submitRating: 'Gửi đánh giá',
+        saveToFavorites: 'Lưu vào mục yêu thích',
+        signInToSaveFavorites: 'Đăng nhập để lưu vào mục yêu thích',
+        needSignInToSaveFavorites: 'Bạn cần đăng nhập để lưu địa điểm.',
         locationDetails: 'Chi tiết địa điểm',
         closeDetails: 'Đóng chi tiết',
         clickMarkerHint: 'Nhấn vào ghim để xem chi tiết.',
@@ -1483,31 +1501,31 @@ function showInfoWindow(location, markerElement) {
     const ratingsSection = `
         <div class="theme-surface-card rounded-xl border border-white/10 bg-slate-950/40 p-3 space-y-3">
             <div class="space-y-2">
-                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Community Ratings</p>
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">${t('communityRatings')}</p>
                 <div id="ratingsSummary-${location.id}" class="theme-surface-body text-sm text-slate-300">
-                    <p style="font-size: 13px; color: #cbd5e1;">Loading ratings...</p>
+                    <p style="font-size: 13px; color: #cbd5e1;">${t('loadingRatings')}</p>
                 </div>
             </div>
 
             <div class="space-y-2">
-                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Recent Reviews</p>
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">${t('recentReviews')}</p>
                 <div id="existingRatings-${location.id}" class="theme-surface-body text-sm text-slate-300"></div>
             </div>
             ${currentUser ? `
             <div style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
             <div class="space-y-2">
-                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">Your Rating</p>
+                <p class="theme-surface-subtitle text-[11px] uppercase tracking-[0.16em] text-slate-400">${t('yourRating')}</p>
                 <div id="userRatingStars-${location.id}" class="flex gap-2"></div>
-                <textarea id="userComment-${location.id}" class="theme-surface-card w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="Share your experience..." rows="2"></textarea>
-                <button onclick="submitUserRatingHandler('${location.id}')" class="theme-surface-action w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">Submit Rating</button>
+                <textarea id="userComment-${location.id}" class="theme-surface-card w-full px-2 py-2 rounded bg-slate-800 text-white text-xs placeholder-slate-500 border border-slate-600 focus:outline-none focus:border-neon-purple" placeholder="${t('shareYourExperience')}" rows="2"></textarea>
+                <button onclick="submitUserRatingHandler('${location.id}')" class="theme-surface-action w-full py-2 bg-neon-purple text-slate-900 text-xs font-semibold rounded hover:bg-purple-600 transition">${t('submitRating')}</button>
             </div>
             ` : ``}
         </div>
     `;
 
     const favoriteButtonHtml = currentUser
-        ? `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn" aria-pressed="false" title="Save to favorites" aria-label="Save to favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`
-        : `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn text-slate-500" title="Sign in to save favorites" aria-label="Sign in to save favorites"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`;
+        ? `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn" aria-pressed="false" title="${t('saveToFavorites')}" aria-label="${t('saveToFavorites')}"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`
+        : `<button id="favoriteBtn-${location.id}" type="button" class="favorite-btn text-slate-500" title="${t('signInToSaveFavorites')}" aria-label="${t('signInToSaveFavorites')}"><span class="material-symbols-rounded ui-icon ui-icon-large">favorite_border</span></button>`;
 
     rightInfoPanelContentElement.innerHTML = `
         <div class="space-y-3">
@@ -1597,7 +1615,7 @@ function showInfoWindow(location, markerElement) {
             });
         } else {
             favoriteBtn.addEventListener('click', () => {
-                openLoginModal('You need to be signed in to save favorites.');
+                openLoginModal(t('needSignInToSaveFavorites'));
             });
         }
     }
